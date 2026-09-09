@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Kartu Aset - {{ $aset->kode_aset }}</title>
+    <style>
+        @page {
+            margin: 12mm 12mm 16mm 12mm;
+            size: a4 portrait;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 8.5pt;
+            line-height: 1.35;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+        }
+
+        /* Utility */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .font-bold { font-weight: bold; }
+        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .uppercase { text-transform: uppercase; }
+        .text-muted { color: #64748b; }
+        .text-emerald { color: #047857; }
+        .text-cyan { color: #0891b2; }
+        .w-full { width: 100%; }
+        .clearfix::after { content: ""; clear: both; display: table; }
+
+        /* Document Header */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #047857;
+            padding-bottom: 8px;
+        }
+
+        .header-table td {
+            vertical-align: top;
+        }
+
+        .institution-name {
+            font-size: 14pt;
+            font-weight: 800;
+            color: #047857;
+            letter-spacing: 0.5px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .system-subtitle {
+            font-size: 8pt;
+            font-weight: bold;
+            color: #475569;
+            letter-spacing: 1px;
+            margin-top: 2px;
+            margin-bottom: 6px;
+        }
+
+        .asset-title {
+            font-size: 13pt;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .asset-badge-row {
+            margin-top: 4px;
+            font-size: 7.5pt;
+        }
+
+        .badge-tag {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 7.5pt;
+            border: 1px solid #cbd5e1;
+            background-color: #f1f5f9;
+            color: #334155;
+            margin-right: 4px;
+        }
+
+        .badge-tag.active {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .badge-tag.non-active {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .doc-title-box {
+            text-align: right;
+        }
+
+        .doc-title {
+            font-size: 14pt;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .doc-date {
+            font-size: 7.5pt;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* Media Row (QR & Photo side-by-side) */
+        .media-row {
+            display: inline-block;
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        .media-row table {
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+
+        .media-row td {
+            vertical-align: bottom;
+            padding: 0 3px;
+        }
+
+        .qr-img {
+            width: 72px;
+            height: 72px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 2px;
+            background: #fff;
+            display: block;
+        }
+
+        .photo-img {
+            width: 100px;
+            height: 75px;
+            object-fit: cover;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .photo-placeholder {
+            width: 100px;
+            height: 75px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #94a3b8;
+            font-size: 6.5pt;
+            line-height: 75px;
+            text-align: center;
+            display: block;
+        }
+
+        .media-caption {
+            font-size: 6pt;
+            color: #64748b;
+            margin-top: 2px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Section Layout */
+        .section-block {
+            margin-bottom: 9px;
+            page-break-inside: avoid;
+        }
+
+        .section-header {
+            background-color: #047857;
+            color: #ffffff;
+            font-size: 8pt;
+            font-weight: 800;
+            letter-spacing: 0.75px;
+            padding: 3.5px 8px;
+            border-radius: 3px 3px 0 0;
+            text-transform: uppercase;
+        }
+
+        .section-header.secondary {
+            background-color: #0e7490;
+        }
+
+        .section-header.slate {
+            background-color: #334155;
+        }
+
+        /* 2-Column Info Table */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+            border-left: 1px solid #cbd5e1;
+            border-right: 1px solid #cbd5e1;
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        .info-table td, .info-table th {
+            padding: 3.5px 7px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        .info-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .info-table .lbl {
+            width: 25%;
+            font-weight: bold;
+            color: #334155;
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .info-table .val {
+            width: 25%;
+            color: #0f172a;
+        }
+
+        .info-table .lbl-wide {
+            width: 25%;
+            font-weight: bold;
+            color: #334155;
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .info-table .val-wide {
+            width: 75%;
+            color: #0f172a;
+        }
+
+        /* Full Width Text Row */
+        .info-table .full-header {
+            background-color: #f1f5f9;
+            font-weight: bold;
+            color: #334155;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-top: 1px solid #cbd5e1;
+            padding: 3px 7px;
+        }
+
+        .info-table .full-content {
+            background-color: #ffffff;
+            color: #1e293b;
+            padding: 5px 8px;
+            font-size: 7.8pt;
+            line-height: 1.4;
+        }
+
+        /* Data Grid Tables (Riwayat, Agenda, Keuangan, Jurnal) */
+        .data-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.5pt;
+            border: 1px solid #cbd5e1;
+        }
+
+        .data-grid th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 7pt;
+            letter-spacing: 0.3px;
+            padding: 4px 6px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .data-grid td {
+            padding: 4px 6px;
+            border: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .data-grid tr:nth-child(even) td {
+            background-color: #fafbfc;
+        }
+
+        .empty-state {
+            padding: 8px !important;
+            color: #94a3b8;
+            font-style: italic;
+            background-color: #f8fafc !important;
+        }
+
+        /* Highlight Boxes */
+        .highlight-emerald {
+            background-color: #ecfdf5;
+            color: #065f46;
+            font-weight: bold;
+        }
+
+        .highlight-mono {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: #065f46;
+            background-color: #f0fdf4;
+            padding: 1px 4px;
+            border-radius: 2px;
+            border: 1px solid #bbf7d0;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========================================================================= -->
+    <!-- HEADER DOKUMEN: INSTANSI & JUDUL KARTU ASET                               -->
+    <!-- ========================================================================= -->
+    <table class="header-table">
+        <tr>
+            <!-- Kolom Kiri: Nama Lembaga & Nama Aset -->
+            <td style="width: 72%;">
+                <div class="institution-name">{{ $lembagaName }}</div>
+                <div class="system-subtitle">AMANA — SISTEM MANAJEMEN ASET TERPADU</div>
+                <div class="asset-title">{{ strtoupper($aset->nama_aset) }}</div>
+                
+                <div class="asset-badge-row">
+                    <span class="badge-tag {{ $aset->status === 'aktif' ? 'active' : 'non-active' }}">
+                        STATUS: {{ strtoupper($aset->status) }}
+                    </span>
+                    <span class="badge-tag">
+                        JENIS: ASET {{ strtoupper($aset->jenis) }}
+                    </span>
+                    <span class="badge-tag font-mono">
+                        #AST-{{ str_pad($aset->id, 5, '0', STR_PAD_LEFT) }}
+                    </span>
+                </div>
+            </td>
+
+            <!-- Kolom Kanan: Judul Dokumen & Stack Media (QR + Foto) -->
+            <td style="width: 28%;" class="text-right">
+                <div class="doc-title">KARTU ASET</div>
+                <div class="doc-date">Dokumen Resmi Terverifikasi</div>
+
+                <div class="media-row">
+                    <table>
+                        <tr>
+                            @if($qrBase64)
+                            <td>
+                                <img src="{{ $qrBase64 }}" class="qr-img" alt="QR Code">
+                            </td>
+                            @endif
+                            <td>
+                                @if($fotoBase64)
+                                    <img src="{{ $fotoBase64 }}" class="photo-img" alt="Foto Aset">
+                                @else
+                                    <div class="photo-placeholder">Tanpa Foto</div>
+                                @endif
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="media-caption">QR │ Foto Aset</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- ========================================================================= -->
+    <!-- 1. INFORMASI UTAMA                                                        -->
+    <!-- ========================================================================= -->
+    <div class="section-block">
+        <div class="section-header">1. Informasi Utama Aset</div>
+        <table class="info-table">
+            <tr>
+                <td class="lbl">Kode Aset Resmi</td>
+                <td class="val"><span class="highlight-mono">{{ $aset->kode_aset }}</span></td>
+                <td class="lbl">Kode Sistem</td>
+                <td class="val font-mono">#AST-{{ str_pad($aset->id, 5, '0', STR_PAD_LEFT) }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">Kategori Aset</td>
+                <td class="val font-bold">{{ $aset->kategori->nama_kategori ?? '-' }} ({{ $aset->kategori->kode_kategori ?? '-' }})</td>
+                <td class="lbl">Jenis Barang</td>
+                <td class="val">{{ $aset->barang->nama_barang ?? '-' }} ({{ $aset->barang->kode_barang ?? '-' }})</td>
+            </tr>
+            <tr>
+                <td class="lbl">Penanggung Jawab (PIC)</td>
+                <td class="val font-bold">
+                    {{ $aset->penanggungJawab->nama ?? '-' }}
+                    @if($aset->penanggungJawab?->kode_pic)
+                        <span class="text-muted font-mono" style="font-size: 7pt;">[NIA {{ $aset->penanggungJawab->kode_pic }}]</span>
+                    @endif
+                </td>
+                <td class="lbl">Lokasi Penempatan</td>
+                <td class="val font-bold">
+                    {{ $aset->lokasi->nama_lokasi ?? '-' }}
+                    @if($aset->lokasi?->gedung)
+                        <span class="text-muted" style="font-size: 7pt;">({{ $aset->lokasi->gedung }})</span>
+                    @endif
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4" class="full-header">Keterangan Tambahan / Catatan Khusus</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="full-content">
+                    {{ $aset->keterangan_tambahan ?: 'Tidak ada keterangan tambahan.' }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 2. DETIL SPESIFIKASI ASET                                                -->
+    <!-- ========================================================================= -->
+    <div class="section-block">
+        <div class="section-header">2. Detil Spesifikasi & Pengampu</div>
+        <table class="info-table">
+            <tr>
+                <td class="lbl">Merk / Brand</td>
+                <td class="val font-bold">{{ $aset->merk->nama_merk ?? '-' }}</td>
+                <td class="lbl">Tipe / Model</td>
+                <td class="val">{{ $aset->tipe_model ?: '---' }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">Produsen / Manufaktur</td>
+                <td class="val">{{ $aset->produsen ?: '---' }}</td>
+                <td class="lbl">Nomor Seri (Serial No.)</td>
+                <td class="val font-mono">{{ $aset->no_seri ?: '---' }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">Tahun Produksi</td>
+                <td class="val">{{ $aset->tahun_produksi ?: '---' }}</td>
+                <td class="lbl">Sifat Barang</td>
+                <td class="val font-bold">
+                    {{ $aset->sifat_barang === 'D' ? 'Dinamis (Amil Tertentu)' : ($aset->sifat_barang === 'S' ? 'Statis (Bersama)' : '-') }}
+                </td>
+            </tr>
+            <tr>
+                <td class="lbl">Divisi Pengampu</td>
+                <td class="val font-bold" colspan="3">
+                    {{ $aset->divisi->nama_divisi ?? '-' }}
+                    @if($aset->divisi?->kode_divisi)
+                        <span class="text-muted" style="font-size: 7pt;">(Kode Divisi {{ $aset->divisi->kode_divisi }})</span>
+                    @endif
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4" class="full-header">Deskripsi Kondisi & Kelengkapan Aset</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="full-content">
+                    {{ $aset->deskripsi ?: 'Kondisi standar operasional tanpa catatan khusus.' }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 3. PEMBELIAN & PENGADAAN                                                 -->
+    <!-- ========================================================================= -->
+    <div class="section-block">
+        <div class="section-header">3. Pembelian & Pengadaan Awal</div>
+        <table class="info-table">
+            <tr>
+                <td class="lbl">Tanggal Pembelian</td>
+                <td class="val font-bold">{{ \Carbon\Carbon::parse($aset->tanggal_pembelian)->translatedFormat('d F Y') }}</td>
+                <td class="lbl">Toko / Distributor</td>
+                <td class="val font-bold">{{ $aset->toko_distributor }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">No. Invoice / Bukti</td>
+                <td class="val font-mono">{{ $aset->no_invoice ?: '---' }}</td>
+                <td class="lbl">Jumlah Fisik</td>
+                <td class="val font-bold">{{ $aset->jumlah_unit }} Unit</td>
+            </tr>
+            <tr>
+                <td class="lbl">Cara Perolehan</td>
+                <td class="val">{{ $aset->cara_perolehan == 2 ? 'Hibah / Donasi Barang' : 'Pembelian Langsung' }}</td>
+                <td class="lbl">Status Kondisi Awal</td>
+                <td class="val">{{ $aset->status_barang == 2 ? 'Second / Bekas' : 'Baru' }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">Harga Satuan</td>
+                <td class="val font-bold">Rp {{ number_format($aset->harga_satuan, 0, ',', '.') }},00</td>
+                <td class="lbl">Harga Total Perolehan</td>
+                <td class="val font-bold highlight-emerald">Rp {{ number_format($aset->harga_total, 0, ',', '.') }},00</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 4. PENYUSUTAN & ESTIMASI NILAI BUKU                                      -->
+    <!-- ========================================================================= -->
+    <div class="section-block">
+        <div class="section-header">4. Nilai Penyusutan & Nilai Buku (Garis Lurus)</div>
+        <table class="info-table">
+            <tr>
+                <td class="lbl">Umur Ekonomis</td>
+                <td class="val font-bold">{{ $aset->umur_ekonomis_tahun }} Tahun ({{ $aset->umur_ekonomis_tahun * 12 }} Bulan)</td>
+                <td class="lbl">Usia Aset Berjalan</td>
+                <td class="val font-bold text-cyan">{{ $usiaAset }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">Penyusutan per Bulan</td>
+                <td class="val font-bold">Rp {{ number_format($aset->penyusutan_per_bulan, 0, ',', '.') }},00 /bln</td>
+                <td class="lbl">Akumulasi Penyusutan</td>
+                <td class="val font-bold text-emerald">Rp {{ number_format($totalPenyusutan, 0, ',', '.') }},00</td>
+            </tr>
+            <tr>
+                <td class="lbl">Nilai Residu (Sisa)</td>
+                <td class="val">Rp {{ number_format($aset->nilai_residu ?? 0, 0, ',', '.') }},00</td>
+                <td class="lbl">Nilai Buku Saat Ini</td>
+                <td class="val font-bold highlight-emerald">Rp {{ number_format($nilaiBuku, 0, ',', '.') }},00</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 5. RIWAYAT PERPINDAHAN & MUTASI ASET                                     -->
+    <!-- ========================================================================= -->
+    <div class="section-block">
+        <div class="section-header secondary">5. Riwayat Perpindahan & Status Pemegang</div>
+        <table class="data-grid">
+            <thead>
+                <tr>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 14%;">Tanggal</th>
+                    <th style="width: 22%;">Penanggung Jawab</th>
+                    <th style="width: 22%;">Lokasi Penempatan</th>
+                    <th style="width: 10%;" class="text-center">Kondisi</th>
+                    <th style="width: 10%;" class="text-center">Lengkap</th>
+                    <th style="width: 18%;">Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($aset->riwayat as $idx => $r)
+                    <tr>
+                        <td class="text-center">{{ $idx + 1 }}</td>
+                        <td class="font-bold">{{ \Carbon\Carbon::parse($r->sejak_tanggal)->translatedFormat('d/m/Y') }}</td>
+                        <td>{{ $r->penanggungJawab->nama ?? '-' }}</td>
+                        <td>{{ $r->lokasi->nama_lokasi ?? '-' }}</td>
+                        <td class="text-center">{{ $r->kondisi_persen }}%</td>
+                        <td class="text-center">{{ $r->kelengkapan_persen }}%</td>
+                        <td>{{ $r->keterangan ?: '-' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center empty-state">Tidak Ada Data Riwayat</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 6. AGENDA PEMELIHARAAN & PERAWATAN                                       -->
+    <!-- ========================================================================= -->
+    <div class="section-block">
+        <div class="section-header secondary">6. Agenda Perawatan & Pemeliharaan Aset</div>
+        <table class="data-grid">
+            <thead>
+                <tr>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 26%;">Nama Agenda / Kegiatan</th>
+                    <th style="width: 14%;">Tipe</th>
+                    <th style="width: 24%;">Jadwal Waktu</th>
+                    <th style="width: 18%;" class="text-right">Biaya Estimasi</th>
+                    <th style="width: 14%;" class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($aset->agenda as $idx => $ag)
+                    <tr>
+                        <td class="text-center">{{ $idx + 1 }}</td>
+                        <td class="font-bold">{{ $ag->nama_agenda }}</td>
+                        <td class="uppercase" style="font-size: 6.8pt;">{{ $ag->tipe_agenda ?? '-' }}</td>
+                        <td>{{ $ag->jadwal_teks }}</td>
+                        <td class="text-right font-bold">
+                            {{ $ag->biaya_estimasi > 0 ? 'Rp ' . number_format($ag->biaya_estimasi, 0, ',', '.') : '-' }}
+                        </td>
+                        <td class="text-center font-bold" style="color: {{ ($ag->status === 'selesai' || $ag->status === 'aktif' || $ag->is_active) ? '#047857' : '#94a3b8' }};">
+                            {{ strtoupper($ag->status ?? ($ag->is_active ? 'AKTIF' : 'NON-AKTIF')) }}
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center empty-state">Tidak Ada Data Agenda</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 7. CATATAN KEUANGAN & TRANSAKSI                                          -->
+    <!-- ========================================================================= -->
+    <div class="section-block">
+        <div class="section-header secondary">7. Catatan Arus Keuangan Terkait Aset</div>
+        <table class="data-grid">
+            <thead>
+                <tr>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 14%;" class="text-center">Tipe</th>
+                    <th style="width: 16%;">Tanggal</th>
+                    <th style="width: 22%;" class="text-right">Nominal</th>
+                    <th style="width: 44%;">Keterangan Transaksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($aset->keuangan as $idx => $k)
+                    <tr>
+                        <td class="text-center">{{ $idx + 1 }}</td>
+                        <td class="text-center font-bold" style="color: {{ $k->tipe === 'pemasukan' ? '#047857' : '#b91c1c' }};">
+                            {{ strtoupper($k->tipe) }}
+                        </td>
+                        <td>{{ \Carbon\Carbon::parse($k->tanggal)->translatedFormat('d/m/Y') }}</td>
+                        <td class="text-right font-bold">Rp {{ number_format($k->nominal, 0, ',', '.') }},00</td>
+                        <td>{{ $k->keterangan ?: ($k->jenis_transaksi ?: '-') }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center empty-state">Tidak Ada Data Transaksi Keuangan</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 8. JURNAL PERISTIWA & PERBAIKAN                                          -->
+    <!-- ========================================================================= -->
+    <div class="section-block">
+        <div class="section-header secondary">8. Jurnal Peristiwa, Perbaikan & Insiden</div>
+        <table class="data-grid">
+            <thead>
+                <tr>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 16%;">Tanggal Kejadian</th>
+                    <th style="width: 60%;">Catatan Kejadian / Perbaikan</th>
+                    <th style="width: 20%;" class="text-center">Status / Penanganan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($aset->jurnal as $idx => $j)
+                    <tr>
+                        <td class="text-center">{{ $idx + 1 }}</td>
+                        <td class="font-bold">{{ \Carbon\Carbon::parse($j->tanggal)->translatedFormat('d F Y') }}</td>
+                        <td>{{ $j->kejadian }}</td>
+                        <td class="text-center">
+                            @if($j->tingkat_kerusakan || $j->status_penanganan)
+                                <span style="font-size: 6.8pt;">{{ $j->tingkat_kerusakan ? ucfirst($j->tingkat_kerusakan) : '' }} {{ $j->status_penanganan ? '('.ucfirst($j->status_penanganan).')' : '' }}</span>
+                            @else
+                                -
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="text-center empty-state">Tidak Ada Data Jurnal</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- FOOTER RESMI DOKUMEN VIA DOMPDF CANVAS SCRIPT                             -->
+    <!-- ========================================================================= -->
+    <script type="text/php">
+        if (isset($pdf)) {
+            $font = $fontMetrics->get_font("Helvetica", "normal");
+            $size = 7.5;
+            $color = array(0.4, 0.45, 0.5);
+            
+            // Left footer: App & Print timestamp
+            $pdf->page_text(34, 812, "{{ $lembagaName }} • AMANA (Aset Manajemen Al Azhar) • Dicetak: {{ $printedAt }}", $font, $size, $color);
+            
+            // Right footer: Page numbering
+            $pdf->page_text(510, 812, "Hal {PAGE_NUM} dari {PAGE_COUNT}", $font, $size, $color);
+        }
+    </script>
+
+</body>
+</html>
