@@ -1,58 +1,251 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/logo-amana.png" alt="AMANA Logo" width="280">
 </p>
 
-## About Laravel
+<h3 align="center">AMANA — Aset Manajemen Al Azhar</h3>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  Sistem informasi manajemen aset berbasis web untuk <strong>Lembaga Amil Zakat (LAZ) Al Azhar</strong>.<br>
+  Dibangun dengan Laravel 13 · Tailwind CSS 4 · Alpine.js · Vite
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+<p align="center">
+  <img src="https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white" alt="PHP 8.3">
+  <img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white" alt="Laravel 13">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
+  <img src="https://img.shields.io/badge/Alpine.js-3-8BC0D0?logo=alpinedotjs&logoColor=white" alt="Alpine.js 3">
+  <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License MIT">
+</p>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 📋 Tentang AMANA
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+**AMANA** (Aset Manajemen Al Azhar) adalah aplikasi web internal yang dirancang untuk mengelola seluruh siklus hidup aset milik LAZ Al Azhar — mulai dari pencatatan, pelacakan, penyusutan, hingga pelaporan. Aplikasi ini menggantikan proses manual pengelolaan inventaris dengan sistem digital yang terpusat, lengkap dengan fitur QR Code untuk identifikasi aset secara cepat.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Mengapa AMANA?
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+- 🏢 **Terpusat** — Seluruh data aset tersimpan dalam satu platform yang mudah diakses
+- 📊 **Dashboard Analitik** — Ringkasan valuasi buku, penyusutan berjalan, dan statistik aset secara real-time
+- 🔖 **QR Code** — Setiap aset dapat dilabel dengan QR Code untuk scan & identifikasi cepat
+- 📅 **Kalender & Agenda** — Penjadwalan perawatan, servis, dan pemeriksaan aset berkala
+- 📁 **Impor & Ekspor** — Migrasi data aset massal via Excel dengan fitur fuzzy-matching cerdas
+- 🔒 **Audit Trail** — Seluruh perubahan data tercatat dalam log aktivitas
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## ✨ Fitur Utama
+
+### Manajemen Aset
+| Fitur | Deskripsi |
+|---|---|
+| **Daftar Aset** | Pengelompokan aset ke dalam *Aset Tetap*, *Aset Kelolaan*, dan *Aset Non-Aktif* |
+| **CRUD Aset** | Tambah, edit, lihat detail, dan hapus data aset lengkap |
+| **Kode Aset Otomatis** | Generator kode aset terstruktur berdasarkan Divisi, Kategori, Barang, PIC, dan Lokasi |
+| **Penyusutan** | Perhitungan penyusutan aset otomatis dengan metode garis lurus (nilai residu) |
+| **Mutasi Aset** | Perpindahan aset antar lokasi / penanggung jawab dengan preview kode baru |
+| **Ubah Status** | Perubahan status aset (aktif ↔ non-aktif) dengan pencatatan riwayat |
+
+### Sub-Modul Aset
+| Modul | Deskripsi |
+|---|---|
+| **Riwayat** | Catatan kronologis seluruh perubahan dan kejadian pada aset |
+| **Agenda** | Penjadwalan kegiatan terkait aset (perawatan, servis, pemeriksaan) dengan siklus berulang |
+| **Keuangan** | Pencatatan pengeluaran dan biaya terkait aset |
+| **Jurnal** | Pencatatan jurnal akuntansi aset dengan status approval |
+
+### Kalender & Pengingat
+- Tampilan kalender interaktif untuk seluruh agenda aset
+- Sistem reminder/pengingat untuk agenda yang mendekati jatuh tempo
+- Siklus otomatis untuk agenda berulang (harian, mingguan, bulanan, tahunan)
+
+### QR Code & Label
+- Generasi QR Code untuk setiap aset
+- Cetak label QR massal dalam format PDF
+- Portal scan publik (`/p/{kode_aset}`) — akses info aset tanpa login
+- Konfigurasi tampilan QR & portal publik yang fleksibel
+
+### Impor & Ekspor Data
+- **Impor** dari file Excel dengan staging area dan preview sebelum commit
+- **Fuzzy matching** otomatis untuk mencocokkan data master (kategori, lokasi, PIC)
+- **Ekspor** ke Excel dengan filter per grup aset
+- **Kartu Aset PDF** — cetak kartu identitas aset individual
+
+### Data Master
+- **Kategori** — Hierarki kategori dan barang (dengan kode 2 huruf)
+- **Lokasi** — Manajemen lokasi dengan kode, alamat, dan koordinat GPS
+- **Merk** — Daftar merk/brand aset
+- **Penanggung Jawab** — Data PIC aset (terintegrasi dengan data user)
+- **Divisi** — Struktur divisi organisasi
+
+### Administrasi & Keamanan
+- **Manajemen Pengguna** — Buat, edit, nonaktifkan akun (role: `super_admin`, `viewer`)
+- **Log Audit** — Seluruh aksi tercatat (siapa, kapan, apa yang berubah)
+- **Autentikasi** — Login via email atau username dengan fitur "Ingat Saya"
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Teknologi |
+|---|---|
+| **Backend** | PHP 8.3, Laravel 13 |
+| **Frontend** | Tailwind CSS 4, Alpine.js 3, Tabler Icons |
+| **Build Tool** | Vite 8 |
+| **Database** | SQLite (default) / MySQL / PostgreSQL |
+| **PDF** | DomPDF (barryvdh/laravel-dompdf) |
+| **Excel** | PhpSpreadsheet (phpoffice/phpspreadsheet) |
+| **QR Code** | SimpleSoftwareIO/SimpleQrCode |
+| **Charts** | ApexCharts |
+| **Animasi** | Motion (Framer Motion Web) |
+| **Font** | Plus Jakarta Sans (Google Fonts) |
+
+---
+
+## 🚀 Instalasi
+
+### Prasyarat
+
+- PHP ≥ 8.3
+- Composer
+- Node.js ≥ 18 & npm (atau Bun)
+- SQLite / MySQL / PostgreSQL
+
+### Setup Cepat
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clone repository
+git clone https://github.com/sarpraslazalazhar-pixel/Amana.git
+cd Amana
 
-php artisan boost:install
+# 2. Jalankan setup otomatis (install deps, generate key, migrate, build assets)
+composer setup
+
+# 3. Seed data awal (users, kategori, lokasi, dll.)
+php artisan db:seed
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Setup Manual
 
-## Contributing
+```bash
+# 1. Install dependensi PHP
+composer install
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# 2. Salin file environment
+cp .env.example .env
 
-## Code of Conduct
+# 3. Generate application key
+php artisan key:generate
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# 4. Jalankan migrasi database
+php artisan migrate
 
-## Security Vulnerabilities
+# 5. Install dependensi Node.js
+npm install
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 6. Build assets frontend
+npm run build
 
-## License
+# 7. Seed data awal
+php artisan db:seed
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Menjalankan Development Server
+
+```bash
+# Jalankan Laravel dev server + Vite secara bersamaan
+composer dev
+```
+
+Aplikasi akan tersedia di: **http://localhost:8000**
+
+---
+
+## 🔑 Akun Default
+
+Setelah menjalankan `php artisan db:seed`, tersedia akun berikut:
+
+| Role | Email | Password |
+|---|---|---|
+| **Super Admin** | `superadmin@alazhar.or.id` | `password123` |
+| **Viewer** | `viewer@alazhar.or.id` | `password123` |
+
+> **Shortcut Login (development only):**
+> - `/login-admin` — Login langsung sebagai Super Admin
+> - `/login-viewer` — Login langsung sebagai Viewer
+
+---
+
+## 🧪 Testing
+
+Aplikasi dilengkapi dengan test suite yang mencakup seluruh fitur utama:
+
+```bash
+# Jalankan seluruh test
+composer test
+
+# Atau langsung via artisan
+php artisan test
+```
+
+### Cakupan Test
+
+| Kategori | Test |
+|---|---|
+| **Aset** | CRUD, Grup, Mutasi Kode, Submodul (Riwayat/Agenda/Keuangan/Jurnal) |
+| **Impor/Ekspor** | Upload Excel, Preview, Commit, Download |
+| **QR Code** | Print massal, Konfigurasi, Portal publik |
+| **Dashboard** | Statistik, Chart, Redesign |
+| **Kalender** | Agenda view, Reminder, Siklus reset |
+| **Data Master** | Kategori, Lokasi, Merk, Penanggung Jawab |
+| **Sistem** | User management, Audit log |
+| **Unit** | Kode aset generator, Fuzzy matcher |
+
+---
+
+## 📂 Struktur Direktori
+
+```
+AMANA/
+├── app/
+│   ├── Http/Controllers/       # Controller utama & sub-controller
+│   │   ├── DataMaster/         # Controller data master (Kategori, Lokasi, dll.)
+│   │   └── Sistem/             # Controller sistem (User management)
+│   ├── Models/                 # Eloquent models (16 model)
+│   └── Services/               # Business logic services
+│       ├── AgendaReminderService.php
+│       ├── AsetExportService.php
+│       ├── AsetFuzzyMatcher.php
+│       ├── AsetImportService.php
+│       ├── AuditLogger.php
+│       ├── KalenderAsetService.php
+│       ├── KodeAsetGenerator.php
+│       ├── PenyusutanCalculator.php
+│       └── QrCodeService.php
+├── database/
+│   ├── migrations/             # 27 migration files
+│   └── seeders/                # Database seeder & master kode aset
+├── resources/views/
+│   ├── aset/                   # Views: daftar, create, edit, show, export, import, QR print
+│   ├── dashboard/              # Dashboard dengan chart & statistik
+│   ├── kalender/               # Kalender aset interaktif
+│   ├── data-master/            # CRUD data master
+│   ├── layouts/                # Layout utama, sidebar, header
+│   ├── components/             # Blade components reusable
+│   └── public/                 # Portal scan QR publik
+├── routes/web.php              # Definisi seluruh route
+└── tests/                      # Feature & Unit tests
+```
+
+---
+
+## 📄 Lisensi
+
+Proyek ini dilisensikan di bawah [MIT License](https://opensource.org/licenses/MIT).
+
+---
+
+<p align="center">
+  Dibuat dengan ❤️ untuk <strong>LAZ Al Azhar</strong>
+</p>
