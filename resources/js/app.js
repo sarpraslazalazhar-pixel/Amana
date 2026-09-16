@@ -1,11 +1,13 @@
 import Alpine from 'alpinejs';
 import { animate, stagger, spring, inView, scroll } from 'motion';
+import ApexCharts from 'apexcharts';
 
 window.Alpine = Alpine;
 window.Motion = { animate, stagger, spring, inView, scroll };
 window.animate = animate;
 window.stagger = stagger;
 window.spring = spring;
+window.ApexCharts = ApexCharts;
 
 // Helper animations powered by One Motion (motion)
 window.animateFlyout = (el) => {

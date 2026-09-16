@@ -130,7 +130,7 @@
         </div>
 
         <!-- Peta Container -->
-        <div id="overview-map" class="w-full h-[400px] rounded-2xl border border-slate-200 shadow-inner z-10"></div>
+        <div id="overview-map" class="w-full h-[400px] rounded-2xl border border-slate-200 shadow-inner z-10 relative overflow-hidden"></div>
     </div>
 
     <!-- TABEL DATA MASTER LOKASI -->
@@ -400,7 +400,7 @@
                     <p class="text-[11px] text-slate-400">Klik di peta atau geser penanda pin hijau untuk memilih koordinat presisi. Alamat lengkap akan otomatis disesuaikan.</p>
 
                     <!-- Leaflet Picker Container -->
-                    <div id="picker-map" class="w-full h-56 rounded-2xl border border-slate-200 shadow-inner z-10"></div>
+                    <div id="picker-map" class="w-full h-56 rounded-2xl border border-slate-200 shadow-inner z-10 relative overflow-hidden"></div>
 
                     <!-- Latitude & Longitude Numeric Inputs -->
                     <div class="grid grid-cols-2 gap-3 pt-1">
@@ -468,11 +468,56 @@ document.addEventListener('alpine:init', () => {
             this.$nextTick(() => {
                 this.initOverviewMap();
             });
+
+            // Cleanup when leaving page via SPA Navigator
+            document.addEventListener('amana:before-page-unload', () => {
+                this.destroyMaps();
+            }, { once: true });
+        },
+
+        destroy() {
+            this.destroyMaps();
+        },
+
+        destroyMaps() {
+            if (this.overviewMap) {
+                try { this.overviewMap.remove(); } catch (e) {}
+                this.overviewMap = null;
+            }
+            if (this.pickerMap) {
+                try { this.pickerMap.remove(); } catch (e) {}
+                this.pickerMap = null;
+            }
+            const overviewContainer = document.getElementById('overview-map');
+            if (overviewContainer && overviewContainer._leaflet_id) {
+                delete overviewContainer._leaflet_id;
+                overviewContainer.innerHTML = '';
+            }
+            const pickerContainer = document.getElementById('picker-map');
+            if (pickerContainer && pickerContainer._leaflet_id) {
+                delete pickerContainer._leaflet_id;
+                pickerContainer.innerHTML = '';
+            }
         },
 
         initOverviewMap() {
             const overviewContainer = document.getElementById('overview-map');
             if (!overviewContainer) return;
+
+            // Clean up any stale map instance or leaflet ID
+            if (this.overviewMap) {
+                try { this.overviewMap.remove(); } catch (e) {}
+                this.overviewMap = null;
+            }
+            if (overviewContainer._leaflet_id) {
+                delete overviewContainer._leaflet_id;
+                overviewContainer.innerHTML = '';
+            }
+
+            if (typeof L === 'undefined') {
+                console.warn('Leaflet is not available.');
+                return;
+            }
 
             this.overviewMap = L.map('overview-map').setView([-6.309315, 106.772520], 11);
 
@@ -517,11 +562,14 @@ document.addEventListener('alpine:init', () => {
 
             markerGroup.addTo(this.overviewMap);
 
-            setTimeout(() => {
-                if (this.overviewMap) {
-                    this.overviewMap.invalidateSize();
-                }
-            }, 300);
+            // Staggered resize invalidation to ensure proper rendering after SPA transitions
+            [50, 150, 300, 500, 800].forEach(delay => {
+                setTimeout(() => {
+                    if (this.overviewMap) {
+                        this.overviewMap.invalidateSize();
+                    }
+                }, delay);
+            });
         },
 
         openCreateModal() {
@@ -645,8 +693,17 @@ document.addEventListener('alpine:init', () => {
             if (!container) return;
 
             if (this.pickerMap) {
-                this.pickerMap.remove();
+                try { this.pickerMap.remove(); } catch (e) {}
                 this.pickerMap = null;
+            }
+            if (container._leaflet_id) {
+                delete container._leaflet_id;
+                container.innerHTML = '';
+            }
+
+            if (typeof L === 'undefined') {
+                console.warn('Leaflet is not available.');
+                return;
             }
 
             const customPickerIcon = L.divIcon({

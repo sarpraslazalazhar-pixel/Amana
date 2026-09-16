@@ -580,11 +580,10 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- APEXCHARTS JAVASCRIPT INITIALIZATION                                      -->
+<!-- APEXCHARTS JAVASCRIPT INITIALIZATION (apexcharts)                          -->
 <!-- ========================================================================= -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    (function () {
         // ---------------------------------------------------------------------
         // DATA PAYLOAD FROM CONTROLLER
         // ---------------------------------------------------------------------
@@ -598,73 +597,12 @@
         // Helper format rupiah
         const formatRupiahJs = (val) => 'Rp ' + Number(val || 0).toLocaleString('id-ID');
 
-        // ---------------------------------------------------------------------
-        // 1. APEXCHART KATEGORI (GROUPED BAR / COLUMN)
-        // ---------------------------------------------------------------------
-        const chartKategoriOptions = {
-            chart: {
-                type: 'bar',
-                height: 320,
-                toolbar: { show: false },
-                fontFamily: 'inherit',
-            },
-            colors: ['#059669', '#0284c7'],
-            series: [
-                { name: 'Aset Tetap', data: jumlahTetapData },
-                { name: 'Aset Kelolaan', data: jumlahKelolaanData }
-            ],
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '50%',
-                    borderRadius: 6,
-                },
-            },
-            dataLabels: { enabled: false },
-            stroke: { show: true, width: 2, colors: ['transparent'] },
-            xaxis: {
-                categories: kategoriLabels,
-                labels: {
-                    style: { fontSize: '11px', fontWeight: 600, colors: '#64748b' }
-                }
-            },
-            yaxis: {
-                labels: {
-                    style: { fontSize: '11px', fontWeight: 600, colors: '#64748b' },
-                    formatter: function (val) {
-                        return Number(val).toLocaleString('id-ID');
-                    }
-                }
-            },
-            fill: { opacity: 1 },
-            tooltip: {
-                theme: 'light',
-                y: {
-                    formatter: function (val) {
-                        return Number(val).toLocaleString('id-ID') + ' Unit';
-                    }
-                }
-            },
-            legend: {
-                position: 'top',
-                horizontalAlign: 'right',
-                fontWeight: 600,
-                fontSize: '12px',
-                labels: { colors: '#334155' }
-            },
-            grid: {
-                borderColor: '#f1f5f9',
-                strokeDashArray: 3,
-            }
-        };
-
-        const chartKategori = new ApexCharts(document.querySelector("#apexChartKategori"), chartKategoriOptions);
-        chartKategori.render();
-
         // Function toggle unit vs nilai rupiah
         window.toggleChartKategori = function(mode) {
+            if (!window.chartKategori) return;
+
             if (mode === 'unit') {
-                chartKategori.updateOptions({
+                window.chartKategori.updateOptions({
                     series: [
                         { name: 'Aset Tetap', data: jumlahTetapData },
                         { name: 'Aset Kelolaan', data: jumlahKelolaanData }
@@ -685,7 +623,7 @@
                     }
                 });
             } else {
-                chartKategori.updateOptions({
+                window.chartKategori.updateOptions({
                     series: [
                         { name: 'Aset Tetap', data: nilaiTetapData },
                         { name: 'Aset Kelolaan', data: nilaiKelolaanData }
@@ -710,71 +648,173 @@
             }
         };
 
-        // ---------------------------------------------------------------------
-        // 2. APEXCHART VALUASI & PENYUSUTAN (GROUPED COLUMN)
-        // ---------------------------------------------------------------------
-        const chartPenyusutanOptions = {
-            chart: {
-                type: 'bar',
-                height: 320,
-                toolbar: { show: false },
-                fontFamily: 'inherit',
-            },
-            colors: ['#3b82f6', '#f59e0b', '#10b981'],
-            series: [
-                { name: 'Nilai Awal', data: nilaiPenyusutanData.nilai_awal },
-                { name: 'Total Penyusutan', data: nilaiPenyusutanData.penyusutan },
-                { name: 'Nilai Buku Sekarang', data: nilaiPenyusutanData.nilai_sekarang }
-            ],
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '55%',
-                    borderRadius: 6,
-                },
-            },
-            dataLabels: { enabled: false },
-            stroke: { show: true, width: 2, colors: ['transparent'] },
-            xaxis: {
-                categories: nilaiPenyusutanData.labels,
-                labels: {
-                    style: { fontSize: '12px', fontWeight: 700, colors: '#334155' }
-                }
-            },
-            yaxis: {
-                labels: {
-                    style: { fontSize: '10.5px', fontWeight: 600, colors: '#64748b' },
-                    formatter: function (val) {
-                        if (val >= 1000000000) return (val / 1000000000).toFixed(1) + ' M';
-                        if (val >= 1000000) return (val / 1000000).toFixed(1) + ' Jt';
-                        return Number(val).toLocaleString('id-ID');
-                    }
-                }
-            },
-            fill: { opacity: 1 },
-            tooltip: {
-                theme: 'light',
-                y: {
-                    formatter: function (val) {
-                        return formatRupiahJs(val);
-                    }
-                }
-            },
-            legend: {
-                position: 'top',
-                horizontalAlign: 'right',
-                fontWeight: 600,
-                fontSize: '11px',
-                labels: { colors: '#334155' }
-            },
-            grid: {
-                borderColor: '#f1f5f9',
-                strokeDashArray: 3,
+        function destroyExistingCharts() {
+            if (window.chartKategori && typeof window.chartKategori.destroy === 'function') {
+                window.chartKategori.destroy();
+                window.chartKategori = null;
             }
-        };
+            if (window.chartPenyusutan && typeof window.chartPenyusutan.destroy === 'function') {
+                window.chartPenyusutan.destroy();
+                window.chartPenyusutan = null;
+            }
+        }
 
-        const chartPenyusutan = new ApexCharts(document.querySelector("#apexChartPenyusutan"), chartPenyusutanOptions);
-        chartPenyusutan.render();
-    });
+        function initDashboardCharts() {
+            // 1. Destroy any existing instances to avoid memory leaks & duplicate charts
+            destroyExistingCharts();
+
+            const containerKategori = document.querySelector("#apexChartKategori");
+            const containerPenyusutan = document.querySelector("#apexChartPenyusutan");
+            if (!containerKategori || !containerPenyusutan) return;
+
+            // 2. Ensure containers are completely cleared
+            containerKategori.innerHTML = '';
+            containerPenyusutan.innerHTML = '';
+
+            if (typeof ApexCharts === 'undefined') {
+                console.warn('ApexCharts is not available.');
+                return;
+            }
+
+            // ---------------------------------------------------------------------
+            // 1. APEXCHART KATEGORI (GROUPED BAR / COLUMN)
+            // ---------------------------------------------------------------------
+            const chartKategoriOptions = {
+                chart: {
+                    type: 'bar',
+                    height: 320,
+                    toolbar: { show: false },
+                    fontFamily: 'inherit',
+                },
+                colors: ['#059669', '#0284c7'],
+                series: [
+                    { name: 'Aset Tetap', data: jumlahTetapData },
+                    { name: 'Aset Kelolaan', data: jumlahKelolaanData }
+                ],
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '50%',
+                        borderRadius: 6,
+                    },
+                },
+                dataLabels: { enabled: false },
+                stroke: { show: true, width: 2, colors: ['transparent'] },
+                xaxis: {
+                    categories: kategoriLabels,
+                    labels: {
+                        style: { fontSize: '11px', fontWeight: 600, colors: '#64748b' }
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: { fontSize: '11px', fontWeight: 600, colors: '#64748b' },
+                        formatter: function (val) {
+                            return Number(val).toLocaleString('id-ID');
+                        }
+                    }
+                },
+                fill: { opacity: 1 },
+                tooltip: {
+                    theme: 'light',
+                    y: {
+                        formatter: function (val) {
+                            return Number(val).toLocaleString('id-ID') + ' Unit';
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'right',
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    labels: { colors: '#334155' }
+                },
+                grid: {
+                    borderColor: '#f1f5f9',
+                    strokeDashArray: 3,
+                }
+            };
+
+            window.chartKategori = new ApexCharts(containerKategori, chartKategoriOptions);
+            window.chartKategori.render();
+
+            // ---------------------------------------------------------------------
+            // 2. APEXCHART VALUASI & PENYUSUTAN (GROUPED COLUMN)
+            // ---------------------------------------------------------------------
+            const chartPenyusutanOptions = {
+                chart: {
+                    type: 'bar',
+                    height: 320,
+                    toolbar: { show: false },
+                    fontFamily: 'inherit',
+                },
+                colors: ['#3b82f6', '#f59e0b', '#10b981'],
+                series: [
+                    { name: 'Nilai Awal', data: nilaiPenyusutanData.nilai_awal },
+                    { name: 'Total Penyusutan', data: nilaiPenyusutanData.penyusutan },
+                    { name: 'Nilai Buku Sekarang', data: nilaiPenyusutanData.nilai_sekarang }
+                ],
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '55%',
+                        borderRadius: 6,
+                    },
+                },
+                dataLabels: { enabled: false },
+                stroke: { show: true, width: 2, colors: ['transparent'] },
+                xaxis: {
+                    categories: nilaiPenyusutanData.labels,
+                    labels: {
+                        style: { fontSize: '12px', fontWeight: 700, colors: '#334155' }
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: { fontSize: '10.5px', fontWeight: 600, colors: '#64748b' },
+                        formatter: function (val) {
+                            if (val >= 1000000000) return (val / 1000000000).toFixed(1) + ' M';
+                            if (val >= 1000000) return (val / 1000000).toFixed(1) + ' Jt';
+                            return Number(val).toLocaleString('id-ID');
+                        }
+                    }
+                },
+                fill: { opacity: 1 },
+                tooltip: {
+                    theme: 'light',
+                    y: {
+                        formatter: function (val) {
+                            return formatRupiahJs(val);
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'right',
+                    fontWeight: 600,
+                    fontSize: '11px',
+                    labels: { colors: '#334155' }
+                },
+                grid: {
+                    borderColor: '#f1f5f9',
+                    strokeDashArray: 3,
+                }
+            };
+
+            window.chartPenyusutan = new ApexCharts(containerPenyusutan, chartPenyusutanOptions);
+            window.chartPenyusutan.render();
+        }
+
+        // Clean up charts before SPA navigator replaces page content
+        document.addEventListener('amana:before-page-unload', destroyExistingCharts, { once: true });
+
+        // Safe idempotent execution
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDashboardCharts, { once: true });
+        } else {
+            initDashboardCharts();
+        }
+    })();
 </script>
 @endsection

@@ -9,11 +9,16 @@ use App\Models\KeuanganAset;
 use App\Models\Lokasi;
 use App\Models\RiwayatAset;
 use App\Services\AuditLogger;
+use App\Services\ImageOptimizerService;
 use App\Services\KodeAsetGenerator;
 use Illuminate\Http\Request;
 
 class AsetSubmoduleController extends Controller
 {
+    public function __construct(
+        protected ImageOptimizerService $imageOptimizer
+    ) {}
+
     /**
      * Preview Mutasi Kode Aset secara real-time untuk Modal Form
      */
@@ -188,7 +193,7 @@ class AsetSubmoduleController extends Controller
             'tanggal_selesai' => 'required|date',
             'catatan_penyelesaian' => 'nullable|string',
             'biaya_riil' => 'nullable|numeric|min:0',
-            'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,pdf,doc,docx,xls,xlsx',
+            'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
         ]);
 
         $agenda = AgendaAset::with('aset')->findOrFail($agendaId);
@@ -199,7 +204,7 @@ class AsetSubmoduleController extends Controller
         if ($request->hasFile('lampiran') && $request->file('lampiran')->isValid()) {
             $file = $request->file('lampiran');
             if ($file->getRealPath()) {
-                $lampiranPath = $file->store('jurnal_lampiran', 'public');
+                $lampiranPath = $this->imageOptimizer->storeAttachmentSmart($file, 'jurnal_lampiran', 'public');
             }
         }
 
@@ -333,7 +338,7 @@ class AsetSubmoduleController extends Controller
         $request->validate([
             'tanggal' => 'required|date',
             'kejadian' => 'required|string',
-            'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,pdf,doc,docx,xls,xlsx',
+            'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
         ]);
 
         $aset = Aset::findOrFail($asetId);
@@ -342,7 +347,7 @@ class AsetSubmoduleController extends Controller
         if ($request->hasFile('lampiran') && $request->file('lampiran')->isValid()) {
             $file = $request->file('lampiran');
             if ($file->getRealPath()) {
-                $lampiranPath = $file->store('jurnal_lampiran', 'public');
+                $lampiranPath = $this->imageOptimizer->storeAttachmentSmart($file, 'jurnal_lampiran', 'public');
             }
         }
 
@@ -592,14 +597,18 @@ class AsetSubmoduleController extends Controller
         $request->validate([
             'tanggal' => 'required|date',
             'kejadian' => 'required|string',
-            'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,pdf,doc,docx,xls,xlsx',
+            'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
         ]);
 
         $lampiranPath = $jurnal->lampiran;
         if ($request->hasFile('lampiran') && $request->file('lampiran')->isValid()) {
             $file = $request->file('lampiran');
             if ($file->getRealPath()) {
-                $lampiranPath = $file->store('jurnal_lampiran', 'public');
+                $newLampiranPath = $this->imageOptimizer->storeAttachmentSmart($file, 'jurnal_lampiran', 'public');
+                if ($jurnal->lampiran && $this->imageOptimizer->isImage($jurnal->lampiran)) {
+                    $this->imageOptimizer->deleteOldImage($jurnal->lampiran);
+                }
+                $lampiranPath = $newLampiranPath;
             }
         }
 

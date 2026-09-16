@@ -15,6 +15,7 @@ use App\Models\RiwayatAset;
 use App\Services\AsetExportService;
 use App\Services\AsetImportService;
 use App\Services\AuditLogger;
+use App\Services\ImageOptimizerService;
 use App\Services\KodeAsetGenerator;
 use App\Services\PenyusutanCalculator;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -25,6 +26,10 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class AsetController extends Controller
 {
+    public function __construct(
+        protected ImageOptimizerService $imageOptimizer
+    ) {}
+
     public function index()
     {
         return redirect()->route('aset.tetap');
@@ -330,7 +335,13 @@ class AsetController extends Controller
         if ($request->hasFile('foto_utama')) {
             $file = $request->file('foto_utama');
             if ($file && $file->isValid() && $file->getRealPath()) {
-                $fotoPath = $file->store('aset_foto', 'public');
+                try {
+                    $fotoPath = $this->imageOptimizer->optimizeAndStore($file, 'aset_foto');
+                } catch (\Throwable $e) {
+                    return back()->withInput()->withErrors([
+                        'foto_utama' => 'Foto gagal diproses. Pastikan format file berupa gambar yang valid dan ukuran di bawah 10MB.',
+                    ]);
+                }
             } else {
                 return back()->withInput()->withErrors([
                     'foto_utama' => 'Foto gagal diunggah. Pastikan format file berupa gambar (JPG/PNG/WEBP) dan ukuran di bawah 10MB.',
@@ -546,10 +557,15 @@ class AsetController extends Controller
         if ($request->hasFile('foto_utama')) {
             $file = $request->file('foto_utama');
             if ($file && $file->isValid() && $file->getRealPath()) {
-                if ($aset->foto_utama && Storage::disk('public')->exists($aset->foto_utama)) {
-                    Storage::disk('public')->delete($aset->foto_utama);
+                try {
+                    $newFotoPath = $this->imageOptimizer->optimizeAndStore($file, 'aset_foto');
+                    $this->imageOptimizer->deleteOldImage($aset->foto_utama);
+                    $fotoPath = $newFotoPath;
+                } catch (\Throwable $e) {
+                    return back()->withInput()->withErrors([
+                        'foto_utama' => 'Foto gagal diproses. Pastikan format file berupa gambar yang valid dan ukuran di bawah 10MB.',
+                    ]);
                 }
-                $fotoPath = $file->store('aset_foto', 'public');
             } else {
                 return back()->withInput()->withErrors([
                     'foto_utama' => 'Foto gagal diunggah. Pastikan format file berupa gambar (JPG/PNG/WEBP) dan ukuran di bawah 10MB.',

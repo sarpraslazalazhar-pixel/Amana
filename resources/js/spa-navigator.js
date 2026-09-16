@@ -119,11 +119,44 @@ export async function navigateTo(url, pushHistory = true) {
         // 5. Update Main Content
         const newMain = doc.getElementById('page-main');
         if (mainEl && newMain) {
+            // Lifecycle event for page cleanup (destroy charts, timers, listeners, etc.)
+            document.dispatchEvent(new CustomEvent('amana:before-page-unload'));
+
             // Destroy Alpine component trees on old content BEFORE replacing innerHTML
             destroyAlpineTree(mainEl);
 
-            // Remove any previously injected page scripts
+            // Remove any previously injected page scripts and styles
             document.querySelectorAll('script[data-spa-page-script]').forEach(s => s.remove());
+            document.querySelectorAll('[data-spa-page-style]').forEach(s => s.remove());
+
+            // Sync page-specific styles from head (@stack('styles'))
+            const pageStyles = Array.from(doc.head.querySelectorAll('link[rel="stylesheet"], style')).filter(el => {
+                const href = el.getAttribute('href') || '';
+                if (href.includes('app-') || href.includes('fonts.googleapis.com') || href.includes('fonts.gstatic.com')) {
+                    return false;
+                }
+                if (href && document.querySelector(`link[href="${href}"]:not([data-spa-page-style])`)) {
+                    return false;
+                }
+                return true;
+            });
+
+            for (const s of pageStyles) {
+                if (s.tagName.toLowerCase() === 'link') {
+                    const href = s.getAttribute('href');
+                    if (!document.querySelector(`link[href="${href}"]`)) {
+                        const newLink = document.createElement('link');
+                        Array.from(s.attributes).forEach(attr => newLink.setAttribute(attr.name, attr.value));
+                        newLink.setAttribute('data-spa-page-style', 'true');
+                        document.head.appendChild(newLink);
+                    }
+                } else if (s.tagName.toLowerCase() === 'style') {
+                    const newStyle = document.createElement('style');
+                    newStyle.setAttribute('data-spa-page-style', 'true');
+                    newStyle.textContent = s.textContent;
+                    document.head.appendChild(newStyle);
+                }
+            }
 
             // Replace content
             mainEl.innerHTML = newMain.innerHTML;
