@@ -16,8 +16,10 @@ use App\Http\Controllers\Sistem\UserController;
 use App\Models\User;
 use App\Services\AgendaReminderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 // Halaman Login & Process Login
 Route::get('/login', function () {
@@ -171,7 +173,43 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');
         Route::patch('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
     });
+
+    // Utilitas Admin: Buat Symlink Storage (berguna untuk hosting cPanel/LiteSpeed tanpa akses terminal SSH)
+    Route::get('/admin/storage-link', function () {
+        if (auth()->user()?->role !== 'super_admin') {
+            abort(403, 'Akses terbatas hanya untuk Super Admin.');
+        }
+
+        try {
+            Artisan::call('storage:link');
+            $output = Artisan::output();
+
+            return redirect()->route('dashboard')->with('success', 'Symlink storage berhasil diproses: '.trim($output));
+        } catch (Throwable $e) {
+            return redirect()->route('dashboard')->with('error', 'Gagal membuat symlink: '.$e->getMessage());
+        }
+    })->name('admin.storage.link');
 });
 
 // Public QR Scan Portal (Tanpa Login)
 Route::get('/p/{kode_aset}', [PublicQrController::class, 'show'])->name('public.qr');
+
+// Fallback Route untuk Public Storage jika symlink 'public/storage' belum/tidak tersedia di server hosting
+Route::get('/storage/{path}', function (string $path) {
+    // Cegah directory traversal attacks
+    if (str_contains($path, '..') || str_starts_with($path, '/') || str_starts_with($path, '\\')) {
+        abort(404);
+    }
+
+    $disk = Storage::disk('public');
+    if (! $disk->exists($path)) {
+        abort(404);
+    }
+
+    $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
+
+    return response($disk->get($path), 200, [
+        'Content-Type' => $mimeType,
+        'Cache-Control' => 'public, max-age=31536000, immutable',
+    ]);
+})->where('path', '.*')->name('storage.fallback');
