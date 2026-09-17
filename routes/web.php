@@ -9,11 +9,11 @@ use App\Http\Controllers\DataMaster\LokasiController;
 use App\Http\Controllers\DataMaster\MerkController;
 use App\Http\Controllers\DataMaster\PenanggungJawabController;
 use App\Http\Controllers\KalenderAsetController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicQrController;
 use App\Http\Controllers\QrConfigController;
 use App\Http\Controllers\QrPrintController;
 use App\Http\Controllers\Sistem\UserController;
-use App\Models\User;
 use App\Services\AgendaReminderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -52,29 +52,6 @@ Route::post('/login', function (Request $request) {
         'email' => 'Email/Username atau kata sandi tidak sesuai.',
     ])->onlyInput('email');
 });
-
-// Shortcut Quick Login untuk Pengujian
-Route::get('/login-admin', function () {
-    $user = User::where('role', 'super_admin')->first();
-    if ($user) {
-        Auth::login($user);
-
-        return redirect()->route('dashboard')->with('success', 'Logged in sebagai Super Admin!');
-    }
-
-    return 'User admin tidak ditemukan. Jalankan: php artisan db:seed';
-})->name('login.admin');
-
-Route::get('/login-viewer', function () {
-    $user = User::where('role', 'viewer')->first();
-    if ($user) {
-        Auth::login($user);
-
-        return redirect()->route('dashboard')->with('success', 'Logged in sebagai Viewer!');
-    }
-
-    return 'User viewer tidak ditemukan. Jalankan: php artisan db:seed';
-})->name('login.viewer');
 
 Route::post('/logout', function (Request $request) {
     Auth::logout();
@@ -173,6 +150,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');
         Route::patch('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
     });
+
+    // Modul Pengaturan: Profil Akun Mandiri (Ubah Data Profil & Ganti Kata Sandi)
+    Route::get('/profil', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profil', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     // Utilitas Admin: Buat Symlink Storage (berguna untuk hosting cPanel/LiteSpeed tanpa akses terminal SSH)
     Route::get('/admin/storage-link', function () {

@@ -168,12 +168,10 @@ Setelah menjalankan `php artisan db:seed`, tersedia akun berikut:
 
 | Role | Email | Password |
 |---|---|---|
-| **Super Admin** | `superadmin@alazhar.or.id` | `password123` |
+| **Super Admin** | `admin@alazharpeduli.or.id` | `admin123` |
 | **Viewer** | `viewer@alazhar.or.id` | `password123` |
 
-> **Shortcut Login (development only):**
-> - `/login-admin` — Login langsung sebagai Super Admin
-> - `/login-viewer` — Login langsung sebagai Viewer
+> Pengaturan profil dan kata sandi akun dapat diubah sewaktu-waktu melalui menu **Profil Saya** (`/profil`).
 
 ---
 

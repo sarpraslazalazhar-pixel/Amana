@@ -333,30 +333,46 @@
          :class="sidebarCollapsed ? 'p-3 md:p-2' : 'p-4'">
         <!-- Expanded User Info -->
         <div x-show="!sidebarCollapsed" class="flex items-center justify-between">
-            <div class="min-w-0 pr-2">
-                <p class="text-xs font-semibold text-slate-900 truncate">{{ auth()->user()->name ?? 'Pengguna' }}</p>
+            <a href="{{ route('profile.index') }}" class="min-w-0 pr-2 group block" title="Buka Profil Saya">
+                <p class="text-xs font-semibold text-slate-900 truncate group-hover:text-emerald-700 transition-colors flex items-center gap-1">
+                    <span>{{ auth()->user()->name ?? 'Pengguna' }}</span>
+                    <i class="ti ti-chevron-right text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </p>
                 <span class="inline-block mt-0.5 px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
                     {{ strtoupper(auth()->user()->role ?? 'guest') }}
                 </span>
+            </a>
+            <div class="flex items-center gap-1 shrink-0">
+                <a href="{{ route('profile.index') }}" class="p-2 rounded-xl text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors {{ request()->routeIs('profile.*') ? 'bg-emerald-50 text-emerald-700' : '' }}" title="Profil & Keamanan Akun" aria-label="Profil Saya">
+                    <i class="ti ti-user-cog text-lg"></i>
+                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="p-2 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors" title="Keluar" aria-label="Keluar">
+                        <i class="ti ti-logout text-lg"></i>
+                    </button>
+                </form>
             </div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="p-2 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors" title="Keluar" aria-label="Keluar">
-                    <i class="ti ti-logout text-lg"></i>
-                </button>
-            </form>
         </div>
 
         <!-- Collapsed User Info (Desktop) -->
         <div x-show="sidebarCollapsed" class="hidden md:flex flex-col items-center gap-2 py-1">
             <div class="relative group">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-default">
+                <a href="{{ route('profile.index') }}" class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold text-xs flex items-center justify-center shadow-xs hover:scale-105 transition-transform" title="Profil Saya">
                     {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
-                </div>
+                </a>
                 <!-- Tooltip User Profile -->
                 <div class="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-slate-900/90 text-white text-xs font-medium rounded-xl whitespace-nowrap shadow-xl z-50 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-150">
                     <div class="font-bold">{{ auth()->user()->name ?? 'Pengguna' }}</div>
-                    <div class="text-[10px] text-emerald-400">{{ strtoupper(auth()->user()->role ?? 'guest') }}</div>
+                    <div class="text-[10px] text-emerald-400">{{ strtoupper(auth()->user()->role ?? 'guest') }} • Profil Saya</div>
+                </div>
+            </div>
+            <div class="relative group">
+                <a href="{{ route('profile.index') }}" class="p-2 rounded-xl text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors flex justify-center {{ request()->routeIs('profile.*') ? 'bg-emerald-50 text-emerald-700' : '' }}" title="Profil Saya">
+                    <i class="ti ti-user-cog text-lg"></i>
+                </a>
+                <div class="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-semibold rounded-lg whitespace-nowrap shadow-xl z-50 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-150">
+                    Profil Saya
                 </div>
             </div>
             <form method="POST" action="{{ route('logout') }}" class="w-full flex justify-center">

@@ -23,82 +23,152 @@
                 radial-gradient(at 50% 35%, rgba(248, 250, 252, 0.8) 0px, transparent 100%);
         }
 
-        /* ===== Animasi Scene GA ===== */
-        .cloud-float { animation: cloudDrift 8s ease-in-out infinite alternate; }
-        @keyframes cloudDrift { 0% { transform: translateX(-4px); } 100% { transform: translateX(8px); } }
+        /* ===== Animasi Scene Inventory & Asset Management ===== */
 
-        .sun-glow { animation: sunPulse 4s ease-in-out infinite alternate; }
-        @keyframes sunPulse { 0% { opacity: .35; transform: scale(0.96); } 100% { opacity: .65; transform: scale(1.05); } }
-
-        .wlamp { transition: opacity .6s ease; }
-
-        /* Lampu PJU */
-        .glow-lamp { opacity: 0; transition: opacity .6s ease; }
-        .glow-lamp.on { opacity: 1; }
-        .glow-lamp.flick { animation: lampflick .65s steps(3) 1; }
-        @keyframes lampflick {
-            0%,100% { opacity: 0 }
-            20% { opacity:.9 } 40% { opacity:.1 }
-            60% { opacity:.8 } 80% { opacity:.15 }
+        /* Latar Blob Mengambang Halus */
+        .blob-drift {
+            animation: blobMotion 8s ease-in-out infinite alternate;
+            transform-origin: center;
+        }
+        @keyframes blobMotion {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(8px, -5px) scale(1.02); }
         }
 
-        /* Lampu depan mobil */
-        .glow-beam { opacity: 0; transition: opacity .5s ease; }
-        .glow-beam.on { opacity: .7; }
-        .glow-beam.on.bp { animation: beampulse .45s ease 1; }
-        @keyframes beampulse { 0%,100% { opacity:.7 } 45% { opacity:1 } }
-
-        /* Palang parkir */
-        #gate-arm { transform-origin: 433px 396px; transform-box: view-box;
-                    transition: transform .9s cubic-bezier(.34,1.56,.64,1); }
-        .gate.open #gate-arm { transform: rotate(-76deg); }
-        .gate-red    { transition: opacity .4s ease; }
-        .gate-green  { transition: opacity .4s ease; }
-        .gate.open .gate-red   { opacity: 0; }
-        .gate.open .gate-green { opacity: 1; }
-
-        /* Mobil GA */
-        #car.shk { animation: carshake .55s ease 2; }
-        @keyframes carshake {
-            0%,100% { transform: translateX(0) }
-            20% { transform: translateX(-6px) } 40% { transform: translateX(5px) }
-            60% { transform: translateX(-4px) } 80% { transform: translateX(3px) }
+        /* Gear Roda Gigi */
+        .gear-rotate-cw {
+            animation: spinCw 14s linear infinite;
+            transform-box: view-box;
         }
-        #car.go { animation: driveoff 1.25s cubic-bezier(.45,0,.9,.4) forwards; }
-        @keyframes driveoff {
-            0%   { transform: translateX(0) }
-            12%  { transform: translateX(4px) }
-            100% { transform: translateX(380px) }
+        .gear-rotate-ccw {
+            animation: spinCcw 9s linear infinite;
+            transform-box: view-box;
         }
-        #car.go .wheel { animation: spin .32s linear infinite;
-                         transform-box: fill-box; transform-origin: center; }
-        @keyframes spin { to { transform: rotate(360deg) } }
-
-        .puff { opacity: 0; }
-        #car.go .puff { animation: puff .9s ease-out forwards; }
-        #car.go .puff.p2 { animation-delay: .15s; }
-        #car.go .puff.p3 { animation-delay: .3s; }
-        @keyframes puff {
-            0%   { opacity:.8; transform: translate(0,0) scale(.6) }
-            100% { opacity:0;  transform: translate(-34px,-10px) scale(1.7) }
+        .gear-fast {
+            animation-duration: 2.2s !important;
+        }
+        @keyframes spinCw {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        @keyframes spinCcw {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(-360deg); }
         }
 
-        /* Lampu beacon patroli */
-        .beacon-dome { opacity:.3; transition: opacity .3s ease; }
-        #car.go .beacon-dome { animation: amberblink .55s ease-in-out infinite; }
-        @keyframes amberblink { 0%,100% { opacity:.3 } 50% { opacity:1 } }
+        /* Sparkles / Bintang Berkilau */
+        .sparkle-gleam {
+            animation: gleam 2.8s ease-in-out infinite;
+        }
+        .sparkle-gleam-2 {
+            animation: gleam 2.8s ease-in-out infinite 1.2s;
+        }
+        @keyframes gleam {
+            0%, 100% { opacity: 0.35; transform: scale(0.85); }
+            50%      { opacity: 1; transform: scale(1.2); }
+        }
 
-        /* Hazard saat error */
-        #car.haz .hzl { animation: hazblink .45s steps(2) 4; }
-        @keyframes hazblink { 0%,100% { opacity:0 } 50% { opacity:1 } }
+        /* Kaca Pembesar */
+        .mag-hover {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-box: view-box;
+            transform-origin: 368px 202px;
+        }
+        .mag-scanning {
+            animation: magScan 1.2s ease-in-out infinite alternate;
+        }
+        @keyframes magScan {
+            0%   { transform: scale(1) translate(0, 0) rotate(0deg); }
+            100% { transform: scale(1.12) translate(-6px, -4px) rotate(-4deg); }
+        }
 
-        /* Wiper kaca */
-        #wiper { transform-origin: 372px 412px; transform-box: view-box;
-                 transform: rotate(0deg); }
-        #wiper.wp { animation: wipersweep .9s ease 1; }
-        @keyframes wipersweep { 0%,100% { transform: rotate(0) } 45% { transform: rotate(-42deg) } }
+        /* Checklist Transitions */
+        .check-pop {
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
 
-        #lyr-sky, #lyr-mid { will-change: transform; }
+        /* Badge Workflow */
+        .badge-breathe {
+            animation: badgeBreathe 3.5s ease-in-out infinite;
+            transform-box: view-box;
+            transform-origin: 545px 125px;
+        }
+        @keyframes badgeBreathe {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.05); }
+        }
+        .badge-spinning {
+            animation: badgeRotate 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+            transform-box: view-box;
+            transform-origin: 545px 125px;
+        }
+        @keyframes badgeRotate {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        /* Worker Idle Sway */
+        .worker-sway {
+            animation: workerBreathe 4s ease-in-out infinite alternate;
+            transform-origin: 110px 425px;
+        }
+        @keyframes workerBreathe {
+            0%   { transform: translateY(0); }
+            100% { transform: translateY(-2px); }
+        }
+
+        /* Pointing Arm Gesture */
+        .pointing-arm {
+            transition: transform 0.3s ease;
+            transform-origin: 130px 202px;
+        }
+        .arm-active {
+            transform: translateY(-2px) rotate(-2deg);
+        }
+
+        /* Box Subtle Float */
+        .box-stack {
+            transition: transform 0.4s ease;
+        }
+        .box-active {
+            transform: translateY(-3px);
+        }
+
+        /* Fallback Structural Layout Rules (Memastikan tata letak selalu rapi & kokoh) */
+        .login-card {
+            width: 100%;
+            max-width: 980px;
+            background: #ffffff;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 25px 70px -15px rgba(15, 23, 42, 0.12);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .login-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            min-height: 590px;
+        }
+        @media (min-width: 768px) {
+            .login-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .scene-container {
+            position: relative;
+            min-height: 380px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .scene-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -106,9 +176,9 @@
     </style>
 </head>
 <body class="min-h-screen bg-daylight flex items-center justify-center p-4 sm:p-6 md:p-10 relative overflow-x-hidden select-none"
-      x-data="gaScene()" @mousemove="mx = $event.clientX / window.innerWidth; my = $event.clientY / window.innerHeight">
+      x-data="inventoryScene()">
 
-    <!-- Kontur latar luar (siluet garis pepohonan modern terang) -->
+    <!-- Kontur latar luar (siluet garis arsitektural modern) -->
     <div class="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
         <svg class="w-full h-full" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
             <path d="M-80 0 C130 160 170 380 140 900" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
@@ -118,252 +188,360 @@
         </svg>
     </div>
 
-    <main class="relative z-10 w-full max-w-[960px] bg-white rounded-[32px] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.12)] overflow-hidden border border-slate-200/80">
-        <div class="grid grid-cols-1 md:grid-cols-2 min-h-[580px]">
+    <main class="login-card relative z-10 w-full max-w-[980px] bg-white rounded-[32px] shadow-[0_25px_70px_-15px_rgba(15,23,42,0.12)] overflow-hidden border border-slate-200/80">
+        <div class="login-grid grid grid-cols-1 md:grid-cols-2 min-h-[590px]">
 
-            <!-- ===================== PANEL KIRI : SCENE TERANG GA ===================== -->
-            <div class="relative bg-gradient-to-b from-sky-100 via-sky-50 to-emerald-50 min-h-[320px] md:min-h-full overflow-hidden border-b md:border-b-0 md:border-r border-slate-200/80">
-                <!-- Brand pill (top-left) -->
-                <div class="absolute top-4 left-4 z-20 flex items-center space-x-2 bg-white/85 backdrop-blur-md px-3.5 py-1.5 rounded-full text-slate-800 text-xs border border-slate-200/80 shadow-sm">
-                    <img src="{{ asset('logo-icon.png') }}" class="w-10 h-10 object-contain" alt="AMANA Icon">
-                    <span class="font-bold tracking-wider text-slate-800">AMANA</span>
+            <!-- ===================== PANEL KIRI : SCENE ASSET & INVENTORY ===================== -->
+            <div class="scene-container relative bg-gradient-to-br from-sky-50/90 via-slate-50 to-amber-50/30 min-h-[380px] md:min-h-full overflow-hidden border-b md:border-b-0 md:border-r border-slate-200/80 flex flex-col justify-between">
+
+                <!-- Brand Pill Glassmorphic (Top-Left) -->
+                <div class="absolute top-5 left-5 z-20 flex items-center space-x-2.5 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl text-slate-800 text-xs border border-slate-200/80 shadow-sm transition-transform hover:scale-[1.02]">
+                    <img src="{{ asset('logo-icon.png') }}" class="w-8 h-8 object-contain drop-shadow-xs" alt="AMANA Icon">
+                    <div>
+                        <span class="font-extrabold tracking-wider text-slate-900 block leading-tight">AMANA</span>
+                        <span class="text-[10px] font-semibold text-emerald-600 tracking-tight block">Aset & Inventaris GA</span>
+                    </div>
                 </div>
 
-                <svg class="absolute inset-0 w-full h-full" viewBox="0 0 500 620" fill="none"
-                     xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+                <!-- SVG Canvas Ilustrasi Vektor Presisi -->
+                <svg class="scene-svg absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 680 480" fill="none"
+                     xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
                     <defs>
-                        <!-- Sky Gradient (Terang / Fresh Morning) -->
-                        <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#bae6fd"/>
-                            <stop offset="55%" stop-color="#e0f2fe"/>
-                            <stop offset="100%" stop-color="#ecfdf5"/>
+                        <!-- Gradien Latar Belakang Kotak -->
+                        <linearGradient id="boxFront" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#f8a765"/>
+                            <stop offset="100%" stop-color="#ea8a3c"/>
                         </linearGradient>
-                        <!-- Sorot Lampu Depan Mobil -->
-                        <linearGradient id="beamG" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stop-color="#fef08a" stop-opacity=".95"/>
-                            <stop offset="100%" stop-color="#fef08a" stop-opacity="0"/>
+                        <linearGradient id="boxSide" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#f49b51"/>
+                            <stop offset="100%" stop-color="#df7f33"/>
                         </linearGradient>
-                        <!-- Sorot Lampu PJU -->
-                        <linearGradient id="coneG" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#fef08a" stop-opacity=".75"/>
-                            <stop offset="100%" stop-color="#fef08a" stop-opacity="0"/>
+
+                        <!-- Gradien Badge Workflow Oranye -->
+                        <linearGradient id="badgeG" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#ff7b2b"/>
+                            <stop offset="100%" stop-color="#ea580c"/>
                         </linearGradient>
-                        <clipPath id="armClip"><rect x="433" y="392" width="62" height="9" rx="4.5"/></clipPath>
+
+                        <!-- Bayangan Lembut Kotak -->
+                        <filter id="softGlow" x="-10%" y="-10%" width="120%" height="120%">
+                            <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.08"/>
+                        </filter>
+                        <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#ea580c" flood-opacity="0.35"/>
+                        </filter>
                     </defs>
 
-                    <rect width="500" height="620" fill="url(#skyG)"/>
+                    <!-- ===== 1. Fluid Sky-Blue Backdrop (Bentuk Organik Biru Muda) ===== -->
+                    <g class="blob-drift">
+                        <!-- Lapisan Luar Lembut -->
+                        <path d="M 60,230 C 40,140 120,70 230,75 C 330,80 370,110 470,85 C 570,60 630,120 625,240 C 620,330 560,420 480,425 C 380,430 200,430 110,410 C 50,380 75,290 60,230 Z"
+                              fill="#d8eefc" opacity="0.6"/>
+                        <!-- Lapisan Inti -->
+                        <path d="M 80,240 C 65,160 135,95 240,100 C 330,105 380,130 480,110 C 560,95 610,150 605,250 C 600,325 550,405 470,410 C 380,415 210,415 130,395 C 80,370 90,300 80,240 Z"
+                              fill="#cbe6f9" opacity="0.8"/>
+                    </g>
 
-                    <!-- ===== Layer langit (Matahari & Awan Pagi) ===== -->
-                    <g id="lyr-sky" :style="`transform:translate(${(mx-.5)*-10}px, ${(my-.5)*-6}px)`">
-                        <!-- Matahari Terang -->
-                        <circle cx="420" cy="80" r="48" fill="#fef08a" class="sun-glow"/>
-                        <circle cx="420" cy="80" r="26" fill="#fde047" opacity=".95"/>
-                        <circle cx="414" cy="74" r="7" fill="#ffffff" opacity=".4"/>
+                    <!-- ===== 2. Interlocking Gears (Roda Gigi di Balik Box) ===== -->
+                    <g>
+                        <!-- Gear 1: Roda Gigi Abu-Biru Tua (Besar) -->
+                        <g class="gear-rotate-cw" :class="typing ? 'gear-fast' : ''" style="transform-origin: 275px 115px;">
+                            <circle cx="275" cy="115" r="30" fill="#44617d"/>
+                            <!-- Gigi Gear Besar (8 Gigi) -->
+                            <rect x="269" y="80" width="12" height="10" rx="2" fill="#44617d"/>
+                            <rect x="269" y="140" width="12" height="10" rx="2" fill="#44617d"/>
+                            <rect x="240" y="109" width="10" height="12" rx="2" fill="#44617d"/>
+                            <rect x="300" y="109" width="10" height="12" rx="2" fill="#44617d"/>
+                            <rect x="247" y="87" width="10" height="12" rx="2" fill="#44617d" transform="rotate(45, 252, 93)"/>
+                            <rect x="293" y="87" width="10" height="12" rx="2" fill="#44617d" transform="rotate(-45, 298, 93)"/>
+                            <rect x="247" y="131" width="10" height="12" rx="2" fill="#44617d" transform="rotate(-45, 252, 137)"/>
+                            <rect x="293" y="131" width="10" height="12" rx="2" fill="#44617d" transform="rotate(45, 298, 137)"/>
+                            <!-- Lubang Tengah Gear -->
+                            <circle cx="275" cy="115" r="11" fill="#cbe6f9"/>
+                        </g>
 
-                        <!-- Awan Pagi Halus -->
-                        <g fill="#ffffff" opacity=".85" class="cloud-float">
-                            <!-- Cloud 1 -->
-                            <path d="M 40 100 Q 55 85 75 90 Q 95 80 115 95 Q 130 95 135 108 Q 138 120 120 120 L 45 120 Q 30 115 40 100 Z"/>
-                            <!-- Cloud 2 -->
-                            <path d="M 220 60 Q 235 48 250 52 Q 268 45 285 58 Q 298 58 302 68 Q 305 78 290 78 L 225 78 Q 212 75 220 60 Z" opacity=".7"/>
-                            <!-- Cloud 3 -->
-                            <path d="M 320 130 Q 332 118 348 122 Q 362 115 378 126 Q 388 126 392 135 L 325 135 Q 312 132 320 130 Z" opacity=".6"/>
+                        <!-- Gear 2: Roda Gigi Biru Muda (Kecil) -->
+                        <g class="gear-rotate-ccw" :class="typing ? 'gear-fast' : ''" style="transform-origin: 322px 148px;">
+                            <circle cx="322" cy="148" r="19" fill="#7cb3e4"/>
+                            <!-- Gigi Gear Kecil (8 Gigi) -->
+                            <rect x="318" y="125" width="8" height="7" rx="1.5" fill="#7cb3e4"/>
+                            <rect x="318" y="164" width="8" height="7" rx="1.5" fill="#7cb3e4"/>
+                            <rect x="299" y="144" width="7" height="8" rx="1.5" fill="#7cb3e4"/>
+                            <rect x="338" y="144" width="7" height="8" rx="1.5" fill="#7cb3e4"/>
+                            <rect x="304" y="130" width="7" height="8" rx="1.5" fill="#7cb3e4" transform="rotate(45, 307.5, 134)"/>
+                            <rect x="333" y="130" width="7" height="8" rx="1.5" fill="#7cb3e4" transform="rotate(-45, 336.5, 134)"/>
+                            <rect x="304" y="158" width="7" height="8" rx="1.5" fill="#7cb3e4" transform="rotate(-45, 307.5, 162)"/>
+                            <rect x="333" y="158" width="7" height="8" rx="1.5" fill="#7cb3e4" transform="rotate(45, 336.5, 162)"/>
+                            <!-- Lubang Tengah -->
+                            <circle cx="322" cy="148" r="7" fill="#cbe6f9"/>
                         </g>
                     </g>
 
-                    <!-- ===== Layer tengah: Gedung GA + PJU ===== -->
-                    <g id="lyr-mid" :style="`transform:translate(${(mx-.5)*-18}px, ${(my-.5)*-10}px)`">
+                    <!-- ===== 3. Clipboard Raksasa (Kanan) ===== -->
+                    <g filter="url(#softGlow)">
+                        <!-- Papan Punggung Dark Slate -->
+                        <rect x="355" y="112" width="205" height="313" rx="18" fill="#203342" stroke="#162531" stroke-width="2"/>
 
-                        <!-- Gedung kantor General Affair (Modern Clean) -->
-                        <rect x="8" y="340" width="90" height="166" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
-                        <rect x="86" y="300" width="150" height="206" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
-                        <rect x="82" y="293" width="158" height="9" rx="3" fill="#0284c7"/>
-                        <line x1="160" y1="293" x2="160" y2="256" stroke="#64748b" stroke-width="3"/>
-                        <circle cx="160" cy="253" r="3.5" fill="#ef4444">
-                            <animate attributeName="opacity" values="1;.2;1" dur="1.5s" repeatCount="indefinite"/>
-                        </circle>
-
-                        <!-- Papan nama GENERAL AFFAIR (Hijau Emerald & Putih) -->
-                        <rect x="94" y="310" width="102" height="24" rx="4" fill="#ffffff" stroke="#059669" stroke-width="1.5"/>
-                        <text x="145" y="326" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif"
-                              font-size="9.5" font-weight="800" fill="#047857" letter-spacing="1">GENERAL AFFAIR</text>
-
-                        <!-- Jendela statis (Kaca Biru Lembut) -->
-                        <g fill="#e0f2fe" stroke="#93c5fd" stroke-width="1">
-                            <rect x="146" y="352" width="32" height="28" rx="3"/>
-                            <rect x="192" y="392" width="32" height="28" rx="3"/>
-                            <rect x="100" y="392" width="32" height="28" rx="3"/>
-                            <rect x="146" y="432" width="32" height="28" rx="3"/>
-                            <rect x="24" y="412" width="26" height="22" rx="3"/>
-                        </g>
-
-                        <!-- Jendela interaktif: Menyala Terang Bertahap saat User Berinteraksi -->
+                        <!-- Klip Kayu / Logam Coklat di Atas -->
                         <g>
-                            <rect x="100" y="352" width="32" height="28" rx="3" fill="#e0f2fe"/>
-                            <rect x="100" y="352" width="32" height="28" rx="3" fill="#fef08a" class="wlamp" :style="{ opacity: lit >= 1 ? .5 : 0 }"/>
-                            <rect x="100" y="352" width="32" height="28" rx="3" fill="#fde047" class="wlamp" :style="{ opacity: lit >= 1 ? 1 : 0 }"/>
-
-                            <rect x="192" y="352" width="32" height="28" rx="3" fill="#e0f2fe"/>
-                            <rect x="192" y="352" width="32" height="28" rx="3" fill="#fef08a" class="wlamp" :style="{ opacity: lit >= 2 ? .5 : 0 }"/>
-                            <rect x="192" y="352" width="32" height="28" rx="3" fill="#fde047" class="wlamp" :style="{ opacity: lit >= 2 ? 1 : 0 }"/>
-
-                            <rect x="146" y="392" width="32" height="28" rx="3" fill="#e0f2fe"/>
-                            <rect x="146" y="392" width="32" height="28" rx="3" fill="#fef08a" class="wlamp" :style="{ opacity: lit >= 3 ? .5 : 0 }"/>
-                            <rect x="146" y="392" width="32" height="28" rx="3" fill="#fde047" class="wlamp" :style="{ opacity: lit >= 3 ? 1 : 0 }"/>
-
-                            <rect x="100" y="432" width="32" height="28" rx="3" fill="#e0f2fe"/>
-                            <rect x="100" y="432" width="32" height="28" rx="3" fill="#fef08a" class="wlamp" :style="{ opacity: lit >= 4 ? .5 : 0 }"/>
-                            <rect x="100" y="432" width="32" height="28" rx="3" fill="#fde047" class="wlamp" :style="{ opacity: lit >= 4 ? 1 : 0 }"/>
-
-                            <rect x="192" y="432" width="32" height="28" rx="3" fill="#e0f2fe"/>
-                            <rect x="192" y="432" width="32" height="28" rx="3" fill="#fef08a" class="wlamp" :style="{ opacity: lit >= 5 ? .5 : 0 }"/>
-                            <rect x="192" y="432" width="32" height="28" rx="3" fill="#fde047" class="wlamp" :style="{ opacity: lit >= 5 ? 1 : 0 }"/>
-
-                            <rect x="24" y="372" width="26" height="22" rx="3" fill="#e0f2fe"/>
-                            <rect x="24" y="372" width="26" height="22" rx="3" fill="#fef08a" class="wlamp" :style="{ opacity: lit >= 6 ? .5 : 0 }"/>
-                            <rect x="24" y="372" width="26" height="22" rx="3" fill="#fde047" class="wlamp" :style="{ opacity: lit >= 6 ? 1 : 0 }"/>
+                            <!-- Badan Klip -->
+                            <rect x="400" y="78" width="115" height="42" rx="8" fill="#8e532f"/>
+                            <path d="M 436,78 C 436,58 479,58 479,78 Z" fill="#8e532f"/>
+                            <!-- Lubang Gantung -->
+                            <circle cx="457.5" cy="72" r="8" fill="#203342"/>
+                            <!-- Bracket Logam Coklat Tua Penjepit Kertas -->
+                            <rect x="412" y="106" width="91" height="12" rx="3" fill="#66391d"/>
                         </g>
 
-                        <!-- Pintu Masuk Gedung -->
-                        <rect x="138" y="462" width="34" height="44" rx="2" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
-                        <rect x="141" y="465" width="13" height="38" fill="#e0f2fe" opacity=".9"/>
-                        <rect x="156" y="465" width="13" height="38" fill="#e0f2fe" opacity=".9"/>
-                        <circle cx="153" cy="484" r="1.8" fill="#059669"/>
+                        <!-- Lembaran Kertas Putih Bersih -->
+                        <rect x="370" y="128" width="175" height="297" rx="6" fill="#ffffff"/>
 
-                        <!-- Lampu PJU Taman/Kampus -->
-                        <rect x="252" y="497" width="12" height="9" rx="2" fill="#64748b"/>
-                        <rect x="256" y="388" width="4" height="112" fill="#64748b"/>
-                        <path d="M258,392 C258,377 274,373 286,375" stroke="#64748b" stroke-width="4" stroke-linecap="round" fill="none"/>
-                        <rect x="282" y="372" width="19" height="8" rx="3" fill="#475569"/>
-                        <ellipse cx="291" cy="381" rx="6" ry="2.6" fill="#fef08a" opacity=".9"/>
+                        <!-- Header Dokumen (Garis Abu-abu Elegan) -->
+                        <rect x="386" y="158" width="95" height="16" rx="4" fill="#e2e8f0"/>
+                        <rect x="386" y="184" width="70" height="4" rx="2" fill="#f1f5f9"/>
 
-                        <!-- Cahaya PJU -->
-                        <g class="glow-lamp" :class="{ on: lamp, flick: flicking }">
-                            <polygon points="283,383 299,383 332,505 250,505" fill="url(#coneG)"/>
-                            <ellipse cx="291" cy="506" rx="46" ry="7" fill="#fef08a" opacity=".4"/>
-                            <circle cx="291" cy="379" r="14" fill="#fef08a" opacity=".5"/>
+                        <!-- Item Checklist 1 (Baris Atas) -->
+                        <g class="check-pop">
+                            <!-- Garis Teks Dokumen -->
+                            <rect x="386" y="222" width="92" height="6" rx="3" fill="#cbd5e1"/>
+                            <rect x="386" y="234" width="65" height="4" rx="2" fill="#e2e8f0"/>
+                            <!-- Kotak Checklist Emas-Kuning Bulat -->
+                            <rect x="488" y="210" width="38" height="38" rx="8" fill="#fab005"/>
+                            <!-- Centang Biru Navy Tebal -->
+                            <path d="M 496 229 L 503 236 L 518 220" stroke="#1e3a5f" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                         </g>
-                    </g>
 
-                    <!-- Palang Parkir / Barrier Gate -->
-                    <g class="gate" :class="{ open: gate }">
-                        <ellipse cx="433" cy="506" rx="14" ry="4" fill="#0f172a" opacity=".15"/>
-                        <rect x="429" y="396" width="8" height="108" fill="#475569"/>
-                        <rect x="429" y="396" width="2.5" height="108" fill="#64748b"/>
-                        <rect x="424" y="500" width="18" height="7" rx="2" fill="#334155"/>
-                        <circle cx="433" cy="390" r="9" fill="#1e293b"/>
-                        <circle class="gate-red" cx="433" cy="390" r="5" fill="#ef4444"/>
-                        <circle class="gate-green" cx="433" cy="390" r="5" fill="#22c55e" style="opacity:0"/>
-                        <circle cx="433" cy="390" r="11" fill="#22c55e" class="wlamp gate-green" :style="{ opacity: gate ? .35 : 0 }"/>
-                        <g id="gate-arm">
-                            <rect x="433" y="392" width="62" height="9" rx="4.5" fill="#ffffff" stroke="#94a3b8" stroke-width=".8"/>
-                            <g clip-path="url(#armClip)" fill="#dc2626">
-                                <rect x="441" y="392" width="10" height="9"/>
-                                <rect x="461" y="392" width="10" height="9"/>
-                                <rect x="481" y="392" width="10" height="9"/>
+                        <!-- Item Checklist 2 (Baris Tengah) -->
+                        <g class="check-pop">
+                            <!-- Garis Teks Dokumen -->
+                            <rect x="386" y="282" width="88" height="6" rx="3" fill="#cbd5e1"/>
+                            <rect x="386" y="294" width="72" height="4" rx="2" fill="#e2e8f0"/>
+                            <!-- Kotak Checklist Emas-Kuning Bulat -->
+                            <rect x="488" y="270" width="38" height="38" rx="8" fill="#fab005"/>
+                            <!-- Centang Biru Navy Tebal -->
+                            <path d="M 496 289 L 503 296 L 518 280" stroke="#1e3a5f" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        </g>
+
+                        <!-- Item Checklist 3 (Baris Bawah - Dinamis Interaktif) -->
+                        <g class="check-pop">
+                            <!-- Garis Teks Dokumen -->
+                            <rect x="386" y="342" width="90" height="6" rx="3" fill="#cbd5e1"/>
+                            <rect x="386" y="354" width="58" height="4" rx="2" fill="#e2e8f0"/>
+                            <!-- Kotak Checklist Emas-Kuning Bulat -->
+                            <rect x="488" y="330" width="38" height="38" rx="8" fill="#fab005"/>
+
+                            <!-- Silang Merah (Kondisi Awal persis referensi gambar) -->
+                            <g x-show="!verified && !submitted" x-transition>
+                                <path d="M 498 340 L 516 358 M 516 340 L 498 358" stroke="#ef4444" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+                            </g>
+                            <!-- Berubah Menjadi Centang Hijau saat Form Terverifikasi / Diisi -->
+                            <g x-show="verified || submitted" x-cloak x-transition>
+                                <path d="M 496 349 L 503 356 L 518 340" stroke="#15803d" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                             </g>
                         </g>
                     </g>
 
-                    <!-- ===== Layer Depan: Jalan Aspal + Mobil Dinas GA ===== -->
-                    <rect x="0" y="505" width="500" height="115" fill="#334155"/>
-                    <rect x="0" y="505" width="500" height="3" fill="#475569"/>
-                    <!-- Garis Marka Jalan Putih Bersih -->
-                    <g fill="#f8fafc" opacity=".9">
-                        <rect x="12"  y="566" width="34" height="5" rx="2"/>
-                        <rect x="82"  y="566" width="34" height="5" rx="2"/>
-                        <rect x="152" y="566" width="34" height="5" rx="2"/>
-                        <rect x="222" y="566" width="34" height="5" rx="2"/>
-                        <rect x="292" y="566" width="34" height="5" rx="2"/>
-                        <rect x="362" y="566" width="34" height="5" rx="2"/>
-                        <rect x="432" y="566" width="34" height="5" rx="2"/>
-                    </g>
+                    <!-- ===== 4. Badge Workflow Lingkaran Oranye (Pojok Kanan Atas Clipboard) ===== -->
+                    <g filter="url(#badgeShadow)" :class="submitted ? 'badge-spinning' : 'badge-breathe'">
+                        <!-- Lingkaran Dasar Oranye -->
+                        <circle cx="552" cy="122" r="44" fill="url(#badgeG)"/>
 
-                    <g id="car" :class="{ shk: shake, go: driving, haz: hazard }" x-ref="car">
-                        <!-- Bayangan Bawah Mobil -->
-                        <ellipse cx="340" cy="506" rx="74" ry="8" fill="#0f172a" opacity=".25"/>
+                        <!-- Ikon Workflow / Siklus Aset (Dua Kotak Bersudut Halus + 2 Panah Sirkuler) -->
+                        <g>
+                            <!-- Kotak Putih Kiri Atas -->
+                            <rect x="530" y="102" width="18" height="18" rx="4.5" fill="#ffffff"/>
+                            <!-- Kotak Putih Kanan Bawah -->
+                            <rect x="556" y="124" width="18" height="18" rx="4.5" fill="#ffffff"/>
 
-                        <!-- Berkas Lampu Depan Mobil -->
-                        <g class="glow-beam" :class="{ on: beams, bp: beamPulse }">
-                            <polygon points="410,446 500,422 500,476 410,458" fill="url(#beamG)"/>
-                            <ellipse cx="468" cy="506" rx="42" ry="6" fill="#fef08a" opacity=".35"/>
-                            <circle cx="405" cy="449" r="7" fill="#ffffff" opacity=".7"/>
-                        </g>
+                            <!-- Panah Melengkung Atas (Kiri Atas ke Kanan Bawah) -->
+                            <path d="M 552 105 C 568 105 572 113 572 120" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none"/>
+                            <path d="M 569 116 L 572 122 L 577 118" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 
-                        <!-- Asap Knalpot -->
-                        <g fill="#cbd5e1">
-                            <circle class="puff"    cx="264" cy="486" r="4"/>
-                            <circle class="puff p2" cx="254" cy="488" r="5.5"/>
-                            <circle class="puff p3" cx="242" cy="487" r="7"/>
-                        </g>
-
-                        <!-- Bodi Mobil Dinas GA (Hijau Emerald Al Azhar) -->
-                        <path d="M 272,492 L 272,452 Q 272,442 283,441 L 305,439 L 320,412
-                                 Q 323,405 332,405 L 366,405 Q 375,405 378,412 L 391,438
-                                 L 401,441 Q 410,443 410,453 L 410,492 Z" fill="#059669"/>
-                        <rect x="272" y="468" width="138" height="24" rx="6" fill="#047857"/>
-                        <path d="M 322,408 L 372,408" stroke="#34d399" stroke-width="2" stroke-linecap="round" opacity=".8"/>
-
-                        <!-- Kaca Mobil -->
-                        <path d="M322,411 L337,411 L346,436 L309,436 Z" fill="#e0f2fe" opacity=".95"/>
-                        <path d="M347,411 L364,411 L377,436 L343,436 Z" fill="#e0f2fe" opacity=".95"/>
-
-                        <!-- Wiper Mobil -->
-                        <g id="wiper" :class="{ wp: wiping }">
-                            <line x1="372" y1="412" x2="352" y2="436" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round"/>
-                        </g>
-
-                        <!-- Garis Pintu + Handle -->
-                        <path d="M 347,440 L 346,470" stroke="#065f46" stroke-width="1.5"/>
-                        <rect x="350" y="446" width="9" height="2.5" rx="1" fill="#065f46"/>
-
-                        <!-- Beacon Patroli Amber di Atap -->
-                        <rect x="341" y="399" width="14" height="4" rx="1.5" fill="#334155"/>
-                        <path class="beacon-dome" d="M 344,399 Q 348,390 352,399 Z" fill="#f59e0b"/>
-
-                        <!-- Lampu Belakang + Hazard -->
-                        <rect x="271" y="445" width="5" height="10" rx="2" fill="#b91c1c"/>
-                        <rect class="hzl" x="271" y="445" width="5" height="10" rx="2" fill="#f87171" style="opacity:0"/>
-                        <rect class="hzl" x="403" y="444" width="7" height="11" rx="2.5" fill="#f87171" style="opacity:0"/>
-
-                        <!-- Lampu Depan -->
-                        <rect x="403" y="444" width="7" height="11" rx="2.5" fill="#ffffff" stroke="#93c5fd" stroke-width=".5"/>
-                        <rect x="403" y="444" width="7" height="11" rx="2.5" fill="#fef08a" class="wlamp" :style="{ opacity: beams ? 1 : 0 }"/>
-
-                        <!-- Knalpot -->
-                        <rect x="268" y="486" width="7" height="3.5" rx="1.5" fill="#64748b"/>
-
-                        <!-- Roda Mobil -->
-                        <g class="wheel">
-                            <circle cx="300" cy="487" r="16" fill="#1e293b" stroke="#334155" stroke-width="3"/>
-                            <circle cx="300" cy="487" r="7.5" fill="#94a3b8"/>
-                            <path d="M300,480 v14 M293,487 h14" stroke="#f1f5f9" stroke-width="2" stroke-linecap="round"/>
-                        </g>
-                        <g class="wheel">
-                            <circle cx="384" cy="487" r="16" fill="#1e293b" stroke="#334155" stroke-width="3"/>
-                            <circle cx="384" cy="487" r="7.5" fill="#94a3b8"/>
-                            <path d="M384,480 v14 M377,487 h14" stroke="#f1f5f9" stroke-width="2" stroke-linecap="round"/>
+                            <!-- Panah Melengkung Bawah (Kanan Bawah ke Kiri Atas) -->
+                            <path d="M 552 139 C 536 139 532 131 532 124" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none"/>
+                            <path d="M 535 128 L 532 122 L 527 126" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                         </g>
                     </g>
+
+                    <!-- ===== 5. Tumpukan Kotak Kardus Inventaris (Tengah) ===== -->
+                    <g class="box-stack" :class="focused ? 'box-active' : ''" filter="url(#softGlow)">
+                        <!-- Kotak A (Bawah Kiri - Kotak Lebar) -->
+                        <g>
+                            <rect x="175" y="318" width="120" height="107" rx="3" fill="url(#boxFront)"/>
+                            <!-- Lakban Coklat Tua Vertikal di Tutup Kotak -->
+                            <rect x="220" y="318" width="22" height="38" rx="1.5" fill="#693717"/>
+                            <!-- Label Pengiriman Barcode Putih -->
+                            <rect x="242" y="392" width="38" height="18" rx="2" fill="#ffffff"/>
+                            <line x1="248" y1="398" x2="274" y2="398" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="248" y1="404" x2="268" y2="404" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round"/>
+                        </g>
+
+                        <!-- Kotak B (Bawah Kanan - Kotak Tinggi Besar) -->
+                        <g>
+                            <rect x="282" y="252" width="168" height="173" rx="3" fill="url(#boxSide)"/>
+                            <!-- Lakban Coklat Tua Vertikal -->
+                            <rect x="320" y="252" width="36" height="66" rx="2" fill="#693717"/>
+                            <!-- Label Pengiriman Barcode Putih -->
+                            <rect x="368" y="388" width="48" height="22" rx="2" fill="#ffffff"/>
+                            <line x1="376" y1="395" x2="408" y2="395" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="376" y1="403" x2="400" y2="403" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+                        </g>
+
+                        <!-- Kotak C (Tengah Kiri - Duduk di atas Kotak A) -->
+                        <g>
+                            <rect x="192" y="230" width="120" height="88" rx="3" fill="url(#boxFront)"/>
+                            <!-- Lakban Coklat Tua -->
+                            <rect x="236" y="230" width="22" height="40" rx="1.5" fill="#693717"/>
+                            <!-- Label Barcode Putih -->
+                            <rect x="260" y="286" width="34" height="16" rx="2" fill="#ffffff"/>
+                            <line x1="265" y1="292" x2="288" y2="292" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/>
+                            <line x1="265" y1="297" x2="282" y2="297" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round"/>
+                        </g>
+
+                        <!-- Kotak D (Paling Atas - Duduk di atas Kotak C) -->
+                        <g>
+                            <rect x="242" y="154" width="120" height="76" rx="3" fill="url(#boxFront)"/>
+                            <!-- Lakban Coklat Tua -->
+                            <rect x="286" y="154" width="24" height="38" rx="1.5" fill="#693717"/>
+                            <!-- Label Barcode Putih -->
+                            <rect x="314" y="198" width="28" height="14" rx="2" fill="#ffffff"/>
+                            <line x1="319" y1="203" x2="336" y2="203" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/>
+                            <line x1="319" y1="207" x2="332" y2="207" stroke="#cbd5e1" stroke-width="1.2" stroke-linecap="round"/>
+                        </g>
+                    </g>
+
+                    <!-- ===== 6. Kaca Pembesar (Bersandar di Samping Box Atas & Clipboard) ===== -->
+                    <g class="mag-hover" :class="focused ? 'mag-scanning' : ''">
+                        <!-- Gagang Kaca Pembesar Oranye-Coklat Miring 45 Derajat -->
+                        <line x1="392" y1="226" x2="424" y2="258" stroke="#e06924" stroke-width="9" stroke-linecap="round"/>
+                        <circle cx="394" cy="228" r="4.5" fill="#243746"/>
+
+                        <!-- Bingkai Lensa Kaca Pembesar (Dark Slate) -->
+                        <circle cx="374" cy="208" r="23" fill="#dcf0ff" opacity="0.65"/>
+                        <circle cx="374" cy="208" r="23" stroke="#243746" stroke-width="5" fill="none"/>
+
+                        <!-- Pantulan Kilau Kaca Putih -->
+                        <path d="M 362 196 C 367 190 376 190 382 193" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.85"/>
+                    </g>
+
+                    <!-- ===== 7. Sparkles / Kilauan Bintang (✦) ===== -->
+                    <g>
+                        <!-- Sparkle Besar (Putih Berlian) -->
+                        <path class="sparkle-gleam"
+                              d="M 234,140 Q 234,162 212,162 Q 234,162 234,184 Q 234,162 256,162 Q 234,162 234,140 Z"
+                              fill="#ffffff" opacity="0.95" filter="drop-shadow(0 0 6px #fde047)"/>
+                        <!-- Sparkle Kecil -->
+                        <path class="sparkle-gleam-2"
+                              d="M 212,126 Q 212,137 201,137 Q 212,137 212,148 Q 212,137 223,137 Q 212,137 212,126 Z"
+                              fill="#ffffff" opacity="0.85"/>
+                    </g>
+
+                    <!-- ===== 8. Petugas Inspeksi GA / Inventory Worker (Kiri) ===== -->
+                    <g class="worker-sway">
+                        <!-- Sepatu Kerja Hitam Formal Berdiri Tegak -->
+                        <!-- Kaki Kiri -->
+                        <path d="M 88,425 L 105,425 C 107.5,425 109,423 109,420 C 109,417 107,414 100,414 L 94,414 L 88,425 Z" fill="#182533"/>
+                        <!-- Kaki Kanan -->
+                        <path d="M 132,425 L 152,425 C 155,425 157,423 156,419 C 155,415 151,414 143,414 L 137,414 L 132,425 Z" fill="#182533"/>
+
+                        <!-- Celana Panjang Kerja Dark Charcoal Slate -->
+                        <!-- Kaki Kiri -->
+                        <path d="M 91,295 L 107,295 L 105,417 L 91,417 Z" fill="#243444"/>
+                        <!-- Kaki Kanan -->
+                        <path d="M 131,295 L 147,295 L 149,417 L 134,417 Z" fill="#243444"/>
+                        <!-- Pinggul & Pinggang -->
+                        <path d="M 89,286 L 148,286 L 148,300 C 139,303 100,303 89,300 Z" fill="#243444"/>
+                        <!-- Ikat Pinggang -->
+                        <rect x="90" y="284" width="58" height="5" fill="#182533"/>
+                        <rect x="114" y="283" width="10" height="7" rx="1.5" fill="#94a3b8"/>
+
+                        <!-- Kemeja Putih Lengan Panjang di Bawah Rompi -->
+                        <path d="M 92,204 L 146,204 L 148,286 L 90,286 Z" fill="#ffffff"/>
+
+                        <!-- Rompi Safety Oranye Terang (High-Visibility Vest) -->
+                        <path d="M 96,205 L 110,205 L 115,248 L 123,205 L 142,205 L 147,286 L 91,286 Z" fill="#f97316"/>
+
+                        <!-- Garis Reflektif Rompi Neon Kuning -->
+                        <!-- Garis Bahu Kiri -->
+                        <rect x="100" y="205" width="6.5" height="79" fill="#fde047"/>
+                        <!-- Garis Bahu Kanan -->
+                        <rect x="131" y="205" width="6.5" height="79" fill="#fde047"/>
+                        <!-- Garis Reflektif Horizontal di Pinggang -->
+                        <rect x="91" y="266" width="56" height="6.5" fill="#fde047"/>
+
+                        <!-- Kerah Kemeja Putih & Dasi Hitam Tipis -->
+                        <polygon points="112,204 119,218 126,204" fill="#ffffff"/>
+                        <polygon points="117,208 121,208 120,224 118,224" fill="#1e293b"/>
+
+                        <!-- Lengan Kanan Menjepit Map Berkas Hitam -->
+                        <!-- Lengan Atas Kemeja Putih -->
+                        <path d="M 92,205 L 80,240 L 92,246 L 100,214 Z" fill="#ffffff"/>
+                        <!-- Map Berkas Hitam Dijepit di Bawah Ketiak -->
+                        <rect x="76" y="235" width="46" height="56" rx="4" transform="rotate(-12, 76, 235)" fill="#182533"/>
+                        <rect x="80" y="238" width="4" height="50" rx="1" transform="rotate(-12, 80, 238)" fill="#ffffff" opacity="0.8"/>
+                        <!-- Tangan Peach Memegang Map -->
+                        <circle cx="94" cy="274" r="7" fill="#fed7aa"/>
+
+                        <!-- Leher Petugas -->
+                        <rect x="113" y="186" width="13" height="19" rx="3" fill="#fed7aa"/>
+
+                        <!-- Kepala & Wajah Samping (Profil Hadap Kanan) -->
+                        <g>
+                            <!-- Kepala Dasar -->
+                            <path d="M 108,160 C 108,148 118,142 130,144 C 142,146 148,156 148,168 C 148,178 138,187 127,187 C 117,187 108,175 108,160 Z" fill="#fed7aa"/>
+                            <!-- Hidung Mancung Mengarah ke Kanan -->
+                            <path d="M 144,166 L 152,172 L 143,176 Z" fill="#fed7aa"/>
+                            <!-- Telinga -->
+                            <circle cx="118" cy="172" r="5" fill="#fcd34d" opacity="0.6"/>
+                            <circle cx="118" cy="172" r="3.5" fill="#fed7aa"/>
+                            <!-- Rambut Coklat Tua Rapi di Bawah Helm -->
+                            <path d="M 107,162 C 105,172 110,183 116,183 L 115,168 Z" fill="#3d2112"/>
+                            <!-- Alis & Mata Minimalis Elegan -->
+                            <path d="M 137,163 L 143,164" stroke="#1e293b" stroke-width="1.8" stroke-linecap="round"/>
+                            <circle cx="140" cy="168" r="1.6" fill="#1e293b"/>
+                        </g>
+
+                        <!-- Helm Proyek Kuning (Safety Hard Hat) -->
+                        <g>
+                            <!-- Kubah Helm -->
+                            <path d="M 104,158 C 104,136 120,132 136,134 C 147,136 153,146 153,158 Z" fill="#facc15"/>
+                            <!-- Garis Lekuk Mahkota Atas Helm -->
+                            <path d="M 116,134 C 122,130 134,130 142,134" stroke="#fef08a" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                            <!-- Lis / Pinggiran Helm -->
+                            <path d="M 100,158 L 159,158 C 163,158 164,162 160,163 L 102,163 C 98,163 97,158 100,158 Z" fill="#eab308"/>
+                        </g>
+
+                        <!-- Lengan Kiri (Menunjuk Tepat ke Kotak & Checklist 👉) -->
+                        <g class="pointing-arm" :class="focused ? 'arm-active' : ''">
+                            <!-- Bahu & Lengan Kemeja Putih Lurus Terentang -->
+                            <path d="M 136,207 L 194,201 L 195,216 L 137,222 Z" fill="#ffffff"/>
+                            <!-- Manset Lengan Kemeja -->
+                            <rect x="193" y="200" width="4" height="17" rx="1" fill="#e2e8f0"/>
+
+                            <!-- Tangan Peach dengan Jari Telunjuk Menunjuk -->
+                            <g>
+                                <!-- Telapak Tangan -->
+                                <circle cx="202" cy="208" r="6.5" fill="#fed7aa"/>
+                                <!-- Jari Telunjuk Menunjuk Lurus ke Arah Kotak -->
+                                <rect x="202" y="203" width="16" height="5" rx="2.5" fill="#fed7aa"/>
+                                <!-- Jari Lain Terlipat Rapi -->
+                                <rect x="200" y="208" width="8" height="3" rx="1.5" fill="#fcd34d" opacity="0.6"/>
+                                <rect x="200" y="211" width="7" height="3" rx="1.5" fill="#fcd34d" opacity="0.6"/>
+                            </g>
+                        </g>
+                    </g>
+
+                    <!-- ===== 9. Garis Lantai / Base Ground Line ===== -->
+                    <line x1="45" y1="425" x2="635" y2="425" stroke="#334e68" stroke-width="4.5" stroke-linecap="round"/>
                 </svg>
 
-                <!-- Keterangan Interaksi (Bottom Pill) -->
-                <div class="absolute bottom-3 left-0 right-0 z-20 flex justify-center px-4">
-                    <div class="flex items-center gap-2.5 text-[10px] font-medium text-slate-600 bg-white/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200/80 shadow-sm whitespace-nowrap">
-                        <span>💡 Fokus = PJU</span>
-                        <span class="text-slate-300">•</span>
-                        <span>🚗 Ketik = Lampu Mobil</span>
-                        <span class="text-slate-300">•</span>
-                        <span>🅿️ Masuk = Buka Gerbang</span>
-                    </div>
-                </div>
             </div>
 
             <!-- ===================== PANEL KANAN : FORM LOGIN ===================== -->
             <div class="bg-white px-8 py-10 sm:px-12 sm:py-12 flex flex-col justify-center">
                 <div class="w-full max-w-[340px] mx-auto">
 
-                    <!-- Logo & Header -->
+                    <!-- Header & Subtitle -->
                     <div class="text-center mb-6">
                         <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-[10.5px] font-bold tracking-wider uppercase mb-2.5 shadow-xs">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -389,38 +567,46 @@
                     <form method="POST" action="{{ route('login') }}" class="space-y-4" @submit="doLogin($event)">
                         @csrf
 
+                        <!-- Field Email -->
                         <div class="space-y-1.5">
                             <label for="email" class="block text-xs font-semibold text-slate-700 pl-0.5">
                                 Email atau Username
                             </label>
-                            <input id="email" type="text" name="email" value="{{ old('email') }}" required autofocus
-                                   autocomplete="username"
-                                   @focus="lampOn(); lightUp()"
-                                   @input="beams = true; beamPulseNow(); lightUp()"
-                                   class="w-full px-4 py-3 text-xs sm:text-sm text-slate-800 bg-slate-50/70 border border-slate-200 rounded-2xl focus:outline-none focus:border-cyan-500 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 transition-all placeholder:text-slate-400"
-                                   placeholder="cth: admin@alazhar.or.id">
+                            <div class="relative">
+                                <input id="email" type="text" name="email" value="{{ old('email') }}" required autofocus
+                                       x-model="emailVal"
+                                       autocomplete="username"
+                                       @focus="onFocus('email')"
+                                       @blur="onBlur()"
+                                       @input="onInput()"
+                                       class="w-full px-4 py-3 text-xs sm:text-sm text-slate-800 bg-slate-50/70 border border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-400"
+                                       placeholder="cth: admin@alazhar.or.id">
+                            </div>
                         </div>
 
+                        <!-- Field Password -->
                         <div class="space-y-1.5" x-data="{ show: false }">
                             <label for="password" class="block text-xs font-semibold text-slate-700 pl-0.5">
                                 Kata Sandi
                             </label>
                             <div class="relative">
                                 <input id="password" :type="show ? 'text' : 'password'" name="password" required
+                                       x-model="passwordVal"
                                        autocomplete="current-password"
-                                       @focus="beams = true; lightUp()"
-                                       @input="beamPulseNow(); lightUp()"
+                                       @focus="onFocus('password')"
+                                       @blur="onBlur()"
+                                       @input="onInput()"
                                        @keydown="checkCaps($event)"
-                                       class="w-full pl-4 pr-11 py-3 text-xs sm:text-sm text-slate-800 bg-slate-50/70 border border-slate-200 rounded-2xl focus:outline-none focus:border-cyan-500 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 transition-all placeholder:text-slate-400"
+                                       class="w-full pl-4 pr-11 py-3 text-xs sm:text-sm text-slate-800 bg-slate-50/70 border border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-400"
                                        placeholder="••••••••">
-                                <button type="button" @click="show = !show; wipe()"
+                                <button type="button" @click="show = !show"
                                         class="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
                                         title="Tampilkan sandi">
                                     <svg x-show="!show" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
-                                    <svg x-show="show" x-cloak class="w-4 h-4 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg x-show="show" x-cloak class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/>
                                     </svg>
                                 </button>
@@ -430,103 +616,71 @@
                             </p>
                         </div>
 
+                        <!-- Remember & Forgot Password -->
                         <div class="flex items-center justify-between pt-0.5 text-xs">
                             <label class="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
                                 <input type="checkbox" name="remember"
-                                       class="w-4 h-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500/20 focus:ring-offset-0">
+                                       class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/20 focus:ring-offset-0">
                                 <span>Ingat saya</span>
                             </label>
-                            <a href="#" onclick="alert('Demo Passwords:\n• Super Admin: superadmin@alazhar.or.id / password123\n• Viewer: viewer@alazhar.or.id / password123'); return false;"
-                               class="text-cyan-600 hover:text-cyan-700 font-semibold hover:underline transition-colors">
+                            <a href="#" onclick="alert('Silakan hubungi Administrator atau Tim IT AMANA Al Azhar Peduli untuk pemulihan akun atau reset kata sandi.'); return false;"
+                               class="text-emerald-600 hover:text-emerald-700 font-semibold hover:underline transition-colors">
                                 Lupa sandi?
                             </a>
                         </div>
 
+                        <!-- Tombol Submit Utama -->
                         <div class="pt-1">
-                            <button type="submit" id="login-btn" :disabled="driving"
-                                    class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 active:scale-[0.99] text-white font-bold text-sm tracking-wide shadow-md shadow-emerald-600/20 transition-all duration-200 cursor-pointer text-center disabled:opacity-75 disabled:cursor-wait flex items-center justify-center gap-2">
-                                <span x-show="!driving">Masuk ke Dashboard</span>
-                                <span x-show="driving" x-cloak>🚧 Membuka gerbang&hellip;</span>
+                            <button type="submit" id="login-btn" :disabled="submitted"
+                                    class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 hover:from-emerald-500 hover:via-emerald-600 hover:to-teal-600 active:scale-[0.99] text-white font-bold text-sm tracking-wide shadow-lg shadow-emerald-600/25 transition-all duration-200 cursor-pointer text-center disabled:opacity-75 disabled:cursor-wait flex items-center justify-center gap-2">
+                                <span x-show="!submitted">Masuk ke Dashboard</span>
+                                <span x-show="submitted" x-cloak class="inline-flex items-center gap-2">
+                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Memvalidasi Akun&hellip;
+                                </span>
                             </button>
                         </div>
                     </form>
-
-                    <!-- Divider -->
-                    <div class="relative my-5 flex items-center justify-center">
-                        <div class="border-t border-slate-200 flex-grow"></div>
-                        <span class="px-3 text-[11px] text-slate-400 font-medium uppercase tracking-wider select-none">Akses Cepat Demo</span>
-                        <div class="border-t border-slate-200 flex-grow"></div>
-                    </div>
-
-                    <!-- Login Cepat Demo -->
-                    <div class="grid grid-cols-2 gap-2.5">
-                        <a href="{{ route('login.admin') }}"
-                           class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 transition-all text-xs font-semibold text-slate-700">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            Super Admin
-                        </a>
-                        <a href="{{ route('login.viewer') }}"
-                           class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 transition-all text-xs font-semibold text-slate-700">
-                            <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
-                            Viewer Demo
-                        </a>
-                    </div>
 
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Alpine.js Interactivity Controller -->
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('gaScene', () => ({
-                mx: .5, my: .5,
-                lit: 0,
-                lamp: false,
-                beams: false,
-                beamPulse: false,
-                gate: false,
-                driving: false,
-                shake: false,
-                hazard: false,
-                wiping: false,
-                flicking: false,
+            Alpine.data('inventoryScene', () => ({
+                emailVal: '',
+                passwordVal: '',
+                focused: false,
+                typing: false,
+                typeTimer: null,
+                submitted: false,
                 caps: false,
 
-                init() {
-                    setTimeout(() => { if (this.lit < 1) this.lit = 1; }, 900);
-
-                    // Lampu PJU sesekali berkedip saat belum aktif
-                    setInterval(() => {
-                        if (!this.lamp && !this.driving) {
-                            this.flicking = true;
-                            setTimeout(() => this.flicking = false, 700);
-                        }
-                    }, 7000);
+                get verified() {
+                    return this.emailVal.trim().length > 3 && this.passwordVal.trim().length > 3;
                 },
 
-                lampOn() {
-                    this.lamp = true;
+
+                onFocus(field) {
+                    this.focused = true;
                 },
 
-                lightUp() {
-                    if (this.lit < 6) this.lit++;
+                onBlur() {
+                    this.focused = false;
                 },
 
-                beamPulseNow() {
-                    this.beamPulse = false;
-                    requestAnimationFrame(() => {
-                        this.beamPulse = true;
-                        setTimeout(() => this.beamPulse = false, 480);
-                    });
-                },
-
-                wipe() {
-                    this.wiping = false;
-                    requestAnimationFrame(() => {
-                        this.wiping = true;
-                        setTimeout(() => this.wiping = false, 950);
-                    });
+                onInput() {
+                    this.typing = true;
+                    clearTimeout(this.typeTimer);
+                    this.typeTimer = setTimeout(() => {
+                        this.typing = false;
+                    }, 800);
                 },
 
                 checkCaps(e) {
@@ -535,16 +689,13 @@
 
                 doLogin(e) {
                     e.preventDefault();
-                    if (this.driving) return;
+                    if (this.submitted) return;
 
-                    this.driving = true;
-                    this.gate = true;
-                    this.lamp = true;
-                    this.beams = true;
-                    this.lit = 6;
+                    this.submitted = true;
+                    this.focused = true;
 
                     const form = e.target;
-                    setTimeout(() => form.submit(), 1400);
+                    setTimeout(() => form.submit(), 1100);
                 },
             }));
         });
