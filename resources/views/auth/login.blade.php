@@ -195,13 +195,7 @@
             <div class="scene-container relative bg-gradient-to-br from-sky-50/90 via-slate-50 to-amber-50/30 min-h-[380px] md:min-h-full overflow-hidden border-b md:border-b-0 md:border-r border-slate-200/80 flex flex-col justify-between">
 
                 <!-- Brand Pill Glassmorphic (Top-Left) -->
-                <div class="absolute top-5 left-5 z-20 flex items-center space-x-2.5 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl text-slate-800 text-xs border border-slate-200/80 shadow-sm transition-transform hover:scale-[1.02]">
-                    <img src="{{ asset('logo-icon.png') }}" class="w-8 h-8 object-contain drop-shadow-xs" alt="AMANA Icon">
-                    <div>
-                        <span class="font-extrabold tracking-wider text-slate-900 block leading-tight">AMANA</span>
-                        <span class="text-[10px] font-semibold text-emerald-600 tracking-tight block">Aset & Inventaris GA</span>
-                    </div>
-                </div>
+                
 
                 <!-- SVG Canvas Ilustrasi Vektor Presisi -->
                 <svg class="scene-svg absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 680 480" fill="none"
@@ -541,18 +535,13 @@
             <div class="bg-white px-8 py-10 sm:px-12 sm:py-12 flex flex-col justify-center">
                 <div class="w-full max-w-[340px] mx-auto">
 
-                    <!-- Header & Subtitle -->
+                    <!-- Brand / Logo -->
                     <div class="text-center mb-6">
-                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-[10.5px] font-bold tracking-wider uppercase mb-2.5 shadow-xs">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            General Affair Portal
-                        </div>
-                        <h1 class="text-2xl sm:text-[28px] font-extrabold text-slate-900 tracking-tight leading-tight">
-                            Selamat Datang <span class="inline-block hover:rotate-12 transition-transform duration-300">👋</span>
-                        </h1>
-                        <p class="text-xs sm:text-[13px] text-slate-500 mt-1.5 font-normal">
-                            Masuk ke portal aset <span class="font-bold text-emerald-600">AMANA</span> Al Azhar Peduli
-                        </p>
+                        <a href="{{ url('/') }}" class="inline-block transition-transform duration-200 hover:scale-105">
+                            <img src="{{ asset('logo-amana.png') }}" 
+                                 alt="AMANA" 
+                                 class="h-26 sm:h-26 w-auto mx-auto object-contain">
+                        </a>
                     </div>
 
                     @if($errors->any())
