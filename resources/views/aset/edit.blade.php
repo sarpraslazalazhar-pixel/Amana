@@ -304,17 +304,38 @@
                 </div>
             @endif
 
+            <!-- Loading Indicator saat Kompresi Gambar -->
+            <div x-show="isCompressingPhoto" x-cloak class="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 flex items-center gap-3 animate-pulse">
+                <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                    <i class="ti ti-loader-2 text-lg animate-spin"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-emerald-900">Mengompresi & Mengonversi ke WebP...</p>
+                    <p class="text-[11px] text-emerald-700">Resolusi disesuaikan maksimal 1200px agar upload cepat dan hemat memori.</p>
+                </div>
+            </div>
+
             <!-- Live Photo Preview Box (Jika memilih foto baru) -->
-            <div x-show="photoPreview" x-cloak class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200 flex items-center gap-4">
-                <img :src="photoPreview" alt="Pratinjau Foto Baru" class="w-20 h-20 object-cover rounded-xl border border-emerald-200 shadow-xs">
-                <div class="space-y-1">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        Foto Baru Dipilih
-                    </span>
-                    <p class="text-xs font-semibold text-slate-800">Foto ini akan menggantikan foto lama saat Anda menyimpan perubahan.</p>
-                    <button type="button" @click="clearPhoto()" class="text-xs text-rose-600 hover:text-rose-700 font-bold inline-flex items-center gap-1">
-                        <i class="ti ti-trash text-sm"></i> Batalkan / Gunakan Foto Lama
-                    </button>
+            <div x-show="photoPreview && !isCompressingPhoto" x-cloak class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                    <img :src="photoPreview" alt="Pratinjau Foto Baru" class="w-20 h-20 object-cover rounded-xl border border-emerald-200 shadow-xs bg-white shrink-0">
+                    <div class="space-y-1">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1">
+                                <i class="ti ti-check text-xs"></i> Foto Baru (WebP)
+                            </span>
+                            <template x-if="photoOriginalSize && photoCompressedSize">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 text-cyan-800 border border-cyan-200">
+                                    <span x-text="photoOriginalSize"></span> → <span class="font-extrabold" x-text="photoCompressedSize"></span>
+                                    (<span x-text="photoSavings"></span>)
+                                </span>
+                            </template>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-800">Foto ini akan menggantikan foto lama saat Anda menyimpan perubahan.</p>
+                        <button type="button" @click="clearPhoto()" class="text-xs text-rose-600 hover:text-rose-700 font-bold inline-flex items-center gap-1 pt-0.5">
+                            <i class="ti ti-trash text-sm"></i> Batalkan / Gunakan Foto Lama
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -322,7 +343,7 @@
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Ganti Foto Utama <span class="text-slate-400 font-normal">(Opsional)</span></label>
                 <input type="file" name="foto_utama" accept="image/*" x-ref="photoInput" @change="handlePhotoChange($event)"
                        class="w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
-                <p class="text-[11px] text-slate-400 mt-1.5">Mendukung format gambar resolusi tinggi kamera (JPG, PNG, WEBP, GIF).</p>
+                <p class="text-[11px] text-slate-400 mt-1">Otomatis di-resize (maks. 1200px) dan dikonversi ke WebP untuk performa optimal.</p>
             </div>
         </div>
 
@@ -418,6 +439,11 @@ document.addEventListener('alpine:init', () => {
         merkError: '',
         merkNamaBaru: '',
         photoPreview: null,
+        photoPreviewUrl: null,
+        isCompressingPhoto: false,
+        photoOriginalSize: '',
+        photoCompressedSize: '',
+        photoSavings: '',
 
         formatCurrency(field) {
             if (field === 'hargaSatuan') {
@@ -463,19 +489,122 @@ document.addEventListener('alpine:init', () => {
             return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
         },
 
-        handlePhotoChange(event) {
-            const file = event.target.files[0];
-            if (file) {
+        formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        },
+
+        async handlePhotoChange(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            this.photoOriginalSize = this.formatBytes(file.size);
+            this.isCompressingPhoto = true;
+
+            try {
+                // Buat Image object dari file yang dipilih
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+
+                await new Promise((resolve, reject) => {
+                    img.onload = () => {
+                        URL.revokeObjectURL(objectUrl);
+                        resolve();
+                    };
+                    img.onerror = () => {
+                        URL.revokeObjectURL(objectUrl);
+                        reject(new Error('Gagal memuat gambar.'));
+                    };
+                    img.src = objectUrl;
+                });
+
+                // Hitung dimensi baru proporsional (maksimum 1200px)
+                const maxDim = 1200;
+                let width = img.naturalWidth || img.width;
+                let height = img.naturalHeight || img.height;
+
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+
+                // Render gambar ke canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Konversi ke WebP blob (kualitas 80%) dengan fallback ke JPEG
+                let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.80));
+                let fileExt = 'webp';
+                let mimeType = 'image/webp';
+
+                if (!blob) {
+                    blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.80));
+                    fileExt = 'jpg';
+                    mimeType = 'image/jpeg';
+                }
+
+                if (!blob) {
+                    throw new Error('Gagal mengekspor canvas.');
+                }
+
+                // Buat file WebP baru
+                const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                const compressedFile = new File([blob], `${baseName}.${fileExt}`, {
+                    type: mimeType,
+                    lastModified: Date.now()
+                });
+
+                // Ganti file di input file menggunakan DataTransfer API
+                if (window.DataTransfer) {
+                    const dt = new DataTransfer();
+                    dt.items.add(compressedFile);
+                    event.target.files = dt.files;
+                }
+
+                this.photoCompressedSize = this.formatBytes(compressedFile.size);
+                const pct = Math.max(0, Math.round((1 - (compressedFile.size / file.size)) * 100));
+                this.photoSavings = pct > 0 ? `Hemat ${pct}%` : 'Optimal';
+
+                if (this.photoPreviewUrl) {
+                    URL.revokeObjectURL(this.photoPreviewUrl);
+                }
+                this.photoPreviewUrl = URL.createObjectURL(blob);
+                this.photoPreview = this.photoPreviewUrl;
+            } catch (err) {
+                console.warn('Kompresi client-side gagal, menggunakan file asli:', err);
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     this.photoPreview = e.target.result;
                 };
                 reader.readAsDataURL(file);
+                this.photoCompressedSize = this.formatBytes(file.size);
+                this.photoSavings = '0%';
+            } finally {
+                this.isCompressingPhoto = false;
             }
         },
 
         clearPhoto() {
+            if (this.photoPreviewUrl) {
+                URL.revokeObjectURL(this.photoPreviewUrl);
+                this.photoPreviewUrl = null;
+            }
             this.photoPreview = null;
+            this.photoOriginalSize = '';
+            this.photoCompressedSize = '';
+            this.photoSavings = '';
+            this.isCompressingPhoto = false;
             if (this.$refs.photoInput) {
                 this.$refs.photoInput.value = '';
             }
