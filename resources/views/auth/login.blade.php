@@ -23,151 +23,21 @@
                 radial-gradient(at 50% 35%, rgba(248, 250, 252, 0.8) 0px, transparent 100%);
         }
 
-        /* ===== Animasi Scene Inventory & Asset Management ===== */
-
-        /* Latar Blob Mengambang Halus */
-        .blob-drift {
-            animation: blobMotion 8s ease-in-out infinite alternate;
-            transform-origin: center;
-        }
-        @keyframes blobMotion {
-            0%   { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(8px, -5px) scale(1.02); }
-        }
-
-        /* Gear Roda Gigi */
-        .gear-rotate-cw {
-            animation: spinCw 14s linear infinite;
-            transform-box: view-box;
-        }
-        .gear-rotate-ccw {
-            animation: spinCcw 9s linear infinite;
-            transform-box: view-box;
-        }
-        .gear-fast {
-            animation-duration: 2.2s !important;
-        }
-        @keyframes spinCw {
-            from { transform: rotate(0deg); }
-            to   { transform: rotate(360deg); }
-        }
-        @keyframes spinCcw {
-            from { transform: rotate(0deg); }
-            to   { transform: rotate(-360deg); }
-        }
-
-        /* Sparkles / Bintang Berkilau */
-        .sparkle-gleam {
-            animation: gleam 2.8s ease-in-out infinite;
-        }
-        .sparkle-gleam-2 {
-            animation: gleam 2.8s ease-in-out infinite 1.2s;
-        }
-        @keyframes gleam {
-            0%, 100% { opacity: 0.35; transform: scale(0.85); }
-            50%      { opacity: 1; transform: scale(1.2); }
-        }
-
-        /* Kaca Pembesar */
-        .mag-hover {
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            transform-box: view-box;
-            transform-origin: 368px 202px;
-        }
-        .mag-scanning {
-            animation: magScan 1.2s ease-in-out infinite alternate;
-        }
-        @keyframes magScan {
-            0%   { transform: scale(1) translate(0, 0) rotate(0deg); }
-            100% { transform: scale(1.12) translate(-6px, -4px) rotate(-4deg); }
-        }
-
-        /* Checklist Transitions */
-        .check-pop {
-            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        /* Badge Workflow */
-        .badge-breathe {
-            animation: badgeBreathe 3.5s ease-in-out infinite;
-            transform-box: view-box;
-            transform-origin: 545px 125px;
-        }
-        @keyframes badgeBreathe {
-            0%, 100% { transform: scale(1); }
-            50%      { transform: scale(1.05); }
-        }
-        .badge-spinning {
-            animation: badgeRotate 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
-            transform-box: view-box;
-            transform-origin: 545px 125px;
-        }
-        @keyframes badgeRotate {
-            from { transform: rotate(0deg); }
-            to   { transform: rotate(360deg); }
-        }
-
-        /* Worker Idle Sway */
-        .worker-sway {
-            animation: workerBreathe 4s ease-in-out infinite alternate;
-            transform-origin: 110px 425px;
-        }
-        @keyframes workerBreathe {
-            0%   { transform: translateY(0); }
-            100% { transform: translateY(-2px); }
-        }
-
-        /* Pointing Arm Gesture */
-        .pointing-arm {
-            transition: transform 0.3s ease;
-            transform-origin: 130px 202px;
-        }
-        .arm-active {
-            transform: translateY(-2px) rotate(-2deg);
-        }
-
-        /* Box Subtle Float */
-        .box-stack {
-            transition: transform 0.4s ease;
-        }
-        .box-active {
-            transform: translateY(-3px);
-        }
-
-        /* Fallback Structural Layout Rules (Memastikan tata letak selalu rapi & kokoh) */
         .login-card {
             width: 100%;
-            max-width: 980px;
+            max-width: 440px;
             background: #ffffff;
-            border-radius: 32px;
+            border-radius: 28px;
             overflow: hidden;
-            box-shadow: 0 25px 70px -15px rgba(15, 23, 42, 0.12);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-        }
-        .login-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            min-height: 590px;
+            box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.1);
+            border: 1px solid rgba(226, 232, 240, 0.85);
         }
         @media (min-width: 768px) {
-            .login-grid {
-                grid-template-columns: 1fr 1fr;
+            .login-card {
+                max-width: 980px;
+                border-radius: 32px;
+                box-shadow: 0 25px 70px -15px rgba(15, 23, 42, 0.12);
             }
-        }
-        .scene-container {
-            position: relative;
-            min-height: 380px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .scene-svg {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -175,7 +45,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-daylight flex items-center justify-center p-4 sm:p-6 md:p-10 relative overflow-x-hidden select-none"
+<body class="min-h-screen min-h-dvh bg-daylight flex items-center justify-center p-4 sm:p-6 md:p-10 relative overflow-x-hidden select-none"
       x-data="inventoryScene()">
 
     <!-- Kontur latar luar (siluet garis arsitektural modern) -->
@@ -188,18 +58,16 @@
         </svg>
     </div>
 
-    <main class="login-card relative z-10 w-full max-w-[980px] bg-white rounded-[32px] shadow-[0_25px_70px_-15px_rgba(15,23,42,0.12)] overflow-hidden border border-slate-200/80">
-        <div class="login-grid grid grid-cols-1 md:grid-cols-2 min-h-[590px]">
+    <main class="login-card relative z-10 w-full">
+        <div class="grid grid-cols-1 md:grid-cols-2 md:min-h-[580px]">
 
-            <!-- ===================== PANEL KIRI : SCENE ASSET & INVENTORY ===================== -->
-            <div class="scene-container relative bg-gradient-to-br from-sky-50/90 via-slate-50 to-amber-50/30 min-h-[380px] md:min-h-full overflow-hidden border-b md:border-b-0 md:border-r border-slate-200/80 flex flex-col justify-between">
-
-               <img src="{{ asset('amana.webp') }}" alt="AMANA" class="w-full h-full object-cover">
-
+            <!-- ===================== PANEL KIRI : HERO GAMBAR ASSET (HANYA DESKTOP) ===================== -->
+            <div class="hidden md:flex relative bg-slate-100 overflow-hidden border-r border-slate-200/80 flex-col justify-between">
+               <img src="{{ asset('amana.webp') }}" alt="AMANA Asset Management" class="w-full h-full object-cover">
             </div>
 
             <!-- ===================== PANEL KANAN : FORM LOGIN ===================== -->
-            <div class="bg-white px-8 py-10 sm:px-12 sm:py-12 flex flex-col justify-center">
+            <div class="bg-white px-6 py-8 sm:px-10 sm:py-12 flex flex-col justify-center">
                 <div class="w-full max-w-[340px] mx-auto">
 
                     <!-- Brand / Logo -->
@@ -207,7 +75,7 @@
                         <a href="{{ url('/') }}" class="inline-block transition-transform duration-200 hover:scale-105">
                             <img src="{{ asset('logo-amana.png') }}" 
                                  alt="AMANA" 
-                                 class="h-26 sm:h-26 w-auto mx-auto object-contain">
+                                 class="h-34 sm:h-34 w-auto mx-auto object-contain">
                         </a>
                     </div>
 
@@ -235,7 +103,7 @@
                                        @focus="onFocus('email')"
                                        @blur="onBlur()"
                                        @input="onInput()"
-                                       class="w-full px-4 py-3 text-xs sm:text-sm text-slate-800 bg-slate-50/70 border border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-400"
+                                       class="w-full px-4 py-3 text-sm text-slate-800 bg-slate-50/70 border border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-400"
                                        placeholder="cth: admin@alazhar.or.id">
                             </div>
                         </div>
@@ -253,10 +121,10 @@
                                        @blur="onBlur()"
                                        @input="onInput()"
                                        @keydown="checkCaps($event)"
-                                       class="w-full pl-4 pr-11 py-3 text-xs sm:text-sm text-slate-800 bg-slate-50/70 border border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-400"
+                                       class="w-full pl-4 pr-11 py-3 text-sm text-slate-800 bg-slate-50/70 border border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-400"
                                        placeholder="••••••••">
                                 <button type="button" @click="show = !show"
-                                        class="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+                                        class="absolute right-2.5 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors cursor-pointer"
                                         title="Tampilkan sandi">
                                     <svg x-show="!show" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -300,6 +168,11 @@
                             </button>
                         </div>
                     </form>
+
+                    <!-- Footer Copyright Formal -->
+                    <p class="text-center text-[11px] text-slate-400 mt-6 sm:mt-8 tracking-tight">
+                        &copy; {{ date('Y') }} Al Azhar Peduli &middot; Sistem Manajemen Aset
+                    </p>
 
                 </div>
             </div>
