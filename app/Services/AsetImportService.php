@@ -658,7 +658,7 @@ class AsetImportService
                         'merk_id' => $merkId,
                         'tipe_model' => $item->tipe_model,
                         'produsen' => $item->produsen,
-                        'no_seri' => $item->no_seri,
+                        'no_seri' => ! empty($item->no_seri) ? mb_substr(trim($item->no_seri), 0, 100) : null,
                         'tahun_produksi' => $item->tahun_produksi,
                         'lokasi_id' => $lokasiId,
                         'penanggung_jawab_id' => $pjId,
