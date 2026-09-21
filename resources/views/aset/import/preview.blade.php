@@ -9,7 +9,8 @@
     total: {{ $batch->total_baris }},
     ready: {{ $batch->baris_siap }},
     incomplete: {{ $batch->baris_belum_lengkap }},
-    duplicate: {{ $batch->baris_duplikat }}
+    duplicate: {{ $batch->baris_duplikat }},
+    failed: {{ $failedCount ?? 0 }}
 })">
 
     <!-- Header Actions & Title -->
@@ -51,6 +52,25 @@
         <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-3">
             <i class="ti ti-circle-check text-lg text-emerald-600"></i>
             <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session('warning'))
+        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2">
+            <div class="flex items-center gap-2 font-bold">
+                <i class="ti ti-alert-triangle text-base text-amber-600"></i>
+                <span>{{ session('warning') }}</span>
+            </div>
+            @if(session('import_errors') && is_array(session('import_errors')))
+                <div class="mt-2 pl-6 space-y-1">
+                    <p class="font-semibold text-amber-900">Rincian baris gagal:</p>
+                    <ul class="list-disc list-inside space-y-1 text-amber-800 font-mono text-[11px]">
+                        @foreach(session('import_errors') as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
         </div>
     @endif
 
@@ -213,6 +233,12 @@
                class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all {{ $filterStatus === 'duplicate' ? 'bg-cyan-600 text-white shadow-sm' : 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border border-cyan-200' }}">
                 Duplikat (<span x-text="duplicate"></span>)
             </a>
+            @if(($failedCount ?? 0) > 0)
+                <a href="{{ request()->fullUrlWithQuery(['status' => 'failed', 'page' => 1]) }}"
+                   class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all {{ $filterStatus === 'failed' ? 'bg-rose-600 text-white shadow-sm' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200' }}">
+                    ❌ Gagal Impor (<span x-text="failed"></span>)
+                </a>
+            @endif
         </div>
 
         <!-- Search & Filter Form -->
@@ -271,7 +297,7 @@
                                 cara: '{{ $item->cara_perolehan }}',
                                 status_brg: '{{ $item->status_barang }}'
                             })"
-                            :class="!is_ready ? 'bg-amber-50/20' : (is_duplicate ? 'bg-cyan-50/20' : '')">
+                            :class="'{{ $item->import_status }}' === 'failed' ? 'bg-rose-50/40 border-l-4 border-l-rose-500' : (!is_ready ? 'bg-amber-50/20' : (is_duplicate ? 'bg-cyan-50/20' : ''))">
 
                             <!-- Checkbox -->
                             <td class="py-2.5 px-3 text-center">
@@ -285,30 +311,59 @@
 
                             <!-- Status Badge & Feedback -->
                             <td class="py-2.5 px-4">
-                                <template x-if="is_ready">
-                                    <div class="space-y-0.5">
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                            <i class="ti ti-check text-xs"></i> Siap Generate
-                                        </span>
-                                        @if($item->is_duplicate)
-                                            <div class="text-[10px] text-cyan-700 font-medium">Duplikat Terdeteksi</div>
-                                        @endif
-                                        @if($item->generated_kode_aset)
-                                            <div class="font-mono text-[11px] font-bold text-emerald-700">{{ $item->generated_kode_aset }}</div>
-                                        @endif
-                                    </div>
-                                </template>
-
-                                <template x-if="!is_ready">
+                                @if($item->import_status === 'failed')
                                     <div class="space-y-1">
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800">
-                                            <i class="ti ti-alert-triangle text-xs"></i> Belum Lengkap
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-800">
+                                            <i class="ti ti-x text-xs"></i> Gagal Impor
                                         </span>
-                                        <p class="text-[10px] text-rose-600 leading-tight">
-                                            Kurang: <span x-text="missing.join(', ')"></span>
+                                        <p class="text-[10px] text-rose-600 font-medium leading-tight">
+                                            {{ $item->error_message ?: 'Gagal saat generate/simpan aset' }}
                                         </p>
                                     </div>
-                                </template>
+                                @elseif($item->import_status === 'success')
+                                    <div class="space-y-0.5">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                            <i class="ti ti-circle-check text-xs"></i> Berhasil Diimpor
+                                        </span>
+                                        <div class="font-mono text-[11px] font-bold text-emerald-700">{{ $item->generated_kode_aset }}</div>
+                                    </div>
+                                @elseif($item->import_status === 'updated')
+                                    <div class="space-y-0.5">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-cyan-100 text-cyan-800">
+                                            <i class="ti ti-refresh text-xs"></i> Diperbarui
+                                        </span>
+                                        <div class="font-mono text-[11px] font-bold text-cyan-700">{{ $item->generated_kode_aset }}</div>
+                                    </div>
+                                @elseif($item->import_status === 'skipped')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600">
+                                        <i class="ti ti-player-skip-forward text-xs"></i> Dilewati
+                                    </span>
+                                @else
+                                    <template x-if="is_ready">
+                                        <div class="space-y-0.5">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                                <i class="ti ti-check text-xs"></i> Siap Generate
+                                            </span>
+                                            @if($item->is_duplicate)
+                                                <div class="text-[10px] text-cyan-700 font-medium">Duplikat Terdeteksi</div>
+                                            @endif
+                                            @if($item->generated_kode_aset)
+                                                <div class="font-mono text-[11px] font-bold text-emerald-700">{{ $item->generated_kode_aset }}</div>
+                                            @endif
+                                        </div>
+                                    </template>
+
+                                    <template x-if="!is_ready">
+                                        <div class="space-y-1">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800">
+                                                <i class="ti ti-alert-triangle text-xs"></i> Belum Lengkap
+                                            </span>
+                                            <p class="text-[10px] text-rose-600 leading-tight">
+                                                Kurang: <span x-text="missing.join(', ')"></span>
+                                            </p>
+                                        </div>
+                                    </template>
+                                @endif
                             </td>
 
                             <!-- Data Mentah Excel -->
@@ -523,6 +578,7 @@ document.addEventListener('alpine:init', () => {
         ready: config.ready,
         incomplete: config.incomplete,
         duplicate: config.duplicate,
+        failed: config.failed || 0,
         selectedItems: [],
         openCommitModal: false,
 

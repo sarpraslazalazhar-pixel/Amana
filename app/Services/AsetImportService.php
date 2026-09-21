@@ -585,23 +585,29 @@ class AsetImportService
                     // Cari atau buat Merk
                     $merkId = 1; // default merk
                     if (! empty($item->merk_mentah)) {
-                        $merk = Merk::firstOrCreate(['nama_merk' => trim($item->merk_mentah)]);
+                        $namaMerk = mb_substr(trim($item->merk_mentah), 0, 150);
+                        $merk = Merk::firstOrCreate(['nama_merk' => $namaMerk]);
                         $merkId = $merk->id;
                     } else {
                         $firstMerk = Merk::first();
                         $merkId = $firstMerk ? $firstMerk->id : Merk::create(['nama_merk' => 'Umum'])->id;
                     }
 
-                    // Tentukan fallback lokasi atau PJ
-                    $lokasiId = $item->lokasi_id;
-                    $pjId = $item->penanggung_jawab_id;
+                    // Tentukan fallback aman untuk relasi master
+                    $defaultKategoriId = Kategori::first()?->id ?? 1;
+                    $kategoriId = $item->kategori_id ?: $defaultKategoriId;
 
-                    if ($item->sifat_barang === 'D' && ! $lokasiId) {
-                        $lokasiId = 1; // fallback ke lokasi utama jika dinamis
-                    }
-                    if ($item->sifat_barang === 'S' && ! $pjId) {
-                        $pjId = 1; // fallback ke penanggung jawab default jika statis
-                    }
+                    $defaultBarangId = Barang::where('kategori_id', $kategoriId)->first()?->id ?? Barang::first()?->id ?? 1;
+                    $barangId = $item->barang_id ?: $defaultBarangId;
+
+                    $defaultDivisiId = Divisi::first()?->id ?? 1;
+                    $divisiId = $item->divisi_id ?: $defaultDivisiId;
+
+                    $defaultLokasiId = Lokasi::first()?->id ?? 1;
+                    $lokasiId = $item->lokasi_id ?: $defaultLokasiId;
+
+                    $defaultPjId = PenanggungJawab::first()?->id ?? 1;
+                    $pjId = $item->penanggung_jawab_id ?: $defaultPjId;
 
                     // Cek apakah kode dari Excel adalah format kode 9-komponen dan nomor urutnya belum bentrok
                     $parsedDirect = ! empty($item->kode_aset_lama) ? KodeAsetGenerator::parse($item->kode_aset_lama) : null;
@@ -620,14 +626,14 @@ class AsetImportService
                     if (! $useDirectCode) {
                         // Panggil Generator Kode Aset 9-Komponen untuk mengamankan nomor urut unik
                         $genResult = KodeAsetGenerator::generate([
-                            'kategori_id' => $item->kategori_id,
-                            'barang_id' => $item->barang_id,
-                            'sifat_barang' => $item->sifat_barang,
+                            'kategori_id' => $kategoriId,
+                            'barang_id' => $barangId,
+                            'sifat_barang' => in_array($item->sifat_barang, ['D', 'S'], true) ? $item->sifat_barang : 'D',
                             'penanggung_jawab_id' => $pjId,
                             'lokasi_id' => $lokasiId,
-                            'divisi_id' => $item->divisi_id,
-                            'cara_perolehan' => $item->cara_perolehan,
-                            'status_barang' => $item->status_barang,
+                            'divisi_id' => $divisiId,
+                            'cara_perolehan' => in_array($item->cara_perolehan, ['1', '2'], true) ? $item->cara_perolehan : '1',
+                            'status_barang' => in_array($item->status_barang, ['1', '2'], true) ? $item->status_barang : '1',
                             'tanggal_pembelian' => $item->tanggal_pembelian ? $item->tanggal_pembelian->format('Y-m-d') : date('Y-m-d'),
                         ]);
 
@@ -640,38 +646,38 @@ class AsetImportService
                     $penyusutanBulan = PenyusutanCalculator::hitungPenyusutanPerBulan($hargaTotal, $item->umur_ekonomis_tahun, $item->nilai_residu);
 
                     // Tentukan Klasifikasi / Jenis dari Divisi
-                    $divisi = Divisi::find($item->divisi_id);
+                    $divisi = Divisi::find($divisiId);
                     $jenis = ($divisi && in_array($divisi->kode_divisi, ['5', '6'], true)) ? 'kelolaan' : 'tetap';
 
                     $aset = Aset::create([
-                        'nama_aset' => $item->nama_aset_mentah,
-                        'sifat_barang' => $item->sifat_barang,
+                        'nama_aset' => mb_substr(trim($item->nama_aset_mentah ?: 'Aset Tanpa Nama'), 0, 255),
+                        'sifat_barang' => in_array($item->sifat_barang, ['D', 'S'], true) ? $item->sifat_barang : 'D',
                         'kode_aset' => $kodeAset,
-                        'kode_aset_lama' => $item->kode_aset_lama,
-                        'kode_sistem_lama' => $item->kode_sistem_lama,
-                        'kategori_id' => $item->kategori_id,
-                        'barang_id' => $item->barang_id,
-                        'divisi_id' => $item->divisi_id,
-                        'cara_perolehan' => $item->cara_perolehan,
-                        'status_barang' => $item->status_barang,
+                        'kode_aset_lama' => ! empty($item->kode_aset_lama) ? mb_substr(trim($item->kode_aset_lama), 0, 100) : null,
+                        'kode_sistem_lama' => ! empty($item->kode_sistem_lama) ? mb_substr(trim($item->kode_sistem_lama), 0, 100) : null,
+                        'kategori_id' => $kategoriId,
+                        'barang_id' => $barangId,
+                        'divisi_id' => $divisiId,
+                        'cara_perolehan' => in_array($item->cara_perolehan, ['1', '2'], true) ? $item->cara_perolehan : '1',
+                        'status_barang' => in_array($item->status_barang, ['1', '2'], true) ? $item->status_barang : '1',
                         'nomor_urut' => $nomorUrut,
                         'merk_id' => $merkId,
-                        'tipe_model' => $item->tipe_model,
-                        'produsen' => $item->produsen,
+                        'tipe_model' => ! empty($item->tipe_model) ? mb_substr(trim($item->tipe_model), 0, 150) : null,
+                        'produsen' => ! empty($item->produsen) ? mb_substr(trim($item->produsen), 0, 150) : null,
                         'no_seri' => ! empty($item->no_seri) ? mb_substr(trim($item->no_seri), 0, 100) : null,
                         'tahun_produksi' => $item->tahun_produksi,
                         'lokasi_id' => $lokasiId,
                         'penanggung_jawab_id' => $pjId,
                         'deskripsi' => $item->deskripsi_mentah,
-                        'tanggal_pembelian' => $item->tanggal_pembelian,
-                        'toko_distributor' => $item->toko_distributor ?: 'LAZ Al Azhar',
-                        'no_invoice' => $item->no_invoice,
-                        'jumlah_unit' => $item->jumlah_unit,
-                        'harga_satuan' => $item->harga_satuan,
-                        'harga_total' => $hargaTotal,
-                        'umur_ekonomis_tahun' => $item->umur_ekonomis_tahun,
-                        'nilai_residu' => $item->nilai_residu,
-                        'penyusutan_per_bulan' => $penyusutanBulan,
+                        'tanggal_pembelian' => $item->tanggal_pembelian ?? now()->toDateString(),
+                        'toko_distributor' => ! empty($item->toko_distributor) ? mb_substr(trim($item->toko_distributor), 0, 255) : 'LAZ Al Azhar',
+                        'no_invoice' => ! empty($item->no_invoice) ? mb_substr(trim($item->no_invoice), 0, 100) : null,
+                        'jumlah_unit' => max(1, (int) $item->jumlah_unit),
+                        'harga_satuan' => max(0, (float) $item->harga_satuan),
+                        'harga_total' => max(0, (float) $hargaTotal),
+                        'umur_ekonomis_tahun' => max(1, (int) $item->umur_ekonomis_tahun),
+                        'nilai_residu' => max(0, (float) $item->nilai_residu),
+                        'penyusutan_per_bulan' => max(0, (float) $penyusutanBulan),
                         'keterangan_tambahan' => $item->keterangan_tambahan,
                         'status' => 'aktif',
                         'jenis' => $jenis,

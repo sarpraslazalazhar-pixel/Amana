@@ -768,6 +768,8 @@ class AsetController extends Controller
             $query->where('is_ready', false);
         } elseif ($filterStatus === 'duplicate') {
             $query->where('is_duplicate', true);
+        } elseif ($filterStatus === 'failed') {
+            $query->where('import_status', 'failed');
         }
 
         if ($request->filled('kategori_id')) {
@@ -785,6 +787,7 @@ class AsetController extends Controller
         }
 
         $items = $query->paginate(25)->withQueryString();
+        $failedCount = $batch->items()->where('import_status', 'failed')->count();
 
         $kategoriList = Kategori::with('barang')->orderBy('nama_kategori')->get();
         $barangList = Barang::orderBy('nama_barang')->get();
@@ -793,7 +796,7 @@ class AsetController extends Controller
         $pjList = PenanggungJawab::orderBy('nama')->get();
 
         return view('aset.import.preview', compact(
-            'batch', 'items', 'kategoriList', 'barangList', 'divisiList', 'lokasiList', 'pjList', 'filterStatus'
+            'batch', 'items', 'kategoriList', 'barangList', 'divisiList', 'lokasiList', 'pjList', 'filterStatus', 'failedCount'
         ));
     }
 
@@ -868,8 +871,13 @@ class AsetController extends Controller
             if ($stats['skipped'] > 0) {
                 $msg .= ", {$stats['skipped']} duplikat dilewati";
             }
+
             if ($stats['failed'] > 0) {
                 $msg .= ", {$stats['failed']} baris gagal";
+
+                return redirect()->route('aset.import.preview', ['batch' => $batch->id, 'status' => 'failed'])
+                    ->with('warning', $msg)
+                    ->with('import_errors', $stats['errors']);
             }
 
             return redirect()->route('aset.import.preview', $batch->id)->with('success', $msg);

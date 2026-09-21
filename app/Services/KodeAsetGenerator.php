@@ -236,9 +236,20 @@ class KodeAsetGenerator
             $statusBarang = '1';
         }
 
-        $kategori = Kategori::findOrFail($kategoriId);
-        $barang = Barang::findOrFail($barangId);
-        $divisi = Divisi::findOrFail($divisiId);
+        $kategori = Kategori::find($kategoriId) ?? Kategori::first();
+        if (! $kategori) {
+            throw new InvalidArgumentException('Master Kategori belum tersedia di database.');
+        }
+
+        $barang = Barang::find($barangId) ?? Barang::where('kategori_id', $kategori->id)->first() ?? Barang::first();
+        if (! $barang) {
+            throw new InvalidArgumentException('Master Barang belum tersedia di database.');
+        }
+
+        $divisi = Divisi::find($divisiId) ?? Divisi::first();
+        if (! $divisi) {
+            throw new InvalidArgumentException('Master Divisi belum tersedia di database.');
+        }
 
         $kodeKategori = strtoupper(substr(trim($kategori->kode_kategori), 0, 2));
         $kodeKategori = str_pad($kodeKategori, 2, 'X');
@@ -250,16 +261,16 @@ class KodeAsetGenerator
 
         if ($sifatBarang === 'D') {
             $pjId = (int) ($params['penanggung_jawab_id'] ?? 0);
-            $pj = PenanggungJawab::findOrFail($pjId);
-            $kodePic = ! empty($pj->kode_pic) ? trim($pj->kode_pic) : (string) $pj->id;
+            $pj = PenanggungJawab::find($pjId) ?? PenanggungJawab::first();
+            $kodePic = $pj ? (! empty($pj->kode_pic) ? trim($pj->kode_pic) : (string) $pj->id) : '001';
             $kodeKeempat = str_pad($kodePic, 3, '0', STR_PAD_LEFT);
-            $labelKeempat = "Amil: {$pj->nama} ({$kodeKeempat})";
+            $labelKeempat = $pj ? "Amil: {$pj->nama} ({$kodeKeempat})" : "Amil Default ({$kodeKeempat})";
         } else {
             $lokasiId = (int) ($params['lokasi_id'] ?? 0);
-            $lokasi = Lokasi::findOrFail($lokasiId);
-            $kodeLok = ! empty($lokasi->kode_lokasi) ? trim($lokasi->kode_lokasi) : (string) $lokasi->id;
+            $lokasi = Lokasi::find($lokasiId) ?? Lokasi::first();
+            $kodeLok = $lokasi ? (! empty($lokasi->kode_lokasi) ? trim($lokasi->kode_lokasi) : (string) $lokasi->id) : '001';
             $kodeKeempat = str_pad($kodeLok, 3, '0', STR_PAD_LEFT);
-            $labelKeempat = "Lokasi: {$lokasi->nama_lokasi} ({$kodeKeempat})";
+            $labelKeempat = $lokasi ? "Lokasi: {$lokasi->nama_lokasi} ({$kodeKeempat})" : "Lokasi Default ({$kodeKeempat})";
         }
 
         return [
