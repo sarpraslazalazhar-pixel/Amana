@@ -88,19 +88,19 @@
             @foreach($kategoriList as $kat)
                 @php
                     $isSelected = ($selectedKategori && $selectedKategori->id === $kat->id);
-                    $iconClass = match($kat->kode_kategori) {
-                        'EL' => 'ti-device-laptop text-cyan-600 bg-cyan-50 border-cyan-100',
-                        'FN' => 'ti-armchair text-amber-600 bg-amber-50 border-amber-100',
-                        'KD' => 'ti-car text-emerald-600 bg-emerald-50 border-emerald-100',
-                        default => 'ti-category text-indigo-600 bg-indigo-50 border-indigo-100',
+                    [$iconName, $colorClass] = match($kat->kode_kategori) {
+                        'EL' => ['ti-device-laptop', 'text-cyan-600 bg-cyan-50 border-cyan-100'],
+                        'FN' => ['ti-armchair', 'text-amber-600 bg-amber-50 border-amber-100'],
+                        'KD' => ['ti-car', 'text-emerald-600 bg-emerald-50 border-emerald-100'],
+                        default => ['ti-category', 'text-indigo-600 bg-indigo-50 border-indigo-100'],
                     };
                 @endphp
                 <div class="p-5 rounded-3xl border transition-all duration-200 relative group flex flex-col justify-between {{ $isSelected ? 'bg-white border-emerald-500 shadow-md ring-2 ring-emerald-500/20' : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-xs' }}">
                     <a href="{{ route('data.kategori.index', ['kategori_id' => $kat->id]) }}" class="block space-y-3">
                         <div class="flex items-start justify-between">
                             <div class="flex items-center gap-3">
-                                <span class="p-3 rounded-2xl border flex items-center justify-center {{ $iconClass }}">
-                                    <i class="ti {{ explode(' ', $iconClass)[0] }} text-2xl"></i>
+                                <span class="p-3 rounded-2xl border flex items-center justify-center {{ $colorClass }}">
+                                    <i class="ti {{ $iconName }} text-2xl"></i>
                                 </span>
                                 <div>
                                     <div class="flex items-center gap-2">
