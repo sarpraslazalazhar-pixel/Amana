@@ -162,7 +162,7 @@
                     <button @click="chartTab = 'nilai'; toggleChartKategori('nilai')"
                             :class="chartTab === 'nilai' ? 'bg-white text-emerald-700 font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800'"
                             class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1">
-                        <i class="ti ti-currency-dollar text-sm"></i>
+                        <span class="text-xs font-bold leading-none">Rp</span>
                         <span>Nilai Rupiah</span>
                     </button>
                 </div>
