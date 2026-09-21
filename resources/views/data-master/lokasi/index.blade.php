@@ -300,9 +300,7 @@
             <!-- Modal Form -->
             <form :action="formAction" method="POST" class="space-y-4">
                 @csrf
-                <template x-if="isEdit">
-                    <input type="hidden" name="_method" value="PUT">
-                </template>
+                <input type="hidden" name="_method" value="PUT" :disabled="!isEdit">
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Kode Lokasi -->
@@ -438,11 +436,9 @@
 @endsection
 
 @push('scripts')
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('lokasiManager', () => ({
+function lokasiManager() {
+    return {
         modalOpen: false,
         isEdit: false,
         editId: null,
@@ -783,7 +779,16 @@ document.addEventListener('alpine:init', () => {
                 this.overviewMap.setView([-2.5, 118.0], 5);
             }
         }
-    }));
-});
+    };
+}
+window.lokasiManager = lokasiManager;
+
+if (window.Alpine) {
+    Alpine.data('lokasiManager', lokasiManager);
+} else {
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('lokasiManager', lokasiManager);
+    });
+}
 </script>
 @endpush

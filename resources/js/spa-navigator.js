@@ -158,9 +158,6 @@ export async function navigateTo(url, pushHistory = true) {
                 }
             }
 
-            // Replace content
-            mainEl.innerHTML = newMain.innerHTML;
-
             // Collect ALL page-specific scripts (inside main + @stack('scripts') at body level)
             const scripts = Array.from(doc.querySelectorAll('script')).filter(s => {
                 const src = s.getAttribute('src') || '';
@@ -171,10 +168,7 @@ export async function navigateTo(url, pushHistory = true) {
                 return true;
             });
 
-            // Execute scripts synchronously — the key fix:
-            // Scripts that use `document.addEventListener('alpine:init', cb)` need
-            // their callback invoked BEFORE Alpine.initTree runs.
-            // We execute them first, then manually fire 'alpine:init', then initTree.
+            // Execute scripts synchronously — register Alpine.data() BEFORE DOM insertion
             for (const oldScript of scripts) {
                 const newScript = document.createElement('script');
                 newScript.setAttribute('data-spa-page-script', 'true');
@@ -194,14 +188,16 @@ export async function navigateTo(url, pushHistory = true) {
                 }
             }
 
-            // Now dispatch alpine:init — this triggers the addEventListener callbacks
-            // that were just registered by the page scripts (e.g. Alpine.data('asetEditForm', ...))
+            // Dispatch alpine:init so all Alpine.data registrations are complete
             document.dispatchEvent(new CustomEvent('alpine:init'));
 
             // Give Alpine a microtask to process the data registration
             await new Promise(resolve => queueMicrotask(resolve));
 
-            // NOW init the Alpine tree — all Alpine.data() components are registered
+            // Replace content — NOW when Alpine's MutationObserver scans, everything is ready
+            mainEl.innerHTML = newMain.innerHTML;
+
+            // Init the Alpine tree
             if (window.Alpine) {
                 window.Alpine.initTree(mainEl);
             }

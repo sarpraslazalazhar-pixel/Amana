@@ -137,7 +137,7 @@
                             <td class="py-3 px-4 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <button type="button"
-                                            @click='openEditModal(@js(["id" => $item->id, "nama_merk" => $item->nama_merk]))'
+                                            @click="openEditModal({{ Js::from($item) }})"
                                             class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 inline-flex items-center justify-center transition-colors"
                                             title="Edit Merk">
                                         <i class="ti ti-pencil text-sm"></i>
@@ -197,9 +197,7 @@
             <!-- Modal Form -->
             <form :action="formAction" method="POST" class="space-y-4">
                 @csrf
-                <template x-if="isEdit">
-                    <input type="hidden" name="_method" value="PUT">
-                </template>
+                <input type="hidden" name="_method" value="PUT" :disabled="!isEdit">
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Merk <span class="text-rose-500">*</span></label>
@@ -228,8 +226,8 @@
 
 @push('scripts')
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('merkManager', () => ({
+function merkManager() {
+    return {
         modalOpen: false,
         isEdit: false,
         editId: null,
@@ -253,7 +251,16 @@ document.addEventListener('alpine:init', () => {
             this.formData = { nama_merk: item.nama_merk };
             this.modalOpen = true;
         }
-    }));
-});
+    };
+}
+window.merkManager = merkManager;
+
+if (window.Alpine) {
+    Alpine.data('merkManager', merkManager);
+} else {
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('merkManager', merkManager);
+    });
+}
 </script>
 @endpush
