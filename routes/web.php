@@ -4,6 +4,7 @@ use App\Http\Controllers\AsetController;
 use App\Http\Controllers\AsetSubmoduleController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LampiranAsetController;
 use App\Http\Controllers\DataMaster\KategoriController;
 use App\Http\Controllers\DataMaster\LokasiController;
 use App\Http\Controllers\DataMaster\MerkController;
@@ -123,6 +124,11 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/jurnal/{jurnal}/status', [AsetSubmoduleController::class, 'updateJurnalStatus'])->name('aset.jurnal.status');
 
     Route::post('/aset/{aset}/status', [AsetSubmoduleController::class, 'ubahStatus'])->name('aset.status.update');
+
+    // Lampiran Dokumen Aset
+    Route::post('/aset/{aset}/lampiran', [LampiranAsetController::class, 'store'])->name('aset.lampiran.store');
+    Route::get('/lampiran/{lampiran}/download', [LampiranAsetController::class, 'download'])->name('aset.lampiran.download');
+    Route::delete('/lampiran/{lampiran}', [LampiranAsetController::class, 'destroy'])->name('aset.lampiran.destroy');
 
     // Data Master
     Route::resource('data/lokasi', LokasiController::class)->names('data.lokasi');

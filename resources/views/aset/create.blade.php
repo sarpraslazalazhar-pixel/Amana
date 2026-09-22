@@ -479,6 +479,49 @@
                           class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors">{{ old('keterangan_tambahan') }}</textarea>
             </div>
         </div>
+        <!-- 6. LAMPIRAN DOKUMEN -->
+        <div class="p-6 sm:p-7 bg-white rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-bold text-xs">6</span>
+                    LAMPIRAN DOKUMEN
+                </h3>
+                <span class="text-xs text-slate-400 font-medium">Maks. 5 file • PDF, Gambar, Word, Excel (≤ 5 MB)</span>
+            </div>
+
+            <div x-data="{ lampiranRows: [{ id: Date.now() }] }" class="space-y-3">
+                <template x-for="(row, index) in lampiranRows" :key="row.id">
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200/70">
+                        <div class="sm:col-span-5">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">File Dokumen <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                            <input type="file" :name="'lampiran_files[' + index + ']'"
+                                   accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
+                                   class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 cursor-pointer">
+                        </div>
+                        <div class="sm:col-span-5">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Label <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                            <input type="text" :name="'lampiran_labels[' + index + ']'" maxlength="255" placeholder="Contoh: Invoice pembelian..."
+                                   class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors">
+                        </div>
+                        <div class="sm:col-span-2 flex items-end pb-0.5">
+                            <button type="button" @click="lampiranRows.splice(index, 1)" x-show="lampiranRows.length > 1"
+                                    class="px-2.5 py-2 rounded-lg text-rose-500 hover:bg-rose-50 text-xs font-bold inline-flex items-center gap-1 transition-colors">
+                                <i class="ti ti-trash text-sm"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <button type="button" @click="if (lampiranRows.length < 5) lampiranRows.push({ id: Date.now() })"
+                        x-show="lampiranRows.length < 5"
+                        class="text-xs font-bold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors">
+                    <i class="ti ti-plus text-sm"></i>
+                    Tambah Lampiran (<span x-text="lampiranRows.length"></span>/5)
+                </button>
+
+                <p class="text-[10px] text-slate-400">Format: PDF, JPG, PNG, WEBP, DOC, DOCX, XLS, XLSX. Ukuran per file maks. 5 MB.</p>
+            </div>
+        </div>
 
         <!-- Form Submit Bar -->
         <div class="flex items-center justify-end space-x-3 pt-2">

@@ -130,4 +130,9 @@ class Aset extends Model
     {
         return $this->hasMany(AuditLog::class, 'aset_id')->latest();
     }
+
+    public function lampiran()
+    {
+        return $this->hasMany(LampiranAset::class, 'aset_id')->latest();
+    }
 }

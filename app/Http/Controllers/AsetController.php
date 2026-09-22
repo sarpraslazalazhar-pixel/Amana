@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aset;
+use App\Models\LampiranAset;
 use App\Models\AsetImportBatch;
 use App\Models\AsetImportItem;
 use App\Models\Barang;
@@ -409,6 +410,28 @@ class AsetController extends Controller
 
         AuditLogger::log('buat_aset', "Pendaftaran aset baru {$aset->kode_aset} ({$aset->nama_aset})", $aset);
 
+        // Proses upload lampiran dokumen (jika ada)
+        if ($request->hasFile('lampiran_files')) {
+            $lampiranFiles = $request->file('lampiran_files');
+            $lampiranLabels = $request->input('lampiran_labels', []);
+            $maxLampiran = 5;
+
+            foreach (array_slice($lampiranFiles, 0, $maxLampiran) as $index => $lampiranFile) {
+                if ($lampiranFile && $lampiranFile->isValid()) {
+                    $path = $lampiranFile->store('lampiran_aset', 'public');
+                    LampiranAset::create([
+                        'aset_id' => $aset->id,
+                        'file_path' => $path,
+                        'file_name' => $lampiranFile->getClientOriginalName(),
+                        'file_size' => $lampiranFile->getSize(),
+                        'file_type' => $lampiranFile->getMimeType(),
+                        'label' => $lampiranLabels[$index] ?? null,
+                        'uploaded_by' => auth()->id() ?? 1,
+                    ]);
+                }
+            }
+        }
+
         $grupRoute = $jenis === 'kelolaan' ? 'aset.kelolaan' : 'aset.tetap';
 
         return redirect()->route($grupRoute)->with('success', "Aset berhasil dibuat dengan Kode: {$kodeAset}");
@@ -422,6 +445,7 @@ class AsetController extends Controller
             'agenda.user', 'agenda.updater',
             'keuangan.user', 'keuangan.updater',
             'jurnal.user', 'jurnal.updater',
+            'lampiran.uploader',
         ])->findOrFail($id);
 
         $nilaiBuku = PenyusutanCalculator::hitungNilaiBukuSaatIni($aset);
@@ -506,7 +530,7 @@ class AsetController extends Controller
 
     public function edit($id)
     {
-        $aset = Aset::with(['barang', 'divisi'])->findOrFail($id);
+        $aset = Aset::with(['barang', 'divisi', 'lampiran'])->findOrFail($id);
         $kategoriList = Kategori::with('barang')->orderBy('nama_kategori')->get();
         $barangList = Barang::where('kategori_id', $aset->kategori_id)->orderBy('nama_barang')->get();
         $divisiList = Divisi::orderBy('kode_divisi')->get();

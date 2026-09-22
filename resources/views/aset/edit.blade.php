@@ -389,6 +389,114 @@
 
     </form>
 
+    <!-- 6. LAMPIRAN DOKUMEN (Form terpisah dari form edit utama) -->
+    <div class="p-6 sm:p-7 bg-white rounded-3xl border border-slate-200/80 shadow-sm space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-bold text-xs">6</span>
+                LAMPIRAN DOKUMEN
+            </h3>
+            <span class="text-xs text-slate-400 font-medium">Maks. 5 file • PDF, Gambar, Word, Excel (≤ 5 MB)</span>
+        </div>
+
+        <!-- Daftar Lampiran yang Sudah Ada -->
+        @if($aset->lampiran && $aset->lampiran->count() > 0)
+            <div class="space-y-2">
+                @foreach($aset->lampiran as $lampiran)
+                    <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70 group hover:border-emerald-200 transition-colors">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-9 h-9 rounded-xl flex items-center justify-center border shrink-0
+                                {{ $lampiran->is_pdf ? 'bg-rose-50 text-rose-600 border-rose-100' : ($lampiran->is_image ? 'bg-cyan-50 text-cyan-600 border-cyan-100' : 'bg-amber-50 text-amber-600 border-amber-100') }}">
+                                <i class="ti {{ $lampiran->icon_class }} text-base"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-slate-800 truncate" title="{{ $lampiran->file_name }}">
+                                    {{ $lampiran->label ?: $lampiran->file_name }}
+                                </p>
+                                <p class="text-[10px] text-slate-400">
+                                    {{ $lampiran->file_name }} • {{ $lampiran->formatted_size }} • {{ $lampiran->created_at->translatedFormat('d M Y') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <a href="{{ route('aset.lampiran.download', $lampiran->id) }}"
+                               class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                               title="Download">
+                                <i class="ti ti-download text-sm"></i>
+                            </a>
+                            @if(auth()->check() && auth()->user()->role === 'super_admin')
+                                <form method="POST" action="{{ route('aset.lampiran.destroy', $lampiran->id) }}"
+                                      onsubmit="return confirm('Hapus lampiran \'{{ $lampiran->file_name }}\'?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="p-1.5 rounded-lg text-rose-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                                            title="Hapus Lampiran">
+                                        <i class="ti ti-trash text-sm"></i>
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 text-center">
+                <i class="ti ti-file-off text-2xl text-slate-300"></i>
+                <p class="text-xs text-slate-400 mt-1">Belum ada lampiran dokumen untuk aset ini.</p>
+            </div>
+        @endif
+
+        <!-- Form Upload Lampiran Baru -->
+        @php
+            $lampiranCount = $aset->lampiran ? $aset->lampiran->count() : 0;
+            $sisaSlot = 5 - $lampiranCount;
+        @endphp
+
+        @if($sisaSlot > 0)
+            <form method="POST" action="{{ route('aset.lampiran.store', $aset->id) }}" enctype="multipart/form-data"
+                  class="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200/60 space-y-3">
+                @csrf
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="ti ti-upload text-emerald-600"></i>
+                    <span class="text-xs font-bold text-emerald-800">Unggah Lampiran Baru</span>
+                    <span class="text-[10px] text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full font-bold border border-emerald-200">{{ $sisaSlot }} slot tersisa</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">File Dokumen <span class="text-rose-500">*</span></label>
+                        <input type="file" name="lampiran_file" required
+                               accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
+                               class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Label / Keterangan <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                        <input type="text" name="lampiran_label" maxlength="255" placeholder="Contoh: Invoice pembelian, Nota toko..."
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors">
+                    </div>
+                </div>
+
+                @if($errors->has('lampiran_file'))
+                    <p class="text-[11px] font-bold text-rose-600">{{ $errors->first('lampiran_file') }}</p>
+                @endif
+
+                <div class="flex justify-end">
+                    <button type="submit"
+                            class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition-colors">
+                        <i class="ti ti-upload text-sm"></i>
+                        Unggah Lampiran
+                    </button>
+                </div>
+            </form>
+        @else
+            <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 font-medium flex items-center gap-2">
+                <i class="ti ti-alert-triangle text-sm"></i>
+                Batas maksimal 5 lampiran telah tercapai. Hapus lampiran lama untuk mengunggah yang baru.
+            </div>
+        @endif
+    </div>
+
     <div x-show="merkModalOpen" x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto"
          @keydown.escape.window="merkModalOpen = false">
