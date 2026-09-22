@@ -48,7 +48,7 @@ class ImageOptimizationFeatureTest extends TestCase
 
         $this->kategori = Kategori::where('kode_kategori', 'EL')->first() ?? Kategori::create(['kode_kategori' => 'EL', 'nama_kategori' => 'Elektronik']);
         $this->barang = Barang::where('kode_barang', '14')->first() ?? Barang::create(['kategori_id' => $this->kategori->id, 'kode_barang' => '14', 'nama_barang' => 'Laptop']);
-        $this->divisi = Divisi::first() ?? Divisi::create(['kode_divisi' => '2', 'nama_divisi' => 'Kelembagaan']);
+        $this->divisi = Divisi::first() ?? Divisi::create(['kode_divisi' => '2', 'nama_divisi' => 'Sekretariat']);
         $this->lokasi = Lokasi::first() ?? Lokasi::create(['kode_lokasi' => '111', 'nama_lokasi' => 'Lobi Utama', 'gedung' => 'Pusat']);
         $this->pj = PenanggungJawab::first() ?? PenanggungJawab::create(['nama' => 'Suryamin', 'kode_pic' => '050', 'divisi_id' => $this->divisi->id]);
         $this->merk = Merk::first() ?? Merk::create(['nama_merk' => 'Lenovo']);

@@ -92,6 +92,8 @@
                         'EL' => ['ti-device-laptop', 'text-cyan-600 bg-cyan-50 border-cyan-100'],
                         'FN' => ['ti-armchair', 'text-amber-600 bg-amber-50 border-amber-100'],
                         'KD' => ['ti-car', 'text-emerald-600 bg-emerald-50 border-emerald-100'],
+                        'GD' => ['ti-building-skyscraper', 'text-blue-600 bg-blue-50 border-blue-100'],
+                        'TN' => ['ti-map-2', 'text-emerald-700 bg-emerald-50 border-emerald-100'],
                         default => ['ti-category', 'text-indigo-600 bg-indigo-50 border-indigo-100'],
                     };
                 @endphp
@@ -323,9 +325,7 @@
             <!-- Modal Form -->
             <form :action="formKategoriAction" method="POST" class="space-y-4">
                 @csrf
-                <template x-if="isEditKategori">
-                    <input type="hidden" name="_method" value="PUT">
-                </template>
+                <input type="hidden" name="_method" value="PUT" :disabled="!isEditKategori">
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Kode Kategori (2 Huruf Kapital) <span class="text-rose-500">*</span></label>
@@ -388,9 +388,7 @@
             <!-- Modal Form -->
             <form :action="formBarangAction" method="POST" class="space-y-4">
                 @csrf
-                <template x-if="isEditBarang">
-                    <input type="hidden" name="_method" value="PUT">
-                </template>
+                <input type="hidden" name="_method" value="PUT" :disabled="!isEditBarang">
 
                 <!-- Kategori Induk Dropdown -->
                 <div x-show="!isEditBarang">
@@ -460,8 +458,8 @@
 
 @push('scripts')
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('kategoriManager', () => ({
+function kategoriManager() {
+    return {
         modalKategoriOpen: false,
         modalBarangOpen: false,
         isEditKategori: false,
@@ -494,7 +492,7 @@ document.addEventListener('alpine:init', () => {
 
         openEditKategoriModal(kat) {
             this.isEditKategori = true;
-            this.formKategoriAction = '/data/kategori/' + kat.id;
+            this.formKategoriAction = '{{ url('data/kategori') }}/' + kat.id;
             this.formKategoriData = {
                 kode_kategori: kat.kode_kategori,
                 nama_kategori: kat.nama_kategori,
@@ -522,7 +520,7 @@ document.addEventListener('alpine:init', () => {
 
         openEditBarangModal(item) {
             this.isEditBarang = true;
-            this.formBarangAction = '/data/kategori/barang/' + item.id;
+            this.formBarangAction = '{{ url('data/kategori/barang') }}/' + item.id;
             this.formBarangData = {
                 kategori_id: item.kategori_id,
                 kode_barang: item.kode_barang,
@@ -553,7 +551,16 @@ document.addEventListener('alpine:init', () => {
             const kat = this.kategoriList.find(k => k.id == kategoriId);
             return kat ? kat.kode_kategori : 'EL';
         }
-    }));
-});
+    };
+}
+window.kategoriManager = kategoriManager;
+
+if (window.Alpine) {
+    Alpine.data('kategoriManager', kategoriManager);
+} else {
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('kategoriManager', kategoriManager);
+    });
+}
 </script>
 @endpush

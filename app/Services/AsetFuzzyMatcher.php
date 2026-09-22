@@ -231,7 +231,7 @@ class AsetFuzzyMatcher
             'PROGRAM' => '122',
             'HRD' => '131',
             'CRM' => '132',
-            'KELEMBAGAAN' => '133',
+            'SEKRETARIAT' => '133',
             'ROOFTOP' => '140',
             'KLB' => '200',
             'SAWANGAN' => '300',

@@ -53,7 +53,7 @@ class AsetMutasiKodeTest extends TestCase
         $this->barang = Barang::create(['nama_barang' => 'Laptop', 'kode_barang' => '14', 'kategori_id' => $this->kategori->id]);
         $this->merk = Merk::create(['nama_merk' => 'Lenovo']);
 
-        $this->divisi1 = Divisi::create(['nama_divisi' => 'Kelembagaan', 'kode_divisi' => '2']);
+        $this->divisi1 = Divisi::create(['nama_divisi' => 'Sekretariat', 'kode_divisi' => '2']);
         $this->divisi2 = Divisi::create(['nama_divisi' => 'Fundraising', 'kode_divisi' => '3']);
 
         $this->lokasi1 = Lokasi::create(['nama_lokasi' => 'Lobi Cirendeu', 'kode_lokasi' => '111']);

@@ -289,9 +289,12 @@
                                         {{ ucfirst($aset->jenis) }}
                                     </span>
                                 @endif
-                            </td>
                             <td class="py-3 px-4 text-right font-medium text-slate-900 text-xs whitespace-nowrap">
-                                Rp {{ number_format($aset->harga_total, 0, ',', '.') }}
+                                @if($aset->harga_total > 0)
+                                    Rp {{ number_format($aset->harga_total, 0, ',', '.') }}
+                                @else
+                                    <span class="text-slate-400 font-normal italic">-</span>
+                                @endif
                             </td>
                             <td class="py-3 px-4 text-center">
                                 <a href="{{ route('aset.show', $aset->id) }}"

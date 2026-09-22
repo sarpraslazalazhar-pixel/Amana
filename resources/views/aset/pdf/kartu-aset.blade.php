@@ -491,9 +491,21 @@
             </tr>
             <tr>
                 <td class="lbl">Harga Satuan</td>
-                <td class="val font-bold">Rp {{ number_format($aset->harga_satuan, 0, ',', '.') }},00</td>
+                <td class="val font-bold">
+                    @if($aset->harga_satuan > 0)
+                        Rp {{ number_format($aset->harga_satuan, 0, ',', '.') }},00
+                    @else
+                        <span style="color:#64748b; font-style:italic; font-weight:normal;">- (Belum dinilai)</span>
+                    @endif
+                </td>
                 <td class="lbl">Harga Total Perolehan</td>
-                <td class="val font-bold highlight-emerald">Rp {{ number_format($aset->harga_total, 0, ',', '.') }},00</td>
+                <td class="val font-bold highlight-emerald">
+                    @if($aset->harga_total > 0)
+                        Rp {{ number_format($aset->harga_total, 0, ',', '.') }},00
+                    @else
+                        <span style="color:#64748b; font-style:italic; font-weight:normal;">- (Belum dinilai)</span>
+                    @endif
+                </td>
             </tr>
         </table>
     </div>
@@ -506,21 +518,53 @@
         <table class="info-table">
             <tr>
                 <td class="lbl">Umur Ekonomis</td>
-                <td class="val font-bold">{{ $aset->umur_ekonomis_tahun }} Tahun ({{ $aset->umur_ekonomis_tahun * 12 }} Bulan)</td>
+                <td class="val font-bold">
+                    @if($aset->umur_ekonomis_tahun > 0)
+                        {{ $aset->umur_ekonomis_tahun }} Tahun ({{ $aset->umur_ekonomis_tahun * 12 }} Bulan)
+                    @elseif($aset->kategori && $aset->kategori->kode_kategori === 'TN')
+                        <span style="color:#0f766e; font-weight:normal;">Tidak disusutkan</span>
+                    @else
+                        <span style="color:#64748b; font-style:italic; font-weight:normal;">-</span>
+                    @endif
+                </td>
                 <td class="lbl">Usia Aset Berjalan</td>
                 <td class="val font-bold text-cyan">{{ $usiaAset }}</td>
             </tr>
             <tr>
                 <td class="lbl">Penyusutan per Bulan</td>
-                <td class="val font-bold">Rp {{ number_format($aset->penyusutan_per_bulan, 0, ',', '.') }},00 /bln</td>
+                <td class="val font-bold">
+                    @if($aset->penyusutan_per_bulan > 0)
+                        Rp {{ number_format($aset->penyusutan_per_bulan, 0, ',', '.') }},00 /bln
+                    @else
+                        <span style="color:#64748b; font-style:italic; font-weight:normal;">-</span>
+                    @endif
+                </td>
                 <td class="lbl">Akumulasi Penyusutan</td>
-                <td class="val font-bold text-emerald">Rp {{ number_format($totalPenyusutan, 0, ',', '.') }},00</td>
+                <td class="val font-bold text-emerald">
+                    @if($totalPenyusutan > 0)
+                        Rp {{ number_format($totalPenyusutan, 0, ',', '.') }},00
+                    @else
+                        <span style="color:#64748b; font-style:italic; font-weight:normal;">-</span>
+                    @endif
+                </td>
             </tr>
             <tr>
                 <td class="lbl">Nilai Residu (Sisa)</td>
-                <td class="val">Rp {{ number_format($aset->nilai_residu ?? 0, 0, ',', '.') }},00</td>
+                <td class="val">
+                    @if(($aset->nilai_residu ?? 0) > 0)
+                        Rp {{ number_format($aset->nilai_residu, 0, ',', '.') }},00
+                    @else
+                        <span style="color:#64748b; font-style:italic; font-weight:normal;">-</span>
+                    @endif
+                </td>
                 <td class="lbl">Nilai Buku Saat Ini</td>
-                <td class="val font-bold highlight-emerald">Rp {{ number_format($nilaiBuku, 0, ',', '.') }},00</td>
+                <td class="val font-bold highlight-emerald">
+                    @if($nilaiBuku > 0)
+                        Rp {{ number_format($nilaiBuku, 0, ',', '.') }},00
+                    @else
+                        <span style="color:#64748b; font-style:italic; font-weight:normal;">- (Belum dinilai)</span>
+                    @endif
+                </td>
             </tr>
         </table>
     </div>

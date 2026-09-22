@@ -50,6 +50,20 @@
                     </div>
                 @endif
 
+                @if($errors->any())
+                    <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs shadow-sm">
+                        <div class="flex items-center gap-2 font-bold mb-1.5 text-rose-900">
+                            <i class="ti ti-alert-circle text-base text-rose-600"></i>
+                            <span>Terjadi kesalahan pada data yang dimasukkan:</span>
+                        </div>
+                        <ul class="list-disc list-inside space-y-0.5 text-rose-700">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 @yield('content')
             </main>
         </div>

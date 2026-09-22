@@ -641,9 +641,18 @@ class AsetImportService
                         $nomorUrut = $genResult['nomor_urut'];
                     }
 
+                    $isGedungOrTanah = false;
+                    if ($kategoriId) {
+                        $kat = Kategori::find($kategoriId);
+                        $isGedungOrTanah = $kat && in_array($kat->kode_kategori, ['GD', 'TN'], true);
+                    }
+                    $minUmur = $isGedungOrTanah ? 0 : 1;
+                    $umurEkonomis = max($minUmur, (int) $item->umur_ekonomis_tahun);
+                    $hargaSatuan = max(0, (float) $item->harga_satuan);
+
                     // Hitung Penyusutan
-                    $hargaTotal = PenyusutanCalculator::hitungHargaTotal($item->jumlah_unit, $item->harga_satuan);
-                    $penyusutanBulan = PenyusutanCalculator::hitungPenyusutanPerBulan($hargaTotal, $item->umur_ekonomis_tahun, $item->nilai_residu);
+                    $hargaTotal = PenyusutanCalculator::hitungHargaTotal($item->jumlah_unit, $hargaSatuan);
+                    $penyusutanBulan = PenyusutanCalculator::hitungPenyusutanPerBulan($hargaTotal, $umurEkonomis, $item->nilai_residu);
 
                     // Tentukan Klasifikasi / Jenis dari Divisi
                     $divisi = Divisi::find($divisiId);
@@ -673,9 +682,9 @@ class AsetImportService
                         'toko_distributor' => ! empty($item->toko_distributor) ? mb_substr(trim($item->toko_distributor), 0, 255) : 'LAZ Al Azhar',
                         'no_invoice' => ! empty($item->no_invoice) ? mb_substr(trim($item->no_invoice), 0, 100) : null,
                         'jumlah_unit' => max(1, (int) $item->jumlah_unit),
-                        'harga_satuan' => max(0, (float) $item->harga_satuan),
+                        'harga_satuan' => $hargaSatuan,
                         'harga_total' => max(0, (float) $hargaTotal),
-                        'umur_ekonomis_tahun' => max(1, (int) $item->umur_ekonomis_tahun),
+                        'umur_ekonomis_tahun' => $umurEkonomis,
                         'nilai_residu' => max(0, (float) $item->nilai_residu),
                         'penyusutan_per_bulan' => max(0, (float) $penyusutanBulan),
                         'keterangan_tambahan' => $item->keterangan_tambahan,

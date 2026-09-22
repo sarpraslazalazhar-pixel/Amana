@@ -7,6 +7,7 @@ use App\Models\Divisi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\PenanggungJawab;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class MasterKodeAsetSeeder extends Seeder
@@ -16,7 +17,7 @@ class MasterKodeAsetSeeder extends Seeder
         // 1. Seed Divisi (1 - 6)
         $divisiList = [
             ['kode_divisi' => '1', 'nama_divisi' => 'Direksi', 'keterangan' => 'Aset Tetap'],
-            ['kode_divisi' => '2', 'nama_divisi' => 'Kelembagaan', 'keterangan' => 'Aset Tetap'],
+            ['kode_divisi' => '2', 'nama_divisi' => 'Sekretariat', 'keterangan' => 'Aset Tetap'],
             ['kode_divisi' => '3', 'nama_divisi' => 'Fundraising', 'keterangan' => 'Aset Tetap'],
             ['kode_divisi' => '4', 'nama_divisi' => 'Keuangan', 'keterangan' => 'Aset Tetap'],
             ['kode_divisi' => '5', 'nama_divisi' => 'Program', 'keterangan' => 'Aset dalam Kelolaan'],
@@ -30,21 +31,40 @@ class MasterKodeAsetSeeder extends Seeder
             );
         }
 
-        // 2. Seed Kategori (EL, FN, KD)
-        $kategoriEL = Kategori::updateOrCreate(
-            ['kode_kategori' => 'EL'],
-            ['nama_kategori' => 'Elektronik', 'keterangan' => 'Peralatan elektronik, komputer, dan IT']
-        );
+        // 2. Seed Kategori (EL, FN, KD, GD, TN)
+        $kategoriList = [
+            ['id' => 1, 'kode_kategori' => 'EL', 'nama_kategori' => 'Elektronik', 'keterangan' => 'Peralatan elektronik, komputer, dan IT'],
+            ['id' => 2, 'kode_kategori' => 'FN', 'nama_kategori' => 'Furniture', 'keterangan' => 'Perabotan kantor, meja, kursi, dan perlengkapan'],
+            ['id' => 3, 'kode_kategori' => 'KD', 'nama_kategori' => 'Kendaraan', 'keterangan' => 'Kendaraan dinas dan operasional'],
+            ['id' => 5, 'kode_kategori' => 'GD', 'nama_kategori' => 'GEDUNG', 'keterangan' => 'Gedung sebagai kantor operasional'],
+            ['id' => 6, 'kode_kategori' => 'TN', 'nama_kategori' => 'TANAH', 'keterangan' => 'Tanah milik LAZWaf'],
+        ];
 
-        $kategoriFN = Kategori::updateOrCreate(
-            ['kode_kategori' => 'FN'],
-            ['nama_kategori' => 'Furniture', 'keterangan' => 'Perabotan kantor, meja, kursi, dan perlengkapan']
-        );
+        foreach ($kategoriList as $kat) {
+            $k = null;
+            if (isset($kat['id'])) {
+                $k = Kategori::find($kat['id']);
+            }
+            if (! $k) {
+                $k = Kategori::where('kode_kategori', $kat['kode_kategori'])->first();
+            }
+            if (! $k) {
+                $k = new Kategori;
+                if (isset($kat['id'])) {
+                    $k->id = $kat['id'];
+                }
+            }
+            $k->nama_kategori = $kat['nama_kategori'];
+            $k->kode_kategori = $kat['kode_kategori'];
+            $k->keterangan = $kat['keterangan'];
+            $k->save();
+        }
 
-        $kategoriKD = Kategori::updateOrCreate(
-            ['kode_kategori' => 'KD'],
-            ['nama_kategori' => 'Kendaraan', 'keterangan' => 'Kendaraan dinas dan operasional']
-        );
+        $kategoriEL = Kategori::where('kode_kategori', 'EL')->first();
+        $kategoriFN = Kategori::where('kode_kategori', 'FN')->first();
+        $kategoriKD = Kategori::where('kode_kategori', 'KD')->first();
+        $kategoriGD = Kategori::where('kode_kategori', 'GD')->first();
+        $kategoriTN = Kategori::where('kode_kategori', 'TN')->first();
 
         // 3. Seed Master Barang - Elektronik (EL01 - EL55)
         $elektronikItems = [
@@ -164,132 +184,147 @@ class MasterKodeAsetSeeder extends Seeder
         $divMap = Divisi::pluck('id', 'kode_divisi')->toArray();
 
         $picList = [
-            ['kode' => '008', 'nama' => 'Iwan Rahmat', 'divisi' => '1', 'jabatan' => 'Direktur Utama', 'telepon' => '081289008008', 'email' => 'iwan.rahmat@alazhar.org'],
-            ['kode' => '009', 'nama' => 'Subakti', 'divisi' => '1', 'jabatan' => 'Direktur Eksekutif', 'telepon' => '081289009009', 'email' => 'subakti@alazhar.org'],
-            ['kode' => '010', 'nama' => 'Nurli Laelasari', 'divisi' => '2', 'jabatan' => 'Kepala Divisi Kelembagaan', 'telepon' => '081289010010', 'email' => 'nurli.laelasari@alazhar.org'],
-            ['kode' => '012', 'nama' => 'Suparman', 'divisi' => '5', 'jabatan' => 'General Affairs & Logistik', 'telepon' => '081289012012', 'email' => 'suparman@alazhar.org'],
-            ['kode' => '013', 'nama' => 'Rahmatullah Sidik', 'divisi' => '5', 'jabatan' => 'Koordinator RGI Sawangan', 'telepon' => '081289013013', 'email' => 'rahmatullah.sidik@alazhar.org'],
-            ['kode' => '014', 'nama' => 'Rochadi Kohar', 'divisi' => '5', 'jabatan' => 'Fasilitator Otomotif RGI', 'telepon' => '081289014014', 'email' => 'rochadi.kohar@alazhar.org'],
-            ['kode' => '017', 'nama' => 'Lias', 'divisi' => '4', 'jabatan' => 'Staf Keuangan & Pajak', 'telepon' => '081289017017', 'email' => 'lias@alazhar.org'],
-            ['kode' => '019', 'nama' => 'Jamaludin', 'divisi' => '5', 'jabatan' => 'Instruktur Teknik Komputer RGI', 'telepon' => '081289019019', 'email' => 'jamaludin@alazhar.org'],
-            ['kode' => '023', 'nama' => 'Rusdi', 'divisi' => '5', 'jabatan' => 'Staff Operasional RGI', 'telepon' => '081289023023', 'email' => 'rusdi@alazhar.org'],
-            ['kode' => '025', 'nama' => 'Matnur', 'divisi' => '5', 'jabatan' => 'Koordinator Keamanan & Driver', 'telepon' => '081289025025', 'email' => 'matnur@alazhar.org'],
-            ['kode' => '026', 'nama' => 'Sigit Nugroho', 'divisi' => '3', 'jabatan' => 'Supervisor Digital Fundraising', 'telepon' => '081289026026', 'email' => 'sigit.nugroho@alazhar.org'],
-            ['kode' => '029', 'nama' => 'Andi', 'divisi' => '3', 'jabatan' => 'Account Manager Fundraising', 'telepon' => '081289029029', 'email' => 'andi@alazhar.org'],
-            ['kode' => '030', 'nama' => 'Maulana Soheh', 'divisi' => '5', 'jabatan' => 'Fasilitator Tata Busana RGI', 'telepon' => '081289030030', 'email' => 'maulana.soheh@alazhar.org'],
-            ['kode' => '031', 'nama' => 'Faridun Nidhom', 'divisi' => '5', 'jabatan' => 'Instruktur Desain Grafis RGI', 'telepon' => '081289031031', 'email' => 'faridun.nidhom@alazhar.org'],
-            ['kode' => '032', 'nama' => 'Deden Nurdin Salim', 'divisi' => '5', 'jabatan' => 'Kepala Divisi Program Pendayagunaan', 'telepon' => '081289032032', 'email' => 'deden.nurdin@alazhar.org'],
-            ['kode' => '035', 'nama' => 'Soleh', 'divisi' => '5', 'jabatan' => 'Fasilitator Fotografi & Studio RGI', 'telepon' => '081289035035', 'email' => 'soleh@alazhar.org'],
-            ['kode' => '037', 'nama' => 'Arini Susanti', 'divisi' => '4', 'jabatan' => 'Kepala Divisi Keuangan & Akuntansi', 'telepon' => '081289037037', 'email' => 'arini.susanti@alazhar.org'],
-            ['kode' => '042', 'nama' => 'Ratih Puspitasari', 'divisi' => '3', 'jabatan' => 'Relationship Officer CSR', 'telepon' => '081289042042', 'email' => 'ratih.puspitasari@alazhar.org'],
-            ['kode' => '043', 'nama' => 'Eri Sukeri', 'divisi' => '5', 'jabatan' => 'Staf Logistik & Gudang', 'telepon' => '081289043043', 'email' => 'eri.sukeri@alazhar.org'],
-            ['kode' => '044', 'nama' => 'Syarifudin', 'divisi' => '2', 'jabatan' => 'Staf Legal & Kelembagaan', 'telepon' => '081289044044', 'email' => 'syarifudin@alazhar.org'],
-            ['kode' => '045', 'nama' => 'Mad Soleh', 'divisi' => '5', 'jabatan' => 'Staf Maintenance & Teknisi', 'telepon' => '081289045045', 'email' => 'mad.soleh@alazhar.org'],
-            ['kode' => '046', 'nama' => 'Eko Mustakim', 'divisi' => '3', 'jabatan' => 'Koordinator Event & Mitra', 'telepon' => '081289046046', 'email' => 'eko.mustakim@alazhar.org'],
-            ['kode' => '049', 'nama' => 'Benny Abdullah', 'divisi' => '6', 'jabatan' => 'Koordinator Pengelolaan Wakaf', 'telepon' => '081289049049', 'email' => 'benny.abdullah@alazhar.org'],
-            ['kode' => '050', 'nama' => 'Suryamin', 'divisi' => '2', 'jabatan' => 'Staf Pengelolaan Aset & CRM', 'telepon' => '081289050050', 'email' => 'suryamin@alazhar.org'],
-            ['kode' => '052', 'nama' => 'Ridwan', 'divisi' => '3', 'jabatan' => 'Fundraiser Retail', 'telepon' => '081289052052', 'email' => 'ridwan@alazhar.org'],
-            ['kode' => '053', 'nama' => 'Yeny Herliana', 'divisi' => '4', 'jabatan' => 'Staf Kasir & Pembayaran', 'telepon' => '081289053053', 'email' => 'yeny.herliana@alazhar.org'],
-            ['kode' => '055', 'nama' => 'Eko Sugiyanto', 'divisi' => '5', 'jabatan' => 'Koordinator Santri Career Center', 'telepon' => '081289055055', 'email' => 'eko.sugiyanto@alazhar.org'],
-            ['kode' => '057', 'nama' => 'Ridho Fitriansyah Mursalaat', 'divisi' => '2', 'jabatan' => 'Staf IT & Infrastruktur Jaringan', 'telepon' => '081289057057', 'email' => 'ridho.fitriansyah@alazhar.org'],
-            ['kode' => '060', 'nama' => 'Suci Putriani', 'divisi' => '3', 'jabatan' => 'Customer Service & Donatur Care', 'telepon' => '081289060060', 'email' => 'suci.putriani@alazhar.org'],
-            ['kode' => '063', 'nama' => 'Edy Tri Susanto', 'divisi' => '5', 'jabatan' => 'Staf Program Pemberdayaan Ekonomi', 'telepon' => '081289063063', 'email' => 'edy.tri@alazhar.org'],
-            ['kode' => '066', 'nama' => 'Sigit Tripuruca', 'divisi' => '2', 'jabatan' => 'Staf HRD & Pengembangan SDM', 'telepon' => '081289066066', 'email' => 'sigit.tripuruca@alazhar.org'],
-            ['kode' => '067', 'nama' => 'Ahmad Priyanto', 'divisi' => '5', 'jabatan' => 'Fasilitator Administrasi Perkantoran RGI', 'telepon' => '081289067067', 'email' => 'ahmad.priyanto@alazhar.org'],
-            ['kode' => '069', 'nama' => 'Irsan Haikal', 'divisi' => '3', 'jabatan' => 'Creative Designer & Video Editor', 'telepon' => '081289069069', 'email' => 'irsan.haikal@alazhar.org'],
-            ['kode' => '071', 'nama' => 'Setiyadi', 'divisi' => '5', 'jabatan' => 'Instruktur Bengkel RGI', 'telepon' => '081289071071', 'email' => 'setiyadi@alazhar.org'],
-            ['kode' => '072', 'nama' => 'Rudiansah', 'divisi' => '5', 'jabatan' => 'Staf Distribusi & Kebencanaan', 'telepon' => '081289072072', 'email' => 'rudiansah@alazhar.org'],
-            ['kode' => '073', 'nama' => 'Nurmala', 'divisi' => '4', 'jabatan' => 'Staf Akuntansi & Jurnal', 'telepon' => '081289073073', 'email' => 'nurmala@alazhar.org'],
-            ['kode' => '074', 'nama' => 'Aditya Kusuma', 'divisi' => '3', 'jabatan' => 'Digital Marketer & Ads Specialist', 'telepon' => '081289074074', 'email' => 'aditya.kusuma@alazhar.org'],
-            ['kode' => '077', 'nama' => 'Teguh Widada', 'divisi' => '5', 'jabatan' => 'Kepala Asrama Santri Putra RGI', 'telepon' => '081289077077', 'email' => 'teguh.widada@alazhar.org'],
-            ['kode' => '081', 'nama' => 'Ulil Ansor', 'divisi' => '5', 'jabatan' => 'Instruktur Rekaman Audio RGI', 'telepon' => '081289081081', 'email' => 'ulil.ansor@alazhar.org'],
-            ['kode' => '082', 'nama' => 'Rayan Asa Luminaries', 'divisi' => '3', 'jabatan' => 'Staf Media Kreatif', 'telepon' => '081289082082', 'email' => 'rayan.asa@alazhar.org'],
-            ['kode' => '084', 'nama' => 'Dwi Nursyamsi', 'divisi' => '4', 'jabatan' => 'Staf Verifikasi Dokumen Keuangan', 'telepon' => '081289084084', 'email' => 'dwi.nursyamsi@alazhar.org'],
-            ['kode' => '086', 'nama' => 'Eka Nur Prihantari', 'divisi' => '2', 'jabatan' => 'Sekretaris Eksekutif', 'telepon' => '081289086086', 'email' => 'eka.nur@alazhar.org'],
-            ['kode' => '088', 'nama' => 'Mohammad Mahrus', 'divisi' => '5', 'jabatan' => 'Staf Program Dakwah & Advokasi', 'telepon' => '081289088088', 'email' => 'mohammad.mahrus@alazhar.org'],
-            ['kode' => '089', 'nama' => 'Fadhillah Mustikaningrum', 'divisi' => '5', 'jabatan' => 'Kepala Asrama Santri Putri RGI', 'telepon' => '081289089089', 'email' => 'fadhillah.mustika@alazhar.org'],
-            ['kode' => '090', 'nama' => 'Agus Rodiansyah', 'divisi' => '5', 'jabatan' => 'Staf Lapangan Siaga Bencana', 'telepon' => '081289090090', 'email' => 'agus.rodiansyah@alazhar.org'],
-            ['kode' => '092', 'nama' => 'Oktorian Yolinda', 'divisi' => '3', 'jabatan' => 'Koordinator Fundraising Komunitas', 'telepon' => '081289092092', 'email' => 'oktorian.yolinda@alazhar.org'],
-            ['kode' => '093', 'nama' => 'Hapipul Umam', 'divisi' => '5', 'jabatan' => 'Staf Program Kesehatan & Ambulans', 'telepon' => '081289093093', 'email' => 'hapipul.umam@alazhar.org'],
-            ['kode' => '095', 'nama' => 'Norma Widya Rachamawatie', 'divisi' => '4', 'jabatan' => 'Staf Payroll & Remunerasi', 'telepon' => '081289095095', 'email' => 'norma.widya@alazhar.org'],
-            ['kode' => '101', 'nama' => 'Ridwan Sanusi', 'divisi' => '5', 'jabatan' => 'Staf Program Beasiswa', 'telepon' => '081289101101', 'email' => 'ridwan.sanusi@alazhar.org'],
-            ['kode' => '102', 'nama' => 'Fakhri Hamdi', 'divisi' => '3', 'jabatan' => 'Content Creator & Copywriter', 'telepon' => '081289102102', 'email' => 'fakhri.hamdi@alazhar.org'],
-            ['kode' => '109', 'nama' => 'Muhammad Lutfhi Nurizaman', 'divisi' => '2', 'jabatan' => 'Staf Database & Analis Sistem', 'telepon' => '081289109109', 'email' => 'lutfhi.nurizaman@alazhar.org'],
-            ['kode' => '113', 'nama' => 'Kholis Fatahillah', 'divisi' => '5', 'jabatan' => 'Fasilitator Kewirausahaan RGI', 'telepon' => '081289113113', 'email' => 'kholis.fatahillah@alazhar.org'],
-            ['kode' => '114', 'nama' => 'Mohlas Madani', 'divisi' => '6', 'jabatan' => 'Staf Pengembangan Aset Wakaf', 'telepon' => '081289114114', 'email' => 'mohlas.madani@alazhar.org'],
-            ['kode' => '116', 'nama' => 'Andi Suryadi', 'divisi' => '5', 'jabatan' => 'Koordinator Lapangan Program Desa', 'telepon' => '081289116116', 'email' => 'andi.suryadi@alazhar.org'],
-            ['kode' => '117', 'nama' => 'Fahmi', 'divisi' => '3', 'jabatan' => 'Staf Telefundraising', 'telepon' => '081289117117', 'email' => 'fahmi@alazhar.org'],
-            ['kode' => '118', 'nama' => 'Feni Lestari', 'divisi' => '4', 'jabatan' => 'Kasir Kantor Cirendeu', 'telepon' => '081289118118', 'email' => 'feni.lestari@alazhar.org'],
-            ['kode' => '119', 'nama' => 'Herfandro Fajar', 'divisi' => '2', 'jabatan' => 'Staf Pengadaan & Inventaris', 'telepon' => '081289119119', 'email' => 'herfandro.fajar@alazhar.org'],
-            ['kode' => '123', 'nama' => 'Agus Bangun Prabowo', 'divisi' => '5', 'jabatan' => 'Staf Pelaksana RGI', 'telepon' => '081289123123', 'email' => 'agus.bangun@alazhar.org'],
-            ['kode' => '124', 'nama' => 'Ulfa Mutia', 'divisi' => '3', 'jabatan' => 'Staf Pelayanan Donatur KLB', 'telepon' => '081289124124', 'email' => 'ulfa.mutia@alazhar.org'],
-            ['kode' => '129', 'nama' => 'Dofi Ridofillah', 'divisi' => '5', 'jabatan' => 'Staf Program Rumah Sehat', 'telepon' => '081289129129', 'email' => 'dofi.ridofillah@alazhar.org'],
-            ['kode' => '143', 'nama' => 'Ade Anisa Oktaviani', 'divisi' => '4', 'jabatan' => 'Staf Anggaran & Perbendaharaan', 'telepon' => '081289143143', 'email' => 'ade.anisa@alazhar.org'],
-            ['kode' => '146', 'nama' => 'Salman Abdun Nashiir', 'divisi' => '3', 'jabatan' => 'Campaigner ZISWAF Online', 'telepon' => '081289146146', 'email' => 'salman.abdun@alazhar.org'],
-            ['kode' => '147', 'nama' => 'Muammaliyah Muhammad Amin', 'divisi' => '2', 'jabatan' => 'Staf Hubungan Kelembagaan', 'telepon' => '081289147147', 'email' => 'muammaliyah.amin@alazhar.org'],
-            ['kode' => '149', 'nama' => 'Anas Priyogi', 'divisi' => '5', 'jabatan' => 'Staf Monitoring Evaluasi Program', 'telepon' => '081289149149', 'email' => 'anas.priyogi@alazhar.org'],
-            ['kode' => '150', 'nama' => 'Alam Maptullah', 'divisi' => '3', 'jabatan' => 'Account Executive Korporat', 'telepon' => '081289150150', 'email' => 'alam.maptullah@alazhar.org'],
-            ['kode' => '152', 'nama' => 'Siti Sarah', 'divisi' => '4', 'jabatan' => 'Staf Pelaporan Keuangan', 'telepon' => '081289152152', 'email' => 'siti.sarah@alazhar.org'],
-            ['kode' => '153', 'nama' => 'Faisal Ahmad', 'divisi' => '5', 'jabatan' => 'Staf Logistik Tanggap Bencana', 'telepon' => '081289153153', 'email' => 'faisal.ahmad@alazhar.org'],
-            ['kode' => '154', 'nama' => 'Bayu Setiawan', 'divisi' => '3', 'jabatan' => 'Fotografer & Desainer Lapangan', 'telepon' => '081289154154', 'email' => 'bayu.setiawan@alazhar.org'],
-            ['kode' => '155', 'nama' => 'Siti Adidah', 'divisi' => '5', 'jabatan' => 'Instruktur Kuliner & Tata Boga RGI', 'telepon' => '081289155155', 'email' => 'siti.adidah@alazhar.org'],
-            ['kode' => '157', 'nama' => 'Herlinda Novita Wardani', 'divisi' => '3', 'jabatan' => 'Staf Partnership Retail', 'telepon' => '081289157157', 'email' => 'herlinda.novita@alazhar.org'],
-            ['kode' => '158', 'nama' => 'Wahyudi', 'divisi' => '5', 'jabatan' => 'Staf Sarana Prasarana Kampus Sawangan', 'telepon' => '081289158158', 'email' => 'wahyudi@alazhar.org'],
-            ['kode' => '159', 'nama' => 'Muhammad Sudrajat', 'divisi' => '5', 'jabatan' => 'Staf Pendistribusian Logistik', 'telepon' => '081289159159', 'email' => 'muhammad.sudrajat@alazhar.org'],
-            ['kode' => '160', 'nama' => 'Ahmad Zaki Zamany', 'divisi' => '3', 'jabatan' => 'Staf Social Media Specialist', 'telepon' => '081289160160', 'email' => 'ahmad.zaki@alazhar.org'],
-            ['kode' => '162', 'nama' => 'Abbas', 'divisi' => '5', 'jabatan' => 'Staf Operasional Program', 'telepon' => '081289162162', 'email' => 'abbas@alazhar.org'],
-            ['kode' => '165', 'nama' => 'Lia Umro Safitri', 'divisi' => '4', 'jabatan' => 'Staf Rekonsiliasi Bank', 'telepon' => '081289165165', 'email' => 'lia.umro@alazhar.org'],
-            ['kode' => '166', 'nama' => 'Sujarwo Putra', 'divisi' => '5', 'jabatan' => 'Fasilitator Lapangan Program Pertanian', 'telepon' => '081289166166', 'email' => 'sujarwo.putra@alazhar.org'],
-            ['kode' => '169', 'nama' => 'Fauzi Arif Suhada', 'divisi' => '3', 'jabatan' => 'Koordinator Layanan Konter Zakat', 'telepon' => '081289169169', 'email' => 'fauzi.arif@alazhar.org'],
-            ['kode' => '171', 'nama' => 'Rosyadi', 'divisi' => '5', 'jabatan' => 'Staf Pelaksana Lapangan', 'telepon' => '081289171171', 'email' => 'rosyadi@alazhar.org'],
-            ['kode' => '172', 'nama' => 'Nopen Setiawan', 'divisi' => '5', 'jabatan' => 'Staf Program Rumah Qur\'an', 'telepon' => '081289172172', 'email' => 'nopen.setiawan@alazhar.org'],
-            ['kode' => '173', 'nama' => 'Agus Setiawan', 'divisi' => '2', 'jabatan' => 'Staf IT Hardware & Jaringan', 'telepon' => '081289173173', 'email' => 'agus.setiawan@alazhar.org'],
-            ['kode' => '174', 'nama' => 'Hadi Nur Cahyo', 'divisi' => '3', 'jabatan' => 'Officer Fundraising Cabang', 'telepon' => '081289174174', 'email' => 'hadi.nur@alazhar.org'],
-            ['kode' => '179', 'nama' => 'Nadhilah Amalia Sifa', 'divisi' => '4', 'jabatan' => 'Staf Administrasi Keuangan', 'telepon' => '081289179179', 'email' => 'nadhilah.amalia@alazhar.org'],
-            ['kode' => '186', 'nama' => 'Dedy Irwansyah', 'divisi' => '5', 'jabatan' => 'Staf Operasional Program Sawangan', 'telepon' => '081289186186', 'email' => 'dedy.irwansyah@alazhar.org'],
-            ['kode' => '187', 'nama' => 'Dian Ameliawati', 'divisi' => '2', 'jabatan' => 'Staf Sekretariat & Kearsipan', 'telepon' => '081289187187', 'email' => 'dian.amelia@alazhar.org'],
-            ['kode' => '189', 'nama' => 'Deta Aga Arif Rahman', 'divisi' => '3', 'jabatan' => 'Staf Digital Media & Broadcast', 'telepon' => '081289189189', 'email' => 'deta.aga@alazhar.org'],
-            ['kode' => '191', 'nama' => 'Naila Novita', 'divisi' => '3', 'jabatan' => 'Staf Layanan Donatur Online', 'telepon' => '081289191191', 'email' => 'naila.novita@alazhar.org'],
-            ['kode' => '194', 'nama' => 'Rizky Ramadhanti', 'divisi' => '4', 'jabatan' => 'Staf Akuntansi & Pajak', 'telepon' => '081289194194', 'email' => 'rizky.ramadhanti@alazhar.org'],
-            ['kode' => '198', 'nama' => 'Halimatu Sa\'diah', 'divisi' => '5', 'jabatan' => 'Staf Program Pendidikan', 'telepon' => '081289198198', 'email' => 'halimatu.sadiah@alazhar.org'],
-            ['kode' => '199', 'nama' => 'Putri Amelia', 'divisi' => '3', 'jabatan' => 'Staf Layanan Muzakki', 'telepon' => '081289199199', 'email' => 'putri.amelia@alazhar.org'],
-            ['kode' => '200', 'nama' => 'Annisa Syafariah', 'divisi' => '2', 'jabatan' => 'Staf Legalitas & Kerjasama', 'telepon' => '081289200200', 'email' => 'annisa.syafariah@alazhar.org'],
-            ['kode' => '202', 'nama' => 'Rifka Hartono', 'divisi' => '5', 'jabatan' => 'Staf Program Dakwah & Bina Santri', 'telepon' => '081289202202', 'email' => 'rifka.hartono@alazhar.org'],
-            ['kode' => '203', 'nama' => 'Muhammad Ridwan', 'divisi' => '3', 'jabatan' => 'Staf Fundraising Retail', 'telepon' => '081289203203', 'email' => 'm.ridwan@alazhar.org'],
-            ['kode' => '205', 'nama' => 'Ahmad Yasir', 'divisi' => '5', 'jabatan' => 'Koordinator Lapangan RGI Sawangan', 'telepon' => '081289205205', 'email' => 'ahmad.yasir@alazhar.org'],
-            ['kode' => '206', 'nama' => 'Hijriani', 'divisi' => '4', 'jabatan' => 'Staf Keuangan Program', 'telepon' => '081289206206', 'email' => 'hijriani@alazhar.org'],
-            ['kode' => '207', 'nama' => 'Wilda', 'divisi' => '3', 'jabatan' => 'Staf CRM & Retensi Donatur', 'telepon' => '081289207207', 'email' => 'wilda@alazhar.org'],
-            ['kode' => '208', 'nama' => 'Nurlia', 'divisi' => '5', 'jabatan' => 'Staf Administrasi RGI', 'telepon' => '081289208208', 'email' => 'nurlia@alazhar.org'],
-            ['kode' => '211', 'nama' => 'Hana Nurhasanah', 'divisi' => '4', 'jabatan' => 'Kasir Layanan Zakat', 'telepon' => '081289211211', 'email' => 'hana.nurhasanah@alazhar.org'],
-            ['kode' => '213', 'nama' => 'Imam Nur Hamid', 'divisi' => '5', 'jabatan' => 'Fasilitator Pembinaan Karakter Santri', 'telepon' => '081289213213', 'email' => 'imam.nur@alazhar.org'],
-            ['kode' => '214', 'nama' => 'Mohamad Hasan', 'divisi' => '6', 'jabatan' => 'Staf Inventarisasi Tanah Wakaf', 'telepon' => '081289214214', 'email' => 'mohamad.hasan@alazhar.org'],
-            ['kode' => '215', 'nama' => 'Ahmad Rizal', 'divisi' => '3', 'jabatan' => 'Staf Media Kreatif & Infografis', 'telepon' => '081289215215', 'email' => 'ahmad.rizal@alazhar.org'],
-            ['kode' => '217', 'nama' => 'Zaenal Mustofa', 'divisi' => '5', 'jabatan' => 'Staf Logistik Program Tanggap Bencana', 'telepon' => '081289217217', 'email' => 'zaenal.mustofa@alazhar.org'],
-            ['kode' => '218', 'nama' => 'Eliyah', 'divisi' => '4', 'jabatan' => 'Staf Pembukuan & Kas Kecil', 'telepon' => '081289218218', 'email' => 'eliyah@alazhar.org'],
-            ['kode' => '220', 'nama' => 'Irpan Hardiansah', 'divisi' => '2', 'jabatan' => 'Staf IT Developer & Web', 'telepon' => '081289220220', 'email' => 'irpan.hardiansah@alazhar.org'],
-            ['kode' => '221', 'nama' => 'Nabilah Rusydah', 'divisi' => '3', 'jabatan' => 'Staf Partnership Lembaga & Komunitas', 'telepon' => '081289221221', 'email' => 'nabilah.rusydah@alazhar.org'],
-            ['kode' => '222', 'nama' => 'JIhan Sahra', 'divisi' => '5', 'jabatan' => 'Staf Dokumentasi Program', 'telepon' => '081289222222', 'email' => 'jihan.sahra@alazhar.org'],
-            ['kode' => '223', 'nama' => 'Fitri Ana Wulandari', 'divisi' => '4', 'jabatan' => 'Staf Verifikasi Transaksi Masuk', 'telepon' => '081289223233', 'email' => 'fitri.ana@alazhar.org'],
-            ['kode' => '224', 'nama' => 'Abu Hurairah', 'divisi' => '5', 'jabatan' => 'Koordinator Relawan & Dakwah', 'telepon' => '081289224224', 'email' => 'abu.hurairah@alazhar.org'],
-            ['kode' => '225', 'nama' => 'Adha Apriani', 'divisi' => '3', 'jabatan' => 'Staf Layanan Donasi Online', 'telepon' => '081289225225', 'email' => 'adha.apriani@alazhar.org'],
-            ['kode' => '226', 'nama' => 'Intan Juliani Hidayat', 'divisi' => '2', 'jabatan' => 'Staf Administrasi Umum', 'telepon' => '081289226226', 'email' => 'intan.juliani@alazhar.org'],
-            ['kode' => '227', 'nama' => 'Rif’at Sauqi', 'divisi' => '5', 'jabatan' => 'Staf Siaga Tanggap Bencana (Sigab)', 'telepon' => '081289227227', 'email' => 'rifat.sauqi@alazhar.org'],
-            ['kode' => '228', 'nama' => 'Nurman Fauzan Hidayana', 'divisi' => '2', 'jabatan' => 'Staf Kelembagaan & Pengawasan Internal', 'telepon' => '081289228228', 'email' => 'nurman.fauzan@alazhar.org'],
+            ['id' => 1, 'kode' => '008', 'nama' => 'Iwan Rahmat', 'divisi' => '1', 'jabatan' => 'Kepala Divisi LAZ Al Azhar dan Pemberdayaan Umat / Direktur LAZ Al Azhar', 'telepon' => '081289008008', 'email' => 'iwan@alazharpeduli.or.id', 'user_id' => null],
+            ['id' => 2, 'kode' => '009', 'nama' => 'Subakti', 'divisi' => '2', 'jabatan' => 'Staf TU Sekretariat', 'telepon' => '081289009009', 'email' => 'subakti@alazhar.org', 'user_id' => null],
+            ['id' => 3, 'kode' => '010', 'nama' => 'Nurli Laelasari', 'divisi' => '2', 'jabatan' => 'Manager Penerimaan Keuangan', 'telepon' => '081289010010', 'email' => 'nurli.laelasari@alazhar.org', 'user_id' => null],
+            ['id' => 4, 'kode' => '012', 'nama' => 'Suparman', 'divisi' => '5', 'jabatan' => 'Security', 'telepon' => '081289012012', 'email' => 'suparman@alazhar.org', 'user_id' => null],
+            ['id' => 5, 'kode' => '013', 'nama' => 'Rahmatullah Sidik', 'divisi' => '2', 'jabatan' => 'Direktur Operasional LAZWaf Al Azhar', 'telepon' => '085124425540', 'email' => 'rahmat@alazharpeduli.or.id', 'user_id' => null],
+            ['id' => 6, 'kode' => '014', 'nama' => 'Rochadi Kohar', 'divisi' => '5', 'jabatan' => 'Manager Pengeluaran Keuangan', 'telepon' => '081289014014', 'email' => 'rochadi.kohar@alazhar.org', 'user_id' => null],
+            ['id' => 7, 'kode' => '017', 'nama' => 'Lias', 'divisi' => '4', 'jabatan' => 'Koordinator Sekretariat', 'telepon' => '081289017017', 'email' => 'lias@alazhar.org', 'user_id' => null],
+            ['id' => 8, 'kode' => '019', 'nama' => 'Jamaludin', 'divisi' => '5', 'jabatan' => 'Staf Komunitas Masjid Eksternal', 'telepon' => '081289019019', 'email' => 'jamaludin@alazhar.org', 'user_id' => null],
+            ['id' => 9, 'kode' => '023', 'nama' => 'Rusdi', 'divisi' => '5', 'jabatan' => 'Office Boy', 'telepon' => '081289023023', 'email' => 'rusdi@alazhar.org', 'user_id' => null],
+            ['id' => 10, 'kode' => '025', 'nama' => 'Matnur', 'divisi' => '5', 'jabatan' => 'Security', 'telepon' => '081289025025', 'email' => 'matnur@alazhar.org', 'user_id' => null],
+            ['id' => 11, 'kode' => '026', 'nama' => 'Sigit Nugroho', 'divisi' => '2', 'jabatan' => 'Manager Humas, IT, dan GA', 'telepon' => '081289026026', 'email' => 'sigit.nugroho@alazhar.org', 'user_id' => null],
+            ['id' => 12, 'kode' => '029', 'nama' => 'Andi', 'divisi' => '3', 'jabatan' => 'Staf MPZ Komunitas', 'telepon' => '081289029029', 'email' => 'andi@alazhar.org', 'user_id' => null],
+            ['id' => 13, 'kode' => '030', 'nama' => 'Maulana Soheh', 'divisi' => '5', 'jabatan' => 'Koordinator Digital Fundraising', 'telepon' => '081289030030', 'email' => 'maulana.soheh@alazhar.org', 'user_id' => null],
+            ['id' => 14, 'kode' => '031', 'nama' => 'Faridun Nidhom', 'divisi' => '5', 'jabatan' => 'Manager Pemberdayaan Wakaf', 'telepon' => '081289031031', 'email' => 'faridun.nidhom@alazhar.org', 'user_id' => null],
+            ['id' => 15, 'kode' => '032', 'nama' => 'Deden Nurdin Salim', 'divisi' => '5', 'jabatan' => 'Manager Kelembagaan', 'telepon' => '081289032032', 'email' => 'deden.nurdin@alazhar.org', 'user_id' => null],
+            ['id' => 16, 'kode' => '035', 'nama' => 'Soleh', 'divisi' => '5', 'jabatan' => 'Staf Program Layanan Jenazah Gratis', 'telepon' => '081289035035', 'email' => 'soleh@alazhar.org', 'user_id' => null],
+            ['id' => 17, 'kode' => '037', 'nama' => 'Arini Susanti', 'divisi' => '4', 'jabatan' => 'Staf Keuangan', 'telepon' => '081289037037', 'email' => 'arini.susanti@alazhar.org', 'user_id' => null],
+            ['id' => 18, 'kode' => '042', 'nama' => 'Ratih Puspitasari', 'divisi' => '3', 'jabatan' => 'Koordinator Akuntansi Keuangan', 'telepon' => '081289042042', 'email' => 'ratih.puspitasari@alazhar.org', 'user_id' => null],
+            ['id' => 19, 'kode' => '043', 'nama' => 'Eri Sukeri', 'divisi' => '5', 'jabatan' => 'Security', 'telepon' => '081289043043', 'email' => 'eri.sukeri@alazhar.org', 'user_id' => null],
+            ['id' => 20, 'kode' => '044', 'nama' => 'Syarifudin', 'divisi' => '2', 'jabatan' => 'Security', 'telepon' => '081289044044', 'email' => 'syarifudin@alazhar.org', 'user_id' => null],
+            ['id' => 21, 'kode' => '045', 'nama' => 'Mad Soleh', 'divisi' => '5', 'jabatan' => 'Office Boy', 'telepon' => '081289045045', 'email' => 'mad.soleh@alazhar.org', 'user_id' => null],
+            ['id' => 22, 'kode' => '046', 'nama' => 'Eko Mustakim', 'divisi' => '3', 'jabatan' => 'Office Boy', 'telepon' => '081289046046', 'email' => 'eko.mustakim@alazhar.org', 'user_id' => null],
+            ['id' => 23, 'kode' => '049', 'nama' => 'Benny Abdullah', 'divisi' => '6', 'jabatan' => 'Koordinator Program', 'telepon' => '081289049049', 'email' => 'benny.abdullah@alazhar.org', 'user_id' => null],
+            ['id' => 24, 'kode' => '050', 'nama' => 'Suryamin', 'divisi' => '2', 'jabatan' => 'Koordinator General Affair', 'telepon' => '081289050050', 'email' => 'suryamin@alazhar.org', 'user_id' => 4],
+            ['id' => 25, 'kode' => '052', 'nama' => 'Ridwan', 'divisi' => '3', 'jabatan' => 'Manager Fundraising Internal', 'telepon' => '081289052052', 'email' => 'ridwan@alazhar.org', 'user_id' => null],
+            ['id' => 26, 'kode' => '053', 'nama' => 'Yeny Herliana', 'divisi' => '4', 'jabatan' => 'Koordinator Kantor Layanan Masjid Agung Al Azhar', 'telepon' => '081289053053', 'email' => 'yeny.herliana@alazhar.org', 'user_id' => null],
+            ['id' => 27, 'kode' => '055', 'nama' => 'Eko Sugiyanto', 'divisi' => '5', 'jabatan' => 'Koordinator Pendistribusian', 'telepon' => '081289055055', 'email' => 'eko.sugiyanto@alazhar.org', 'user_id' => null],
+            ['id' => 28, 'kode' => '057', 'nama' => 'Ridho Fitriansyah Mursalaat', 'divisi' => '2', 'jabatan' => 'Koordinator Transaksi dan Data Support', 'telepon' => '081289057057', 'email' => 'ridho.fitriansyah@alazhar.org', 'user_id' => null],
+            ['id' => 29, 'kode' => '060', 'nama' => 'Suci Putriani', 'divisi' => '3', 'jabatan' => 'Koordinator Fundraising dan Komunikasi Kantor Perwakilan Wilayah Jawa Tengah', 'telepon' => '081289060060', 'email' => 'suci.putriani@alazhar.org', 'user_id' => null],
+            ['id' => 30, 'kode' => '063', 'nama' => 'Edy Tri Susanto', 'divisi' => '5', 'jabatan' => 'Staf Fundraising Kantor Perwakilan Wilayah Jawa Tengah', 'telepon' => '081289063063', 'email' => 'edy.tri@alazhar.org', 'user_id' => null],
+            ['id' => 31, 'kode' => '066', 'nama' => 'Sigit Tripuruca', 'divisi' => '2', 'jabatan' => 'Koordinator Corporate Fundraising', 'telepon' => '081289066066', 'email' => 'sigit.tripuruca@alazhar.org', 'user_id' => null],
+            ['id' => 32, 'kode' => '067', 'nama' => 'Ahmad Priyanto', 'divisi' => '5', 'jabatan' => 'Koordinator Anggaran Keuangan', 'telepon' => '081289067067', 'email' => 'ahmad.priyanto@alazhar.org', 'user_id' => null],
+            ['id' => 33, 'kode' => '069', 'nama' => 'Irsan Haikal', 'divisi' => '3', 'jabatan' => 'Koordinator Kantor Layanan Bekasi dan Jakarta Timur', 'telepon' => '081289069069', 'email' => 'irsan.haikal@alazhar.org', 'user_id' => null],
+            ['id' => 34, 'kode' => '071', 'nama' => 'Stiyadi', 'divisi' => '5', 'jabatan' => 'Staf IT', 'telepon' => '081289071071', 'email' => 'setiyadi@alazhar.org', 'user_id' => null],
+            ['id' => 35, 'kode' => '072', 'nama' => 'Rudiansah', 'divisi' => '5', 'jabatan' => 'Koordinator IT', 'telepon' => '081289072072', 'email' => 'rudiansah@alazhar.org', 'user_id' => null],
+            ['id' => 36, 'kode' => '073', 'nama' => 'Nurmala', 'divisi' => '4', 'jabatan' => 'Manager Anggaran dan Akuntansi Keuangan', 'telepon' => '081289073073', 'email' => 'nurmala@alazhar.org', 'user_id' => null],
+            ['id' => 37, 'kode' => '074', 'nama' => 'Aditya Kusuma', 'divisi' => '3', 'jabatan' => 'Kepala Kantor Perwakilan Wilayah Jawa Timur', 'telepon' => '081289074074', 'email' => 'aditya.kusuma@alazhar.org', 'user_id' => null],
+            ['id' => 38, 'kode' => '077', 'nama' => 'Teguh Widada', 'divisi' => '5', 'jabatan' => 'Koordinator Kantor Layanan Tangerang Selatan dan Bengkulu', 'telepon' => '081289077077', 'email' => 'teguh.widada@alazhar.org', 'user_id' => null],
+            ['id' => 39, 'kode' => '081', 'nama' => 'Ulil Ansor', 'divisi' => '5', 'jabatan' => 'Manager Program LAZ Al Azhar', 'telepon' => '081289081081', 'email' => 'ulil.ansor@alazhar.org', 'user_id' => null],
+            ['id' => 40, 'kode' => '082', 'nama' => 'Rayan Asa Luminaries', 'divisi' => '3', 'jabatan' => 'Kepala Divisi Wakaf Al Azhar dan Pemberdayaan Umat / Direktur Wakaf Al Azhar', 'telepon' => '081289082082', 'email' => 'rayan.asa@alazhar.org', 'user_id' => null],
+            ['id' => 41, 'kode' => '084', 'nama' => 'Dwi Nursyamsi', 'divisi' => '4', 'jabatan' => 'Staf Program Layanan Mustahik (LJG)', 'telepon' => '081289084084', 'email' => 'dwi.nursyamsi@alazhar.org', 'user_id' => null],
+            ['id' => 42, 'kode' => '086', 'nama' => 'Eka Nur Prihantari', 'divisi' => '2', 'jabatan' => 'Koordinator Administrasi / TU Program', 'telepon' => '081289086086', 'email' => 'eka.nur@alazhar.org', 'user_id' => null],
+            ['id' => 43, 'kode' => '088', 'nama' => 'Mohammad Mahrus', 'divisi' => '5', 'jabatan' => 'Manager Fundraising Wakaf', 'telepon' => '081289088088', 'email' => 'mohammad.mahrus@alazhar.org', 'user_id' => null],
+            ['id' => 44, 'kode' => '089', 'nama' => 'Fadhillah Mustikaningrum', 'divisi' => '5', 'jabatan' => 'Kepala Asrama Santri Putri RGI', 'telepon' => '081289089089', 'email' => 'fadhillah.mustika@alazhar.org', 'user_id' => null],
+            ['id' => 45, 'kode' => '090', 'nama' => 'Agus Rodiansyah', 'divisi' => '5', 'jabatan' => 'Koordinator Program Kantor Perwakilan Wilayah Jawa Tengah', 'telepon' => '081289090090', 'email' => 'agus.rodiansyah@alazhar.org', 'user_id' => null],
+            ['id' => 46, 'kode' => '092', 'nama' => 'Oktorian Yolinda', 'divisi' => '3', 'jabatan' => 'Koordinator Internal Fundraising', 'telepon' => '081289092092', 'email' => 'oktorian.yolinda@alazhar.org', 'user_id' => null],
+            ['id' => 47, 'kode' => '093', 'nama' => 'Hapipul Umam', 'divisi' => '5', 'jabatan' => 'Staf Program Layanan Mustahik MAA', 'telepon' => '081289093093', 'email' => 'hapipul.umam@alazhar.org', 'user_id' => null],
+            ['id' => 48, 'kode' => '095', 'nama' => 'Norma Widya Rachamawatie', 'divisi' => '4', 'jabatan' => 'Koordinator Fundraising Kantor Perwakilan Wilayah Jawa Timur', 'telepon' => '081289095095', 'email' => 'norma.widya@alazhar.org', 'user_id' => null],
+            ['id' => 49, 'kode' => '101', 'nama' => 'Ridwan Sanusi', 'divisi' => '5', 'jabatan' => 'Kepala Kantor Perwakilan Wilayah Sumatera Barat', 'telepon' => '081289101101', 'email' => 'ridwan.sanusi@alazhar.org', 'user_id' => null],
+            ['id' => 50, 'kode' => '102', 'nama' => 'Fakhri Hamdi', 'divisi' => '3', 'jabatan' => 'Manager Fundraising Eksternal', 'telepon' => '081289102102', 'email' => 'fakhri.hamdi@alazhar.org', 'user_id' => null],
+            ['id' => 51, 'kode' => '109', 'nama' => 'Muhammad Lutfhi Nurizaman', 'divisi' => '2', 'jabatan' => 'Staf Corporate Fundraising', 'telepon' => '081289109109', 'email' => 'lutfhi.nurizaman@alazhar.org', 'user_id' => null],
+            ['id' => 52, 'kode' => '113', 'nama' => 'Kholis Fatahillah', 'divisi' => '5', 'jabatan' => 'Staf Infralink dan Al Azhar Tanggap Bencana', 'telepon' => '081289113113', 'email' => 'kholis.fatahillah@alazhar.org', 'user_id' => null],
+            ['id' => 53, 'kode' => '114', 'nama' => 'Mohlas Madani', 'divisi' => '6', 'jabatan' => 'Kepala Kantor Perwakilan Wilayah Yogyakarta', 'telepon' => '081289114114', 'email' => 'mohlas.madani@alazhar.org', 'user_id' => null],
+            ['id' => 54, 'kode' => '116', 'nama' => 'Andi Suryadi', 'divisi' => '5', 'jabatan' => 'Security', 'telepon' => '081289116116', 'email' => 'andi.suryadi@alazhar.org', 'user_id' => null],
+            ['id' => 55, 'kode' => '117', 'nama' => 'Fahmi', 'divisi' => '3', 'jabatan' => 'Staf Telefundraising', 'telepon' => '081289117117', 'email' => 'fahmi@alazhar.org', 'user_id' => null],
+            ['id' => 56, 'kode' => '118', 'nama' => 'Feni Lestari', 'divisi' => '4', 'jabatan' => 'Staf Fundraising Kantor Perwakilan Wilayah Jawa Timur', 'telepon' => '081289118118', 'email' => 'feni.lestari@alazhar.org', 'user_id' => null],
+            ['id' => 57, 'kode' => '119', 'nama' => 'Herfandro Fajar', 'divisi' => '2', 'jabatan' => 'Staf Pengadaan & Inventaris', 'telepon' => '081289119119', 'email' => 'herfandro.fajar@alazhar.org', 'user_id' => null],
+            ['id' => 58, 'kode' => '123', 'nama' => 'Agus Bangun Prabowo', 'divisi' => '5', 'jabatan' => 'Kepala Kantor Perwakilan Wilayah Sulawesi Selatan', 'telepon' => '081289123123', 'email' => 'agus.bangun@alazhar.org', 'user_id' => null],
+            ['id' => 59, 'kode' => '124', 'nama' => 'Ulfa Mutia', 'divisi' => '3', 'jabatan' => 'Koordinator Management Report dan TU', 'telepon' => '081289124124', 'email' => 'ulfa.mutia@alazhar.org', 'user_id' => null],
+            ['id' => 60, 'kode' => '129', 'nama' => 'Dofi Ridofillah Nur', 'divisi' => '5', 'jabatan' => 'Staf KL LAZ Al Azhar Sentra Primer', 'telepon' => '081289129129', 'email' => 'dofi.ridofillah@alazhar.org', 'user_id' => null],
+            ['id' => 61, 'kode' => '143', 'nama' => 'Ade Anisa Oktaviani', 'divisi' => '4', 'jabatan' => 'Staf Anggaran & Perbendaharaan', 'telepon' => '081289143143', 'email' => 'ade.anisa@alazhar.org', 'user_id' => null],
+            ['id' => 62, 'kode' => '146', 'nama' => 'Salman Abdun Nashiir', 'divisi' => '3', 'jabatan' => 'Koordinator Pendayagunaan', 'telepon' => '081289146146', 'email' => 'salman.abdun@alazhar.org', 'user_id' => null],
+            ['id' => 63, 'kode' => '147', 'nama' => 'Muamalliyah Muhammad Amin', 'divisi' => '2', 'jabatan' => 'Staf Wakaf', 'telepon' => '081289147147', 'email' => 'muammaliyah.amin@alazhar.org', 'user_id' => null],
+            ['id' => 64, 'kode' => '149', 'nama' => 'Anas Priyogi', 'divisi' => '5', 'jabatan' => 'Koordinator Kelembagaan', 'telepon' => '081289149149', 'email' => 'anas.priyogi@alazhar.org', 'user_id' => null],
+            ['id' => 65, 'kode' => '150', 'nama' => 'Alam Maptullah', 'divisi' => '3', 'jabatan' => 'Koordinator Rumah Gemilang Indonesia', 'telepon' => '081289150150', 'email' => 'alam.maptullah@alazhar.org', 'user_id' => null],
+            ['id' => 66, 'kode' => '152', 'nama' => 'Siti Sarah', 'divisi' => '4', 'jabatan' => 'Koordinator Retail Fundraising', 'telepon' => '081289152152', 'email' => 'siti.sarah@alazhar.org', 'user_id' => null],
+            ['id' => 67, 'kode' => '153', 'nama' => 'Faisal Ahmad', 'divisi' => '5', 'jabatan' => 'Office Boy', 'telepon' => '081289153153', 'email' => 'faisal.ahmad@alazhar.org', 'user_id' => null],
+            ['id' => 68, 'kode' => '154', 'nama' => 'Bayu Juni Setiawan', 'divisi' => '3', 'jabatan' => 'Koordinator Komunikasi', 'telepon' => '081289154154', 'email' => 'bayu.setiawan@alazhar.org', 'user_id' => null],
+            ['id' => 69, 'kode' => '155', 'nama' => 'Siti Adidah', 'divisi' => '5', 'jabatan' => 'Staf LAZ Al Azhar', 'telepon' => '081289155155', 'email' => 'siti.adidah@alazhar.org', 'user_id' => null],
+            ['id' => 70, 'kode' => '157', 'nama' => 'Herlinda Novita Wardani', 'divisi' => '3', 'jabatan' => 'Staf Keuangan Kantor Perwakilan Wilayah Sumatera Barat', 'telepon' => '081289157157', 'email' => 'herlinda.novita@alazhar.org', 'user_id' => null],
+            ['id' => 71, 'kode' => '158', 'nama' => 'Wahyudi', 'divisi' => '5', 'jabatan' => 'Staf Program Pemberdayaan', 'telepon' => '081289158158', 'email' => 'wahyudi@alazhar.org', 'user_id' => null],
+            ['id' => 72, 'kode' => '159', 'nama' => 'Muhammad Sudrajat', 'divisi' => '5', 'jabatan' => 'Staf Program Layanan Mustahik MAA', 'telepon' => '081289159159', 'email' => 'muhammad.sudrajat@alazhar.org', 'user_id' => null],
+            ['id' => 73, 'kode' => '160', 'nama' => 'Ahmad Zaki Zamany', 'divisi' => '3', 'jabatan' => 'Staf Pusat Data dan Management Report / Auditor Utama', 'telepon' => '081289160160', 'email' => 'ahmad.zaki@alazhar.org', 'user_id' => null],
+            ['id' => 74, 'kode' => '162', 'nama' => 'Abbas', 'divisi' => '5', 'jabatan' => 'Staf Kantor Perwakilan Wilayah Sulawesi Selatan', 'telepon' => '081289162162', 'email' => 'abbas@alazhar.org', 'user_id' => null],
+            ['id' => 75, 'kode' => '165', 'nama' => 'Lia Umro Safitri', 'divisi' => '4', 'jabatan' => 'Staf Corporate Fundraising', 'telepon' => '081289165165', 'email' => 'lia.umro@alazhar.org', 'user_id' => null],
+            ['id' => 76, 'kode' => '166', 'nama' => 'Sujarwo Putra', 'divisi' => '5', 'jabatan' => 'Koordinator Fundraising Kantor Perwakilan Wilayah Yogyakarta', 'telepon' => '081289166166', 'email' => 'sujarwo.putra@alazhar.org', 'user_id' => null],
+            ['id' => 77, 'kode' => '169', 'nama' => 'Fauzi Arif Suhada', 'divisi' => '3', 'jabatan' => 'Staf Produksi Desain Grafis', 'telepon' => '081289169169', 'email' => 'fauzi.arif@alazhar.org', 'user_id' => null],
+            ['id' => 78, 'kode' => '171', 'nama' => 'Rosyadi', 'divisi' => '5', 'jabatan' => 'Staf Produksi Desain Grafis', 'telepon' => '081289171171', 'email' => 'rosyadi@alazhar.org', 'user_id' => null],
+            ['id' => 79, 'kode' => '172', 'nama' => 'Nopen Setiawan', 'divisi' => '5', 'jabatan' => 'Staf Produksi Audio Visual', 'telepon' => '081289172172', 'email' => 'nopen.setiawan@alazhar.org', 'user_id' => null],
+            ['id' => 80, 'kode' => '173', 'nama' => 'Agus Setiawan', 'divisi' => '2', 'jabatan' => 'Staf Program Pemberdayaan', 'telepon' => '081289173173', 'email' => 'agus.setiawan@alazhar.org', 'user_id' => null],
+            ['id' => 81, 'kode' => '174', 'nama' => 'Hadi Nur Cahyo', 'divisi' => '3', 'jabatan' => 'Staf GA', 'telepon' => '081289174174', 'email' => 'hadi.nur@alazhar.org', 'user_id' => 5],
+            ['id' => 82, 'kode' => '179', 'nama' => 'Nadhilah Amalia Sifa', 'divisi' => '4', 'jabatan' => 'Staf Produksi Audio Visual', 'telepon' => '081289179179', 'email' => 'nadhilah.amalia@alazhar.org', 'user_id' => null],
+            ['id' => 83, 'kode' => '186', 'nama' => 'Dedy Irwansyah', 'divisi' => '5', 'jabatan' => 'Manager Diklat Litbang', 'telepon' => '081289186186', 'email' => 'dedy.irwansyah@alazhar.org', 'user_id' => null],
+            ['id' => 84, 'kode' => '187', 'nama' => 'Dian Ameliawati', 'divisi' => '2', 'jabatan' => 'Staf CRM Wakaf', 'telepon' => '081289187187', 'email' => 'dian.amelia@alazhar.org', 'user_id' => null],
+            ['id' => 85, 'kode' => '189', 'nama' => 'Deta Aga Arif Rahman', 'divisi' => '3', 'jabatan' => 'Koordinator Keuangan Wakaf', 'telepon' => '081289189189', 'email' => 'deta.aga@alazhar.org', 'user_id' => null],
+            ['id' => 86, 'kode' => '191', 'nama' => 'Naila Novita', 'divisi' => '3', 'jabatan' => 'Koordinator Penerimaan Keuangan', 'telepon' => '081289191191', 'email' => 'naila.novita@alazhar.org', 'user_id' => null],
+            ['id' => 87, 'kode' => '194', 'nama' => 'Rizky Ramadhanti', 'divisi' => '4', 'jabatan' => 'Staf Database Muzakki', 'telepon' => '081289194194', 'email' => 'rizky.ramadhanti@alazhar.org', 'user_id' => null],
+            ['id' => 88, 'kode' => '198', 'nama' => 'Halimatu Sa\'diah', 'divisi' => '5', 'jabatan' => 'Staf MPZ Eksternal', 'telepon' => '081289198198', 'email' => 'halimatu.sadiah@alazhar.org', 'user_id' => null],
+            ['id' => 89, 'kode' => '199', 'nama' => 'Putri Amelia', 'divisi' => '3', 'jabatan' => 'Staf Retail Fundraising', 'telepon' => '081289199199', 'email' => 'putri.amelia@alazhar.org', 'user_id' => null],
+            ['id' => 90, 'kode' => '200', 'nama' => 'Annisa Syafariah', 'divisi' => '2', 'jabatan' => 'Staf Digital Fundraising', 'telepon' => '081289200200', 'email' => 'annisa.syafariah@alazhar.org', 'user_id' => null],
+            ['id' => 91, 'kode' => '202', 'nama' => 'Rifka Hartono', 'divisi' => '5', 'jabatan' => 'Staf Corporate Fundraising', 'telepon' => '081289202202', 'email' => 'rifka.hartono@alazhar.org', 'user_id' => null],
+            ['id' => 92, 'kode' => '203', 'nama' => 'Muhammad Ridwan', 'divisi' => '3', 'jabatan' => 'Staf Program Pemberdayaan', 'telepon' => '081289203203', 'email' => 'm.ridwan@alazhar.org', 'user_id' => null],
+            ['id' => 93, 'kode' => '205', 'nama' => 'Ahmad Yasir', 'divisi' => '5', 'jabatan' => 'Staf MPZ Komunitas Masjid Eksternal', 'telepon' => '081289205205', 'email' => 'ahmad.yasir@alazhar.org', 'user_id' => null],
+            ['id' => 94, 'kode' => '206', 'nama' => 'Hijriani', 'divisi' => '4', 'jabatan' => 'Staf Keuangan Program', 'telepon' => '081289206206', 'email' => 'hijriani@alazhar.org', 'user_id' => null],
+            ['id' => 95, 'kode' => '207', 'nama' => 'Wilda', 'divisi' => '3', 'jabatan' => 'Staf Fundraising Kantor Perwakilan Wilayah Sulawesi Selatan', 'telepon' => '081289207207', 'email' => 'wilda@alazhar.org', 'user_id' => null],
+            ['id' => 96, 'kode' => '208', 'nama' => 'Nurlia', 'divisi' => '5', 'jabatan' => 'Staf Administrasi RGI', 'telepon' => '081289208208', 'email' => 'nurlia@alazhar.org', 'user_id' => null],
+            ['id' => 97, 'kode' => '211', 'nama' => 'Hana Nurhasanah', 'divisi' => '4', 'jabatan' => 'Staf Internal Fundraising', 'telepon' => '081289211211', 'email' => 'hana.nurhasanah@alazhar.org', 'user_id' => null],
+            ['id' => 98, 'kode' => '213', 'nama' => 'Imam Nur Hamid', 'divisi' => '5', 'jabatan' => 'Staf Wakaf', 'telepon' => '081289213213', 'email' => 'imam.nur@alazhar.org', 'user_id' => null],
+            ['id' => 99, 'kode' => '214', 'nama' => 'Mohamad Hasan', 'divisi' => '6', 'jabatan' => 'Staf Inventarisasi Tanah Wakaf', 'telepon' => '081289214214', 'email' => 'mohamad.hasan@alazhar.org', 'user_id' => null],
+            ['id' => 100, 'kode' => '215', 'nama' => 'Ahmad Rizal', 'divisi' => '3', 'jabatan' => 'Security', 'telepon' => '081289215215', 'email' => 'ahmad.rizal@alazhar.org', 'user_id' => null],
+            ['id' => 101, 'kode' => '217', 'nama' => 'Zaenal Mustofa', 'divisi' => '5', 'jabatan' => 'Driver', 'telepon' => '081289217217', 'email' => 'zaenal.mustofa@alazhar.org', 'user_id' => null],
+            ['id' => 102, 'kode' => '218', 'nama' => 'Eliyah', 'divisi' => '4', 'jabatan' => 'Staf Pembukuan & Kas Kecil', 'telepon' => '081289218218', 'email' => 'eliyah@alazhar.org', 'user_id' => null],
+            ['id' => 103, 'kode' => '220', 'nama' => 'Irpan Hardiansah', 'divisi' => '2', 'jabatan' => 'Staf Kantor Layanan Masjid Agung Al Azhar', 'telepon' => '081289220220', 'email' => 'irpan.hardiansah@alazhar.org', 'user_id' => null],
+            ['id' => 104, 'kode' => '221', 'nama' => 'Nabilah Rusydah', 'divisi' => '3', 'jabatan' => 'Staf Digital Fundraising', 'telepon' => '081289221221', 'email' => 'nabilah.rusydah@alazhar.org', 'user_id' => null],
+            ['id' => 105, 'kode' => '222', 'nama' => 'JIhan Sahra', 'divisi' => '5', 'jabatan' => 'Staf HRD', 'telepon' => '081289222222', 'email' => 'jihan.sahra@alazhar.org', 'user_id' => null],
+            ['id' => 106, 'kode' => '223', 'nama' => 'Fitri Ana Wulandari', 'divisi' => '4', 'jabatan' => 'Staf Content Creator', 'telepon' => '081289223233', 'email' => 'fitri.ana@alazhar.org', 'user_id' => null],
+            ['id' => 107, 'kode' => '224', 'nama' => 'Abu Hurairah', 'divisi' => '5', 'jabatan' => 'Koordinator Relawan & Dakwah', 'telepon' => '081289224224', 'email' => 'abu.hurairah@alazhar.org', 'user_id' => null],
+            ['id' => 108, 'kode' => '225', 'nama' => 'Adha Apriani', 'divisi' => '3', 'jabatan' => 'Staf LAZ Al Azhar', 'telepon' => '081289225225', 'email' => 'adha.apriani@alazhar.org', 'user_id' => null],
+            ['id' => 109, 'kode' => '226', 'nama' => 'Intan Juliani Hidayat', 'divisi' => '2', 'jabatan' => 'Staf LAZ Al Azhar', 'telepon' => '081289226226', 'email' => 'intan.juliani@alazhar.org', 'user_id' => null],
+            ['id' => 110, 'kode' => '227', 'nama' => 'Rif’at Sauqi', 'divisi' => '5', 'jabatan' => 'Staf LAZ Al Azhar', 'telepon' => '081289227227', 'email' => 'rifat.sauqi@alazhar.org', 'user_id' => null],
+            ['id' => 111, 'kode' => '228', 'nama' => 'Nurman Fauzan Hidayana', 'divisi' => '2', 'jabatan' => 'Staf LAZ Al Azhar', 'telepon' => '081289228228', 'email' => 'nurman.fauzan@alazhar.org', 'user_id' => null],
+            ['id' => 116, 'kode' => '001', 'nama' => 'Ali Subekhan', 'divisi' => '1', 'jabatan' => 'Direktur Utama LAZWaf Al Azhar', 'telepon' => '08129801723', 'email' => 'alisubehan@alazharpeduli.or.id', 'user_id' => null],
         ];
 
         foreach ($picList as $pic) {
             $divId = isset($pic['divisi']) && isset($divMap[$pic['divisi']]) ? $divMap[$pic['divisi']] : null;
-            PenanggungJawab::updateOrCreate(
-                ['kode_pic' => $pic['kode']],
-                [
-                    'nama' => $pic['nama'],
-                    'divisi_id' => $divId,
-                    'jabatan' => $pic['jabatan'] ?? null,
-                    'telepon' => $pic['telepon'] ?? null,
-                    'email' => $pic['email'] ?? null,
-                    'status' => 'aktif',
-                ]
-            );
+            $userId = (isset($pic['user_id']) && User::where('id', $pic['user_id'])->exists()) ? $pic['user_id'] : null;
+
+            $pj = null;
+            if (isset($pic['id'])) {
+                $pj = PenanggungJawab::find($pic['id']);
+            }
+            if (! $pj && isset($pic['kode'])) {
+                $pj = PenanggungJawab::where('kode_pic', $pic['kode'])->first();
+            }
+            if (! $pj) {
+                $pj = new PenanggungJawab;
+                if (isset($pic['id'])) {
+                    $pj->id = $pic['id'];
+                }
+            }
+
+            $pj->nama = $pic['nama'];
+            $pj->kode_pic = $pic['kode'];
+            $pj->divisi_id = $divId;
+            $pj->jabatan = $pic['jabatan'] ?? null;
+            $pj->telepon = $pic['telepon'] ?? null;
+            $pj->email = $pic['email'] ?? null;
+            $pj->user_id = $userId;
+            $pj->status = 'aktif';
+            $pj->save();
         }
 
         // 7. Seed Master Lokasi (Kode 3 Digit, Alamat Real, Koordinat GPS, dan Gedung)
@@ -311,7 +346,7 @@ class MasterKodeAsetSeeder extends Seeder
             ['kode' => '130', 'nama' => 'Lantai 3 - Gedung Cirendeu', 'gedung' => 'Kantor Cirendeu', 'alamat' => 'Jl. Cirendeu Raya No. 1, Lantai 3, Ciputat Timur, Tangerang Selatan', 'lat' => -6.309315, 'lng' => 106.772520],
             ['kode' => '131', 'nama' => 'Ruang Kerja HRD & SDM Lt. 3', 'gedung' => 'Kantor Cirendeu', 'alamat' => 'Jl. Cirendeu Raya No. 1, Ruang HRD Lt. 3, Ciputat Timur, Tangerang Selatan', 'lat' => -6.309315, 'lng' => 106.772520],
             ['kode' => '132', 'nama' => 'Ruang CRM & Digital Media Lt. 3', 'gedung' => 'Kantor Cirendeu', 'alamat' => 'Jl. Cirendeu Raya No. 1, Ruang CRM Lt. 3, Ciputat Timur, Tangerang Selatan', 'lat' => -6.309315, 'lng' => 106.772520],
-            ['kode' => '133', 'nama' => 'Ruang Kerja Divisi Kelembagaan Lt. 3', 'gedung' => 'Kantor Cirendeu', 'alamat' => 'Jl. Cirendeu Raya No. 1, Ruang Kelembagaan Lt. 3, Ciputat Timur, Tangerang Selatan', 'lat' => -6.309315, 'lng' => 106.772520],
+            ['kode' => '133', 'nama' => 'Ruang Kerja Divisi Sekretariat Lt. 3', 'gedung' => 'Kantor Cirendeu', 'alamat' => 'Jl. Cirendeu Raya No. 1, Ruang Sekretariat Lt. 3, Ciputat Timur, Tangerang Selatan', 'lat' => -6.309315, 'lng' => 106.772520],
             ['kode' => '134', 'nama' => 'Toilet Lt. 3', 'gedung' => 'Kantor Cirendeu', 'alamat' => 'Jl. Cirendeu Raya No. 1, Area Toilet Lt. 3, Ciputat Timur, Tangerang Selatan', 'lat' => -6.309315, 'lng' => 106.772520],
             ['kode' => '140', 'nama' => 'Rooftop & Area Panel Surya', 'gedung' => 'Kantor Cirendeu', 'alamat' => 'Jl. Cirendeu Raya No. 1, Rooftop Gedung Cirendeu, Ciputat Timur, Tangerang Selatan', 'lat' => -6.309315, 'lng' => 106.772520],
 

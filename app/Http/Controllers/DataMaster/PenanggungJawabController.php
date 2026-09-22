@@ -84,22 +84,26 @@ class PenanggungJawabController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->filled('kode_pic')) {
+            $request->merge([
+                'kode_pic' => str_pad(trim($request->kode_pic), 3, '0', STR_PAD_LEFT),
+            ]);
+        }
+
         $request->validate([
             'kode_pic' => 'required|string|max:10|unique:penanggung_jawab,kode_pic',
             'nama' => 'required|string|max:150',
             'divisi_id' => 'nullable|exists:divisi,id',
             'jabatan' => 'nullable|string|max:100',
-            'telepon' => 'nullable|string|max:25',
+            'telepon' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:150',
             'status' => 'required|in:aktif,non_aktif',
             'alamat' => 'nullable|string',
             'keterangan' => 'nullable|string',
         ]);
 
-        $kode = str_pad(trim($request->kode_pic), 3, '0', STR_PAD_LEFT);
-
         $pic = PenanggungJawab::create([
-            'kode_pic' => $kode,
+            'kode_pic' => $request->kode_pic,
             'nama' => $request->nama,
             'divisi_id' => $request->divisi_id,
             'jabatan' => $request->jabatan,
@@ -119,22 +123,26 @@ class PenanggungJawabController extends Controller
     {
         $pic = PenanggungJawab::findOrFail($id);
 
+        if ($request->filled('kode_pic')) {
+            $request->merge([
+                'kode_pic' => str_pad(trim($request->kode_pic), 3, '0', STR_PAD_LEFT),
+            ]);
+        }
+
         $request->validate([
             'kode_pic' => 'required|string|max:10|unique:penanggung_jawab,kode_pic,'.$pic->id,
             'nama' => 'required|string|max:150',
             'divisi_id' => 'nullable|exists:divisi,id',
             'jabatan' => 'nullable|string|max:100',
-            'telepon' => 'nullable|string|max:25',
+            'telepon' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:150',
             'status' => 'required|in:aktif,non_aktif',
             'alamat' => 'nullable|string',
             'keterangan' => 'nullable|string',
         ]);
 
-        $kode = str_pad(trim($request->kode_pic), 3, '0', STR_PAD_LEFT);
-
         $pic->update([
-            'kode_pic' => $kode,
+            'kode_pic' => $request->kode_pic,
             'nama' => $request->nama,
             'divisi_id' => $request->divisi_id,
             'jabatan' => $request->jabatan,

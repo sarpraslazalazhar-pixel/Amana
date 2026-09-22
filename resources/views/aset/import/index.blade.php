@@ -127,7 +127,7 @@
 
                 <div class="space-y-1.5 text-[11px]">
                     <div class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
-                        <span>Divisi 1 (Direksi), 2 (Kelembagaan), 3 (Fundraising), 4 (Keuangan)</span>
+                        <span>Divisi 1 (Direksi), 2 (Sekretariat), 3 (Fundraising), 4 (Keuangan)</span>
                         <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">Aset Tetap</span>
                     </div>
                     <div class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">

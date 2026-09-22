@@ -164,7 +164,7 @@ class KodeAsetGeneratorTest extends TestCase
         $this->assertEquals('01', $p1['nomor_urut']);
         $this->assertEquals('EL01S304511200901', $p1['kode_resmi']);
 
-        // 16-char: EL01S11121120171 (AC Statis, Lokasi 111, Divisi 2 Kelembagaan, Thn 2017, Urutan 1)
+        // 16-char: EL01S11121120171 (AC Statis, Lokasi 111, Divisi 2 Sekretariat, Thn 2017, Urutan 1)
         $p2 = KodeAsetGenerator::parse('EL01S11121120171');
         $this->assertNotNull($p2);
         $this->assertEquals('111', $p2['kode_keempat']);

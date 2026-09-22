@@ -356,27 +356,65 @@
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-1 font-medium">Harga Satuan</span>
-                        <span class="font-bold text-slate-800 text-[13px]">Rp {{ number_format($aset->harga_satuan, 0, ',', '.') }}</span>
+                        <span class="font-bold text-slate-800 text-[13px]">
+                            @if($aset->harga_satuan > 0)
+                                Rp {{ number_format($aset->harga_satuan, 0, ',', '.') }}
+                            @else
+                                <span class="text-slate-400 font-normal italic">- (Belum dinilai)</span>
+                            @endif
+                        </span>
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-1 font-medium">Harga Pembelian Total</span>
-                        <span class="font-extrabold text-slate-900 text-sm">Rp {{ number_format($aset->harga_total, 0, ',', '.') }}</span>
+                        <span class="font-extrabold text-slate-900 text-sm">
+                            @if($aset->harga_total > 0)
+                                Rp {{ number_format($aset->harga_total, 0, ',', '.') }}
+                            @else
+                                <span class="text-slate-400 font-normal italic">- (Belum dinilai)</span>
+                            @endif
+                        </span>
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-1 font-medium">Umur Ekonomis</span>
-                        <span class="font-bold text-slate-800 text-[13px]">{{ $aset->umur_ekonomis_tahun }} Tahun</span>
+                        <span class="font-bold text-slate-800 text-[13px]">
+                            @if($aset->umur_ekonomis_tahun > 0)
+                                {{ $aset->umur_ekonomis_tahun }} Tahun
+                            @elseif($aset->kategori && $aset->kategori->kode_kategori === 'TN')
+                                <span class="text-slate-500 font-medium">Tidak disusutkan</span>
+                            @else
+                                <span class="text-slate-400 font-normal italic">-</span>
+                            @endif
+                        </span>
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-1 font-medium">Nilai Residu / Sisa</span>
-                        <span class="font-bold text-slate-800 text-[13px]">Rp {{ number_format($aset->nilai_residu, 0, ',', '.') }}</span>
+                        <span class="font-bold text-slate-800 text-[13px]">
+                            @if($aset->nilai_residu > 0)
+                                Rp {{ number_format($aset->nilai_residu, 0, ',', '.') }}
+                            @else
+                                <span class="text-slate-400 font-normal italic">-</span>
+                            @endif
+                        </span>
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-1 font-medium">Penyusutan / Bulan</span>
-                        <span class="font-bold text-rose-600 text-[13px]">Rp {{ number_format($aset->penyusutan_per_bulan, 0, ',', '.') }}</span>
+                        <span class="font-bold text-rose-600 text-[13px]">
+                            @if($aset->penyusutan_per_bulan > 0)
+                                Rp {{ number_format($aset->penyusutan_per_bulan, 0, ',', '.') }}
+                            @else
+                                <span class="text-slate-400 font-normal italic">-</span>
+                            @endif
+                        </span>
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-1 font-medium">Estimasi Nilai Buku Saat Ini</span>
-                        <span class="font-extrabold text-emerald-600 text-sm">Rp {{ number_format($nilaiBuku, 0, ',', '.') }}</span>
+                        <span class="font-extrabold text-emerald-600 text-sm">
+                            @if($nilaiBuku > 0)
+                                Rp {{ number_format($nilaiBuku, 0, ',', '.') }}
+                            @else
+                                <span class="text-slate-400 font-normal italic">- (Belum dinilai)</span>
+                            @endif
+                        </span>
                     </div>
                 </div>
             </div>

@@ -278,6 +278,15 @@ class AsetController extends Controller
             $request->merge(['nilai_residu' => str_replace('.', '', (string) $request->nilai_residu)]);
         }
 
+        $isGedungOrTanah = false;
+        if ($request->filled('kategori_id')) {
+            $kat = Kategori::find($request->kategori_id);
+            $isGedungOrTanah = $kat && in_array($kat->kode_kategori, ['GD', 'TN'], true);
+        }
+
+        $hargaRules = $isGedungOrTanah ? 'nullable|numeric|min:0' : 'required|numeric|min:0';
+        $umurRules = $isGedungOrTanah ? 'nullable|integer|min:0' : 'required|integer|min:1';
+
         $request->validate([
             'nama_aset' => 'required|string|max:255',
             'sifat_barang' => 'required|in:D,S',
@@ -286,14 +295,14 @@ class AsetController extends Controller
             'divisi_id' => 'required|exists:divisi,id',
             'cara_perolehan' => 'required|in:1,2',
             'status_barang' => 'required|in:1,2',
-            'merk_id' => 'required|exists:merk,id',
+            'merk_id' => 'nullable|exists:merk,id',
             'lokasi_id' => 'required|exists:lokasi,id',
             'penanggung_jawab_id' => 'required|exists:penanggung_jawab,id',
             'tanggal_pembelian' => 'required|date',
             'toko_distributor' => 'required|string|max:255',
             'jumlah_unit' => 'required|integer|min:1',
-            'harga_satuan' => 'required|numeric|min:0',
-            'umur_ekonomis_tahun' => 'required|integer|min:1',
+            'harga_satuan' => $hargaRules,
+            'umur_ekonomis_tahun' => $umurRules,
             'nilai_residu' => 'nullable|numeric|min:0',
             'jenis' => 'nullable|in:tetap,kelolaan',
             'tipe_model' => 'nullable|string|max:255',
@@ -327,9 +336,11 @@ class AsetController extends Controller
         $nomorUrut = $genResult['nomor_urut'];
 
         // Hitung Keuangan & Penyusutan
-        $hargaTotal = PenyusutanCalculator::hitungHargaTotal($request->jumlah_unit, $request->harga_satuan);
-        $nilaiResidu = $request->nilai_residu ?? 0;
-        $penyusutanBulan = PenyusutanCalculator::hitungPenyusutanPerBulan($hargaTotal, $request->umur_ekonomis_tahun, $nilaiResidu);
+        $hargaSatuan = $request->filled('harga_satuan') ? (float) $request->harga_satuan : 0;
+        $umurEkonomis = $request->filled('umur_ekonomis_tahun') ? (int) $request->umur_ekonomis_tahun : 0;
+        $hargaTotal = PenyusutanCalculator::hitungHargaTotal($request->jumlah_unit, $hargaSatuan);
+        $nilaiResidu = $request->filled('nilai_residu') ? (float) $request->nilai_residu : 0;
+        $penyusutanBulan = PenyusutanCalculator::hitungPenyusutanPerBulan($hargaTotal, $umurEkonomis, $nilaiResidu);
 
         $fotoPath = null;
         if ($request->hasFile('foto_utama')) {
@@ -359,7 +370,7 @@ class AsetController extends Controller
             'cara_perolehan' => $request->cara_perolehan,
             'status_barang' => $request->status_barang,
             'nomor_urut' => $nomorUrut,
-            'merk_id' => $request->merk_id,
+            'merk_id' => $request->filled('merk_id') ? $request->merk_id : null,
             'tipe_model' => $request->tipe_model,
             'produsen' => $request->produsen,
             'no_seri' => $request->no_seri,
@@ -371,9 +382,9 @@ class AsetController extends Controller
             'toko_distributor' => $request->toko_distributor,
             'no_invoice' => $request->no_invoice,
             'jumlah_unit' => $request->jumlah_unit,
-            'harga_satuan' => $request->harga_satuan,
+            'harga_satuan' => $hargaSatuan,
             'harga_total' => $hargaTotal,
-            'umur_ekonomis_tahun' => $request->umur_ekonomis_tahun,
+            'umur_ekonomis_tahun' => $umurEkonomis,
             'nilai_residu' => $nilaiResidu,
             'penyusutan_per_bulan' => $penyusutanBulan,
             'foto_utama' => $fotoPath,
@@ -517,18 +528,28 @@ class AsetController extends Controller
             $request->merge(['nilai_residu' => str_replace('.', '', (string) $request->nilai_residu)]);
         }
 
+        $isGedungOrTanah = false;
+        $kategoriId = $request->input('kategori_id', $aset->kategori_id);
+        if ($kategoriId) {
+            $kat = Kategori::find($kategoriId);
+            $isGedungOrTanah = $kat && in_array($kat->kode_kategori, ['GD', 'TN'], true);
+        }
+
+        $hargaRules = $isGedungOrTanah ? 'nullable|numeric|min:0' : 'required|numeric|min:0';
+        $umurRules = $isGedungOrTanah ? 'nullable|integer|min:0' : 'required|integer|min:1';
+
         $request->validate([
             'nama_aset' => 'required|string|max:255',
             'divisi_id' => 'nullable|exists:divisi,id',
             'kategori_id' => 'required|exists:kategori,id',
-            'merk_id' => 'required|exists:merk,id',
+            'merk_id' => 'nullable|exists:merk,id',
             'lokasi_id' => 'required|exists:lokasi,id',
             'penanggung_jawab_id' => 'required|exists:penanggung_jawab,id',
             'tanggal_pembelian' => 'required|date',
             'toko_distributor' => 'required|string|max:255',
             'jumlah_unit' => 'required|integer|min:1',
-            'harga_satuan' => 'required|numeric|min:0',
-            'umur_ekonomis_tahun' => 'required|integer|min:1',
+            'harga_satuan' => $hargaRules,
+            'umur_ekonomis_tahun' => $umurRules,
             'nilai_residu' => 'nullable|numeric|min:0',
             'jenis' => 'nullable|in:tetap,kelolaan',
             'tipe_model' => 'nullable|string|max:255',
@@ -549,9 +570,11 @@ class AsetController extends Controller
             $jenis = $request->jenis ?? $aset->jenis;
         }
 
-        $hargaTotal = PenyusutanCalculator::hitungHargaTotal($request->jumlah_unit, $request->harga_satuan);
-        $nilaiResidu = $request->nilai_residu ?? 0;
-        $penyusutanBulan = PenyusutanCalculator::hitungPenyusutanPerBulan($hargaTotal, $request->umur_ekonomis_tahun, $nilaiResidu);
+        $hargaSatuan = $request->filled('harga_satuan') ? (float) $request->harga_satuan : 0;
+        $umurEkonomis = $request->filled('umur_ekonomis_tahun') ? (int) $request->umur_ekonomis_tahun : 0;
+        $hargaTotal = PenyusutanCalculator::hitungHargaTotal($request->jumlah_unit, $hargaSatuan);
+        $nilaiResidu = $request->filled('nilai_residu') ? (float) $request->nilai_residu : 0;
+        $penyusutanBulan = PenyusutanCalculator::hitungPenyusutanPerBulan($hargaTotal, $umurEkonomis, $nilaiResidu);
 
         $fotoPath = $aset->foto_utama;
         if ($request->hasFile('foto_utama')) {
@@ -638,7 +661,7 @@ class AsetController extends Controller
             'nama_aset' => $request->nama_aset,
             'divisi_id' => ($mutationResult['new_divisi_id'] ?? null) ?: ($request->divisi_id ?? $aset->divisi_id),
             'kategori_id' => $request->kategori_id,
-            'merk_id' => $request->merk_id,
+            'merk_id' => $request->filled('merk_id') ? $request->merk_id : null,
             'tipe_model' => $request->tipe_model,
             'produsen' => $request->produsen,
             'no_seri' => $request->no_seri,
@@ -650,9 +673,9 @@ class AsetController extends Controller
             'toko_distributor' => $request->toko_distributor,
             'no_invoice' => $request->no_invoice,
             'jumlah_unit' => $request->jumlah_unit,
-            'harga_satuan' => $request->harga_satuan,
+            'harga_satuan' => $hargaSatuan,
             'harga_total' => $hargaTotal,
-            'umur_ekonomis_tahun' => $request->umur_ekonomis_tahun,
+            'umur_ekonomis_tahun' => $umurEkonomis,
             'nilai_residu' => $nilaiResidu,
             'penyusutan_per_bulan' => $penyusutanBulan,
             'foto_utama' => $fotoPath,

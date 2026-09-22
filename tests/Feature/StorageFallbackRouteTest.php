@@ -54,7 +54,7 @@ class StorageFallbackRouteTest extends TestCase
     {
         $viewer = User::factory()->create([
             'role' => 'viewer',
-            'status' => 'aktif',
+            'is_active' => true,
         ]);
 
         $response = $this->actingAs($viewer)->get('/admin/storage-link');
@@ -65,7 +65,7 @@ class StorageFallbackRouteTest extends TestCase
     {
         $admin = User::factory()->create([
             'role' => 'super_admin',
-            'status' => 'aktif',
+            'is_active' => true,
         ]);
 
         $response = $this->actingAs($admin)->get('/admin/storage-link');

@@ -291,9 +291,7 @@
             <!-- Modal Form -->
             <form :action="formAction" method="POST" class="space-y-4">
                 @csrf
-                <template x-if="isEdit">
-                    <input type="hidden" name="_method" value="PUT">
-                </template>
+                <input type="hidden" name="_method" value="PUT" :disabled="!isEdit">
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Kode PIC (NIA 3 Digit) -->
@@ -618,8 +616,8 @@
 
 @push('scripts')
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('picManager', () => ({
+function picManager() {
+    return {
         modalFormOpen: false,
         modalAssetOpen: false,
         isEdit: false,
@@ -777,7 +775,7 @@ document.addEventListener('alpine:init', () => {
         openEditModal(item) {
             this.isEdit = true;
             this.editId = item.id;
-            this.formAction = '/data/penanggung-jawab/' + item.id;
+            this.formAction = '{{ url('data/penanggung-jawab') }}/' + item.id;
             this.formData = {
                 kode_pic: item.kode_pic,
                 nama: item.nama,
@@ -801,7 +799,7 @@ document.addEventListener('alpine:init', () => {
             this.perPage = 15;
 
             try {
-                const response = await fetch('/data/penanggung-jawab/' + id, {
+                const response = await fetch('{{ url('data/penanggung-jawab') }}/' + id, {
                     headers: {
                         'Accept': 'application/json'
                     }
@@ -826,7 +824,16 @@ document.addEventListener('alpine:init', () => {
             }
             return cleaned;
         }
-    }));
-});
+    };
+}
+window.picManager = picManager;
+
+if (window.Alpine) {
+    Alpine.data('picManager', picManager);
+} else {
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('picManager', picManager);
+    });
+}
 </script>
 @endpush

@@ -169,6 +169,13 @@
 
         <!-- Options List -->
         <div x-ref="listContainer" class="max-h-60 overflow-y-auto divide-y divide-slate-50 p-1">
+            @if(!$required)
+                <div @click="select(null)"
+                     class="p-2 rounded-xl cursor-pointer transition-colors flex items-center gap-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 border-b border-slate-100 mb-0.5">
+                    <i class="ti ti-ban text-xs"></i>
+                    <span class="text-[11px] italic font-medium">-- Tanpa Pilihan / Kosongkan --</span>
+                </div>
+            @endif
             <template x-for="(item, idx) in filteredItems" :key="item.id">
                 <div @click="select(item)"
                      @mouseenter="highlightIndex = idx"

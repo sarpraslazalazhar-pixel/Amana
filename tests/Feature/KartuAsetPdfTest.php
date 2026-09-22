@@ -51,7 +51,7 @@ class KartuAsetPdfTest extends TestCase
 
         $kategori = Kategori::where('kode_kategori', 'EL')->first() ?? Kategori::create(['kode_kategori' => 'EL', 'nama_kategori' => 'Elektronik']);
         $barang = Barang::where('kode_barang', '14')->first() ?? Barang::create(['kategori_id' => $kategori->id, 'kode_barang' => '14', 'nama_barang' => 'Laptop']);
-        $divisi = Divisi::first() ?? Divisi::create(['kode_divisi' => '2', 'nama_divisi' => 'Kelembagaan']);
+        $divisi = Divisi::first() ?? Divisi::create(['kode_divisi' => '2', 'nama_divisi' => 'Sekretariat']);
         $lokasi = Lokasi::first() ?? Lokasi::create(['kode_lokasi' => '111', 'nama_lokasi' => 'Lobi Utama', 'gedung' => 'Gedung Pusat']);
         $pj = PenanggungJawab::first() ?? PenanggungJawab::create(['nama' => 'Suryamin', 'kode_pic' => '050', 'divisi_id' => $divisi->id]);
         $merk = Merk::first() ?? Merk::create(['nama_merk' => 'Lenovo']);
