@@ -14,7 +14,7 @@ class MasterKodeAsetSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Seed Divisi (1 - 6)
+        // 1. Seed Divisi (1 - 7)
         $divisiList = [
             ['kode_divisi' => '1', 'nama_divisi' => 'Direksi', 'keterangan' => 'Aset Tetap'],
             ['kode_divisi' => '2', 'nama_divisi' => 'Sekretariat', 'keterangan' => 'Aset Tetap'],
@@ -22,6 +22,7 @@ class MasterKodeAsetSeeder extends Seeder
             ['kode_divisi' => '4', 'nama_divisi' => 'Keuangan', 'keterangan' => 'Aset Tetap'],
             ['kode_divisi' => '5', 'nama_divisi' => 'Program', 'keterangan' => 'Aset dalam Kelolaan'],
             ['kode_divisi' => '6', 'nama_divisi' => 'Wakaf', 'keterangan' => 'Aset'],
+            ['kode_divisi' => '7', 'nama_divisi' => 'Satuan Audit Internal (SAI)', 'keterangan' => 'Aset Tetap'],
         ];
 
         foreach ($divisiList as $div) {
