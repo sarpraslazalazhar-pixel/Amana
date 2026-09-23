@@ -269,4 +269,86 @@ class AsetMutasiKodeTest extends TestCase
         $response->assertSee($newCode);
         $response->assertSee($aset->nama_aset);
     }
+
+    public function test_mutasi_aset_statis_fallback_divisi_dari_penanggung_jawab_bila_divisi_kosong()
+    {
+        $initialCode = 'EL14S111211202501';
+        $aset = Aset::create([
+            'nama_aset' => 'AC Kantor',
+            'sifat_barang' => 'S',
+            'kode_aset' => $initialCode,
+            'kategori_id' => $this->kategori->id,
+            'barang_id' => $this->barang->id,
+            'divisi_id' => $this->divisi1->id,
+            'merk_id' => $this->merk->id,
+            'lokasi_id' => $this->lokasi1->id,
+            'penanggung_jawab_id' => $this->pj1->id,
+            'tanggal_pembelian' => '2025-01-01',
+            'toko_distributor' => 'Store',
+            'jumlah_unit' => 1,
+            'harga_satuan' => 5000000,
+            'harga_total' => 5000000,
+            'umur_ekonomis_tahun' => 4,
+            'penyusutan_per_bulan' => 104166.67,
+            'nomor_urut' => 1,
+            'status' => 'aktif',
+            'jenis' => 'tetap',
+            'created_by' => $this->admin->id,
+        ]);
+
+        // Mutasi PJ ke pj2 (divisi2), tanpa divisi_id
+        $response = $this->actingAs($this->admin)->post(route('aset.mutasi', $aset->id), [
+            'sejak_tanggal' => '2026-09-02',
+            'penanggung_jawab_id' => $this->pj2->id,
+            'lokasi_id' => $this->lokasi1->id,
+            'divisi_id' => '',
+        ]);
+
+        $response->assertRedirect(route('aset.show', $aset->id));
+        $aset->refresh();
+
+        $this->assertEquals($this->divisi2->id, $aset->divisi_id);
+        $this->assertEquals($this->pj2->id, $aset->penanggung_jawab_id);
+    }
+
+    public function test_mutasi_aset_bisa_ubah_divisi_manual_secara_independen()
+    {
+        $initialCode = 'EL14D050211202501';
+        $aset = Aset::create([
+            'nama_aset' => 'Laptop Inventaris',
+            'sifat_barang' => 'D',
+            'kode_aset' => $initialCode,
+            'kategori_id' => $this->kategori->id,
+            'barang_id' => $this->barang->id,
+            'divisi_id' => $this->divisi1->id,
+            'merk_id' => $this->merk->id,
+            'lokasi_id' => $this->lokasi1->id,
+            'penanggung_jawab_id' => $this->pj1->id,
+            'tanggal_pembelian' => '2025-01-01',
+            'toko_distributor' => 'Store',
+            'jumlah_unit' => 1,
+            'harga_satuan' => 5000000,
+            'harga_total' => 5000000,
+            'umur_ekonomis_tahun' => 4,
+            'penyusutan_per_bulan' => 104166.67,
+            'nomor_urut' => 1,
+            'status' => 'aktif',
+            'jenis' => 'tetap',
+            'created_by' => $this->admin->id,
+        ]);
+
+        // PJ dipilih pj1 (divisi1), tetapi divisi_id diubah manual ke divisi2
+        $response = $this->actingAs($this->admin)->post(route('aset.mutasi', $aset->id), [
+            'sejak_tanggal' => '2026-09-02',
+            'penanggung_jawab_id' => $this->pj1->id,
+            'lokasi_id' => $this->lokasi1->id,
+            'divisi_id' => $this->divisi2->id,
+        ]);
+
+        $response->assertRedirect(route('aset.show', $aset->id));
+        $aset->refresh();
+
+        $this->assertEquals($this->divisi2->id, $aset->divisi_id);
+        $this->assertEquals($this->pj1->id, $aset->penanggung_jawab_id);
+    }
 }

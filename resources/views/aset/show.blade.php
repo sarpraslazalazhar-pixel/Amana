@@ -1515,8 +1515,8 @@
                       },
                       onPjChanged(val) {
                           this.pjId = val;
-                          if (this.pjMap[val] && '{{ $aset->sifat_barang }}' === 'D') {
-                              this.divisiId = this.pjMap[val];
+                          if (this.pjMap && val && this.pjMap[val]) {
+                              this.divisiId = String(this.pjMap[val]);
                           }
                           this.fetchPreview();
                       },

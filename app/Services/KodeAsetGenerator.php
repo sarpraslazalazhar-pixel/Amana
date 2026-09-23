@@ -107,7 +107,7 @@ class KodeAsetGenerator
         // Tentukan Divisi baru
         $targetDivisiId = $newDivisiId;
         if (! $targetDivisiId) {
-            if ($sifatBarang === 'D' && $targetPjId) {
+            if ($targetPjId) {
                 $pjModel = PenanggungJawab::find($targetPjId);
                 $targetDivisiId = $pjModel?->divisi_id ?: $aset->divisi_id;
             } else {

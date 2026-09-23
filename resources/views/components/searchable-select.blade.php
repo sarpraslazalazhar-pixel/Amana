@@ -48,8 +48,10 @@
 
         init() {
             @if($model)
-                this.$watch('{{ $model }}', (val) => {
-                    this.selectedId = val;
+                this.$watch(() => {
+                    try { return {{ $model }}; } catch (e) { return null; }
+                }, (val) => {
+                    this.selectedId = (val !== null && val !== undefined) ? String(val) : '';
                 });
             @endif
         },
@@ -69,13 +71,14 @@
 
         select(item) {
             this.selectedId = item ? item.id : '';
+            const selectedId = this.selectedId;
             @if($model)
-                {{ $model }} = this.selectedId;
+                try { {{ $model }} = this.selectedId; } catch (e) {}
             @endif
             this.open = false;
             this.search = '';
             @if($change)
-                {{ $change }};
+                try { {{ $change }}; } catch (e) { console.error(e); }
             @endif
         },
 
