@@ -36,17 +36,34 @@
         </svg>
     </div>
 
-    <!-- Header: Logo AMANA di Pojok Kiri Atas -->
-    <header class="w-full px-6 sm:px-12 py-6 sm:py-8 relative z-10">
+    <!-- Header: Logo AMANA di Pojok Kiri Atas & Animasi di Pojok Kanan Atas -->
+    <header class="w-full px-6 sm:px-12 py-4 sm:py-6 relative z-10 flex items-center justify-between">
         <a href="{{ url('/') }}" class="inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg">
             <img src="{{ asset('logo-amana.png') }}"
                  alt="AMANA · Al Azhar Peduli Management Asset"
                  class="h-34 sm:h-34 w-auto object-contain">
         </a>
+        <div class="flex items-center gap-2.5 sm:gap-3">
+            <div class="text-right">
+                <div class="inline-block bg-slate-100/90 border border-slate-200/80 rounded-2xl rounded-tr-none px-3 py-1.5 shadow-2xs">
+                    <p class="text-xs sm:text-sm font-bold text-slate-800">
+                        &ldquo;Hayo nyasar ya:v&rdquo;
+                    </p>
+                </div>
+                <p class="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-1 mr-1">
+                    by <a href="https://instagram.com/gbrnmewing" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 font-bold hover:underline">IT dev</a>
+                </p>
+            </div>
+            <img src="{{ asset('catgip.webp') }}"
+                 alt="Animasi Kucing"
+                 onclick="spawnCatEmojis(event)"
+                 class="h-16 sm:h-20 md:h-24 w-auto object-contain select-none cursor-pointer active:scale-90 hover:scale-105 transition-transform"
+                 title="Klik meong! 🐾">
+        </div>
     </header>
 
-    <!-- Konten Utama: 2 Kolom Sisi Kiri Kartun & Sisi Kanan Pesan Kesalahan -->
-    <main class="w-full max-w-6xl mx-auto px-6 sm:px-12 py-6 flex-1 flex flex-col md:flex-row items-center justify-center gap-10 md:gap-14 lg:gap-20 relative z-10">
+    <!-- Konten Utama: 2 Kolom Sisi Kiri Kartun & Sisi Kanan Pesan Kesalahan (Optical Center Diangkat ke Atas) -->
+    <main class="w-full max-w-6xl mx-auto px-6 sm:px-12 py-4 flex-1 flex flex-col md:flex-row items-center justify-center gap-10 md:gap-14 lg:gap-20 relative z-10 -mt-6 sm:-mt-10 lg:-mt-14">
 
         <!-- Kolom Kiri: Ilustrasi Kartun (image.png) Tanpa Animasi & Menyatu Sempurna -->
         <div class="flex-1 flex justify-center md:justify-end w-full">
@@ -93,11 +110,49 @@
     </main>
 
     <!-- Footer: Tagline di Pojok Kanan Bawah Sesuai Desain Referensi -->
-    <footer class="w-full px-6 sm:px-12 py-6 flex items-center justify-center md:justify-end relative z-10">
+    <footer class="w-full px-6 sm:px-12 py-4 sm:py-5 flex items-center justify-center md:justify-end relative z-10">
         <span class="text-xs sm:text-[13px] text-slate-400 font-normal tracking-wide">
             &mdash; Aset Tertata, Kinerja Meningkat &mdash;
         </span>
     </footer>
+
+    <script>
+        function spawnCatEmojis(event) {
+            const emojis = ['🐱', '😸', '😹', '😻', '😽', '🐾', '🐈', '✨', '🐟', '🧶', '💖'];
+            const rect = event.currentTarget.getBoundingClientRect();
+            const originX = rect.left + rect.width / 2;
+            const originY = rect.top + rect.height / 2;
+
+            for (let i = 0; i < 24; i++) {
+                const el = document.createElement('span');
+                el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                el.style.position = 'fixed';
+                el.style.left = `${originX}px`;
+                el.style.top = `${originY}px`;
+                el.style.fontSize = `${Math.floor(Math.random() * 18 + 20)}px`;
+                el.style.pointerEvents = 'none';
+                el.style.userSelect = 'none';
+                el.style.zIndex = '9999';
+                document.body.appendChild(el);
+
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 180 + 60;
+                const destX = Math.cos(angle) * dist;
+                const destY = Math.sin(angle) * dist - 30;
+                const rot = (Math.random() - 0.5) * 360;
+
+                el.animate([
+                    { transform: 'translate(-50%, -50%) scale(0.3)', opacity: 1 },
+                    { transform: `translate(calc(-50% + ${destX * 0.7}px), calc(-50% + ${destY * 0.7}px)) scale(1.4) rotate(${rot * 0.5}deg)`, opacity: 1, offset: 0.6 },
+                    { transform: `translate(calc(-50% + ${destX}px), calc(-50% + ${destY + 40}px)) scale(0.9) rotate(${rot}deg)`, opacity: 0 }
+                ], {
+                    duration: Math.random() * 400 + 800,
+                    easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)',
+                    fill: 'forwards'
+                }).onfinish = () => el.remove();
+            }
+        }
+    </script>
 
 </body>
 </html>

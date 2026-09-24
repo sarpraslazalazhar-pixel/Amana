@@ -7,6 +7,12 @@
     $backRoute = $aset->status === 'non_aktif'
         ? 'aset.nonAktif'
         : ($aset->jenis === 'kelolaan' ? 'aset.kelolaan' : 'aset.tetap');
+    $defaultBackUrl = route($backRoute);
+    $previousUrl = url()->previous();
+    $currentUrl = url()->current();
+    $backUrl = ($previousUrl && $previousUrl !== $currentUrl && !str_contains($previousUrl, '/aset/' . $aset->id))
+        ? $previousUrl
+        : $defaultBackUrl;
     $qrUrl = route('public.qr', $aset->kode_aset);
     $qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' . urlencode($qrUrl);
 
@@ -93,7 +99,8 @@
         <!-- Action Buttons (Responsive Top Right) -->
         <div class="flex items-center flex-wrap gap-2">
             <!-- Tombol Kembali -->
-            <a href="{{ route($backRoute) }}"
+            <a href="{{ $backUrl }}"
+               onclick="handleBackAset(event, '{{ $defaultBackUrl }}', {{ $aset->id }})"
                class="px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-xs uppercase tracking-wider border border-emerald-200 transition-colors inline-flex items-center gap-1 shadow-xs">
                 « KEMBALI
             </a>
@@ -1890,3 +1897,47 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    (function() {
+        try {
+            var assetId = {{ $aset->id }};
+            var storageKey = 'aset_prev_url_' + assetId;
+            var ref = document.referrer;
+            if (ref) {
+                var refUrl = new URL(ref);
+                if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('/aset/' + assetId)) {
+                    sessionStorage.setItem(storageKey, ref);
+                }
+            }
+            if (!sessionStorage.getItem(storageKey) && '{{ $backUrl }}' !== '{{ $defaultBackUrl }}') {
+                sessionStorage.setItem(storageKey, '{{ $backUrl }}');
+            }
+        } catch (e) {}
+    })();
+
+    function handleBackAset(e, fallbackUrl, assetId) {
+        try {
+            var storageKey = 'aset_prev_url_' + assetId;
+            var savedUrl = sessionStorage.getItem(storageKey);
+            var ref = document.referrer;
+            var hasDirectRef = ref && new URL(ref).origin === window.location.origin && !ref.includes('/aset/' + assetId);
+
+            if (hasDirectRef && window.history.length > 1) {
+                e.preventDefault();
+                sessionStorage.removeItem(storageKey);
+                window.history.back();
+                return;
+            }
+
+            if (savedUrl) {
+                e.preventDefault();
+                sessionStorage.removeItem(storageKey);
+                window.location.href = savedUrl;
+                return;
+            }
+        } catch (err) {}
+    }
+</script>
+@endpush

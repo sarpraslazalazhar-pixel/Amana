@@ -16,6 +16,10 @@ class Custom404PageTest extends TestCase
         $response->assertSee('Halaman yang Anda cari tidak dapat ditemukan', false);
         $response->assertSee('image.png', false);
         $response->assertSee('logo-amana.png', false);
+        $response->assertSee('catgip.webp', false);
+        $response->assertSee('Hayo nyasar ya:v', false);
+        $response->assertSee('https://instagram.com/gbrnmewing', false);
+        $response->assertSee('IT dev', false);
         $response->assertSee('Kembali ke Beranda', false);
         $response->assertSee('Coba Lagi', false);
         $response->assertSee('Aset Tertata, Kinerja Meningkat', false);
