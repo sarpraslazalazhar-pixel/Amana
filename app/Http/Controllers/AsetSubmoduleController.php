@@ -45,6 +45,7 @@ class AsetSubmoduleController extends Controller
             'penanggung_jawab_id' => 'required|exists:penanggung_jawab,id',
             'lokasi_id' => 'required|exists:lokasi,id',
             'divisi_id' => 'nullable|exists:divisi,id',
+            'jenis' => 'nullable|in:tetap,kelolaan',
             'jumlah' => 'nullable|integer|min:1',
             'kondisi_persen' => 'nullable|integer|min:0|max:100',
             'kelengkapan_persen' => 'nullable|integer|min:0|max:100',
@@ -53,6 +54,7 @@ class AsetSubmoduleController extends Controller
 
         $aset = Aset::with(['kategori', 'barang', 'divisi'])->findOrFail($asetId);
         $oldKode = $aset->kode_aset;
+        $oldJenis = $aset->jenis;
 
         $targetDivisiId = $request->filled('divisi_id') ? (int) $request->divisi_id : null;
         $mutationResult = KodeAsetGenerator::regenerateForMutation(
@@ -69,11 +71,31 @@ class AsetSubmoduleController extends Controller
             $aset->divisi_id = $mutationResult['new_divisi_id'];
         }
 
+        // Tentukan Jenis Aset: Khusus Divisi 6 (Wakaf) fleksibel kelolaan / tetap (misal: pengadaan hak nazir)
+        $activeDivisiId = $mutationResult['new_divisi_id'] ?? $targetDivisiId ?? $aset->divisi_id;
+        $divisiBaru = \App\Models\Divisi::find($activeDivisiId);
+
+        if ($divisiBaru && $divisiBaru->kode_divisi === '6') {
+            $aset->jenis = in_array($request->jenis, ['tetap', 'kelolaan'], true)
+                ? $request->jenis
+                : ($aset->jenis ?: 'kelolaan');
+        } elseif ($divisiBaru && $divisiBaru->kode_divisi === '5') {
+            $aset->jenis = 'kelolaan';
+        } elseif ($divisiBaru) {
+            $aset->jenis = 'tetap';
+        }
+
         if ($mutationResult['changed']) {
             $aset->kode_aset_lama = $oldKode;
             $aset->kode_aset = $mutationResult['new_code'];
         }
         $aset->save();
+
+        $keteranganRiwayat = $request->keterangan;
+        if ($oldJenis !== $aset->jenis) {
+            $ketJenis = $aset->jenis === 'tetap' ? 'Aset Tetap (Hak Nazir)' : 'Aset Kelolaan';
+            $keteranganRiwayat = trim(($keteranganRiwayat ? $keteranganRiwayat . '. ' : '') . "Jenis aset disesuaikan menjadi: {$ketJenis}.");
+        }
 
         RiwayatAset::create([
             'aset_id' => $aset->id,
@@ -87,7 +109,7 @@ class AsetSubmoduleController extends Controller
             'kode_aset_sebelumnya' => $oldKode,
             'kode_aset_baru' => $aset->kode_aset,
             'jenis_aksi' => 'mutasi',
-            'keterangan' => $request->keterangan,
+            'keterangan' => $keteranganRiwayat,
             'user_id' => auth()->id() ?? 1,
         ]);
 

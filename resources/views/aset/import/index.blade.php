@@ -131,8 +131,12 @@
                         <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">Aset Tetap</span>
                     </div>
                     <div class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
-                        <span>Divisi 5 (Program), 6 (Wakaf)</span>
+                        <span>Divisi 5 (Program)</span>
                         <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-semibold">Aset Kelolaan</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
+                        <span>Divisi 6 (Wakaf: Kelolaan umum atau Tetap jika Hak Nazir)</span>
+                        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">Kelolaan / Tetap</span>
                     </div>
                 </div>
             </div>

@@ -35,6 +35,10 @@ class Aset extends Model
 
     public function getKlasifikasiAttribute(): string
     {
+        if (! empty($this->jenis)) {
+            return $this->jenis === 'kelolaan' ? 'Aset dalam Kelolaan' : 'Aset Tetap';
+        }
+
         if ($this->relationLoaded('divisi') && $this->divisi) {
             return in_array($this->divisi->kode_divisi, ['5', '6'], true) ? 'Aset dalam Kelolaan' : 'Aset Tetap';
         }
@@ -46,7 +50,7 @@ class Aset extends Model
             }
         }
 
-        return $this->jenis === 'kelolaan' ? 'Aset dalam Kelolaan' : 'Aset Tetap';
+        return 'Aset Tetap';
     }
 
     public function scopeKlasifikasi($query, string $klasifikasi)
@@ -54,17 +58,23 @@ class Aset extends Model
         $klasifikasi = strtolower($klasifikasi);
         if ($klasifikasi === 'kelolaan' || $klasifikasi === 'aset dalam kelolaan') {
             return $query->where(function ($q) {
-                $q->whereHas('divisi', function ($d) {
-                    $d->whereIn('kode_divisi', ['5', '6']);
-                })->orWhere('jenis', 'kelolaan');
+                $q->where('jenis', 'kelolaan')
+                    ->orWhere(function ($sub) {
+                        $sub->whereNull('jenis')
+                            ->whereHas('divisi', function ($d) {
+                                $d->whereIn('kode_divisi', ['5', '6']);
+                            });
+                    });
             });
         } elseif ($klasifikasi === 'tetap' || $klasifikasi === 'aset tetap') {
             return $query->where(function ($q) {
-                $q->whereHas('divisi', function ($d) {
-                    $d->whereIn('kode_divisi', ['1', '2', '3', '4']);
-                })->orWhere(function ($sub) {
-                    $sub->whereNull('divisi_id')->where('jenis', 'tetap');
-                });
+                $q->where('jenis', 'tetap')
+                    ->orWhere(function ($sub) {
+                        $sub->whereNull('jenis')
+                            ->whereHas('divisi', function ($d) {
+                                $d->whereNotIn('kode_divisi', ['5', '6']);
+                            });
+                    });
             });
         }
 

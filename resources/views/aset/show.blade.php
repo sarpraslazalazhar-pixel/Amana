@@ -662,7 +662,17 @@
                                         </div>
                                         <div>
                                             <span class="text-[11px] text-slate-400 block font-medium">Divisi Pengampu:</span>
-                                            <span class="font-bold text-slate-800">{{ $item->divisi->nama_divisi ?? ($item->penanggungJawab->divisi->nama_divisi ?? ($aset->divisi->nama_divisi ?? '-')) }}</span>
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <span class="font-bold text-slate-800">{{ $item->divisi->nama_divisi ?? ($item->penanggungJawab->divisi->nama_divisi ?? ($aset->divisi->nama_divisi ?? '-')) }}</span>
+                                                @php
+                                                    $itemKodeDivisi = $item->divisi?->kode_divisi ?? $item->penanggungJawab?->divisi?->kode_divisi ?? $aset->divisi?->kode_divisi;
+                                                @endphp
+                                                @if($itemKodeDivisi === '6')
+                                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider {{ $aset->jenis === 'kelolaan' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200' }}">
+                                                        {{ $aset->jenis === 'kelolaan' ? 'Kelolaan' : 'Tetap (Hak Nazir)' }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
                                         <div>
                                             <span class="text-[11px] text-slate-400 block font-medium">Jumlah Unit:</span>
@@ -1490,10 +1500,23 @@
                       pjId: '{{ $aset->penanggung_jawab_id }}',
                       lokasiId: '{{ $aset->lokasi_id }}',
                       divisiId: '{{ $aset->divisi_id }}',
+                      allDivisi: @js($divisiList),
+                      jenisWakaf: @js($aset->jenis ?? 'kelolaan'),
                       previewCode: '{{ $aset->kode_aset }}',
                       isChanged: false,
                       loading: false,
                       pjMap: {{ json_encode($pjList->pluck('divisi_id', 'id')) }},
+                      get selectedDivisi() {
+                          return (this.allDivisi || []).find(d => String(d.id) === String(this.divisiId));
+                      },
+                      get isDivisiWakaf() {
+                          return this.selectedDivisi && String(this.selectedDivisi.kode_divisi) === '6';
+                      },
+                      get jenisAset() {
+                          if (this.isDivisiWakaf) return this.jenisWakaf === 'tetap' ? 'tetap' : 'kelolaan';
+                          if (this.selectedDivisi && String(this.selectedDivisi.kode_divisi) === '5') return 'kelolaan';
+                          return 'tetap';
+                      },
                       async fetchPreview() {
                           this.loading = true;
                           try {
@@ -1572,6 +1595,60 @@
                                          value="{{ $aset->divisi_id }}"
                                          :required="true"
                                          placeholder="-- Pilih Divisi Pengampu --" />
+                </div>
+
+                <!-- Pilihan Jenis Aset (Khusus Divisi Wakaf pada Mutasi Riwayat) -->
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">
+                        Jenis Aset
+                        <template x-if="isDivisiWakaf">
+                            <span class="text-[10px] text-emerald-600 font-semibold">(Pilihan Khusus Wakaf)</span>
+                        </template>
+                        <template x-if="!isDivisiWakaf">
+                            <span class="text-[10px] text-slate-400 font-normal">(Otomatis dari Divisi)</span>
+                        </template>
+                    </label>
+
+                    <input type="hidden" name="jenis" :value="jenisAset">
+
+                    <template x-if="isDivisiWakaf">
+                        <div class="space-y-1.5">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button"
+                                        @click="jenisWakaf = 'kelolaan'"
+                                        :class="jenisAset === 'kelolaan'
+                                            ? 'bg-amber-50 border-amber-500 text-amber-900 ring-2 ring-amber-500/20 shadow-sm'
+                                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
+                                        class="px-3 py-2 text-xs font-bold rounded-xl border flex items-center justify-center gap-1.5 transition-all">
+                                    <span class="w-2 h-2 rounded-full" :class="jenisAset === 'kelolaan' ? 'bg-amber-500' : 'bg-slate-300'"></span>
+                                    <span>Kelolaan</span>
+                                </button>
+                                <button type="button"
+                                        @click="jenisWakaf = 'tetap'"
+                                        :class="jenisAset === 'tetap'
+                                            ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-500/20 shadow-sm'
+                                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
+                                        class="px-3 py-2 text-xs font-bold rounded-xl border flex items-center justify-center gap-1.5 transition-all">
+                                    <span class="w-2 h-2 rounded-full" :class="jenisAset === 'tetap' ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                                    <span>Tetap (Hak Nazir)</span>
+                                </button>
+                            </div>
+                            <p class="text-[10px] text-slate-500 leading-tight">
+                                <span class="font-semibold text-emerald-700">Khusus Wakaf:</span>
+                                Pilih <b>Kelolaan</b> untuk aset wakaf umum, atau <b>Tetap</b> jika dibeli dengan hak nazir.
+                            </p>
+                        </div>
+                    </template>
+
+                    <template x-if="!isDivisiWakaf">
+                        <div class="px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-100/80 flex items-center justify-between font-bold text-slate-700 select-none">
+                            <span x-text="jenisAset === 'kelolaan' ? 'Aset Kelolaan' : 'Aset Tetap'"></span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+                                  :class="jenisAset === 'kelolaan' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'"
+                                  x-text="jenisAset === 'kelolaan' ? 'Kelolaan' : 'Tetap'">
+                            </span>
+                        </div>
+                    </template>
                 </div>
 
                 <!-- Live Preview Kode Aset -->

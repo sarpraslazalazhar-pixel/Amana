@@ -316,9 +316,18 @@ class AsetController extends Controller
             'foto_utama' => 'nullable|image|max:10240',
         ]);
 
-        // Tentukan Jenis Aset otomatis dari Divisi (Divisi 5 & 6 = Kelolaan, 1-4 = Tetap)
+        // Tentukan Jenis Aset:
+        // - Divisi 6 (Wakaf): Fleksibel bisa pilih 'kelolaan' atau 'tetap' (misal: pengadaan dari hak nazir)
+        // - Divisi 5 (Program): Otomatis 'kelolaan'
+        // - Divisi lainnya: Otomatis 'tetap'
         $divisi = Divisi::find($request->divisi_id);
-        $jenis = ($divisi && in_array($divisi->kode_divisi, ['5', '6'])) ? 'kelolaan' : 'tetap';
+        if ($divisi && $divisi->kode_divisi === '6') {
+            $jenis = in_array($request->jenis, ['tetap', 'kelolaan'], true) ? $request->jenis : 'kelolaan';
+        } elseif ($divisi && $divisi->kode_divisi === '5') {
+            $jenis = 'kelolaan';
+        } else {
+            $jenis = 'tetap';
+        }
 
         // Auto-generate Kode Aset 9-Komponen sesuai MODUL_KODE_ASET.md
         $genResult = KodeAsetGenerator::generate([
@@ -586,10 +595,19 @@ class AsetController extends Controller
             'foto_utama' => 'nullable|image|max:10240',
         ]);
 
-        // Tentukan Jenis Aset otomatis dari Divisi jika diisi, atau pertahankan
+        // Tentukan Jenis Aset:
+        // - Divisi 6 (Wakaf): Fleksibel bisa pilih 'kelolaan' atau 'tetap' (misal: pengadaan dari hak nazir)
+        // - Divisi 5 (Program): Otomatis 'kelolaan'
+        // - Divisi lainnya: Otomatis 'tetap'
         if ($request->filled('divisi_id')) {
             $divisi = Divisi::find($request->divisi_id);
-            $jenis = ($divisi && in_array($divisi->kode_divisi, ['5', '6'])) ? 'kelolaan' : 'tetap';
+            if ($divisi && $divisi->kode_divisi === '6') {
+                $jenis = in_array($request->jenis, ['tetap', 'kelolaan'], true) ? $request->jenis : ($aset->jenis ?: 'kelolaan');
+            } elseif ($divisi && $divisi->kode_divisi === '5') {
+                $jenis = 'kelolaan';
+            } else {
+                $jenis = 'tetap';
+            }
         } else {
             $jenis = $request->jenis ?? $aset->jenis;
         }
@@ -646,17 +664,24 @@ class AsetController extends Controller
             $divisiBaru = Divisi::find($request->divisi_id)?->nama_divisi ?? '-';
             $mutasiLogs[] = "Divisi dialihkan dari '{$divisiLama}' ke '{$divisiBaru}'";
         }
+        if ($aset->jenis !== $jenis) {
+            $jenisLama = $aset->jenis === 'kelolaan' ? 'Kelolaan' : 'Tetap';
+            $jenisBaru = $jenis === 'kelolaan' ? 'Kelolaan' : 'Tetap (Hak Nazir)';
+            $mutasiLogs[] = "Jenis aset dialihkan dari '{$jenisLama}' ke '{$jenisBaru}'";
+        }
 
         $oldKode = $aset->kode_aset;
         $mutationResult = null;
 
-        // HANYA jalankan regenerasi kode dan buat record di riwayat_aset jika terjadi mutasi fisik
+        // HANYA jalankan regenerasi kode dan buat record di riwayat_aset jika terjadi mutasi fisik atau perubahan jenis/divisi
         if (count($mutasiLogs) > 0) {
             $targetDivisiId = $request->divisi_id ?? $aset->divisi_id;
+            $targetPjId = $request->penanggung_jawab_id ?? $aset->penanggung_jawab_id;
+            $targetLokasiId = $request->lokasi_id ?? $aset->lokasi_id;
             $mutationResult = KodeAsetGenerator::regenerateForMutation(
                 $aset,
-                (int) $request->penanggung_jawab_id,
-                (int) $request->lokasi_id,
+                $targetPjId ? (int) $targetPjId : null,
+                $targetLokasiId ? (int) $targetLokasiId : null,
                 $targetDivisiId ? (int) $targetDivisiId : null
             );
 
