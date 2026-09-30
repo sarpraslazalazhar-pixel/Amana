@@ -830,7 +830,7 @@
                                                     title="Edit Agenda">
                                                 <i class="ti ti-pencil text-sm"></i>
                                             </button>
-                                            <form method="POST" action="{{ route('aset.agenda.destroy', $agenda->id) }}" onsubmit="return confirm('{{ $aset->keuangan->contains('agenda_id', $agenda->id) ? 'PERINGATAN: Agenda ini terhubung dengan catatan pengeluaran di Keuangan. Menghapus agenda ini akan MENGHAPUS catatan keuangan terkait secara permanen! Lanjutkan?' : 'Apakah Anda yakin ingin menghapus agenda ini?' }}');" class="inline">
+                                            <form method="POST" action="{{ route('aset.agenda.destroy', $agenda->id) }}" onsubmit="return confirm('{{ $aset->keuangan->contains('agenda_id', $agenda->id) ? 'PERINGATAN: Agenda ini terhubung dengan catatan pengeluaran di Keuangan dan Jurnal. Menghapus agenda ini akan MENGHAPUS catatan keuangan dan jurnal terkait secara permanen! Lanjutkan?' : 'Apakah Anda yakin ingin menghapus agenda ini? (Catatan jurnal terkait juga akan dihapus).' }}');" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
@@ -958,7 +958,7 @@
                                                             title="Edit Agenda">
                                                         <i class="ti ti-pencil text-sm"></i>
                                                     </button>
-                                                    <form method="POST" action="{{ route('aset.agenda.destroy', $agenda->id) }}" onsubmit="return confirm('{{ $aset->keuangan->contains('agenda_id', $agenda->id) ? 'PERINGATAN: Agenda ini terhubung dengan catatan pengeluaran di Keuangan. Menghapus agenda ini akan MENGHAPUS catatan keuangan terkait secara permanen! Lanjutkan?' : 'Apakah Anda yakin ingin menghapus agenda ini?' }}');" class="inline">
+                                                    <form method="POST" action="{{ route('aset.agenda.destroy', $agenda->id) }}" onsubmit="return confirm('{{ $aset->keuangan->contains('agenda_id', $agenda->id) ? 'PERINGATAN: Agenda ini terhubung dengan catatan pengeluaran di Keuangan dan Jurnal. Menghapus agenda ini akan MENGHAPUS catatan keuangan dan jurnal terkait secara permanen! Lanjutkan?' : 'Apakah Anda yakin ingin menghapus agenda ini? (Catatan jurnal terkait juga akan dihapus).' }}');" class="inline">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit"
@@ -1040,6 +1040,24 @@
                                                 <span class="text-slate-500">{{ $keu->keterangan }}</span>
                                             @endif
                                         </div>
+                                        @if($keu->lampiran_url)
+                                            <div class="pt-1 flex items-center gap-1.5 flex-wrap">
+                                                @if($keu->is_image)
+                                                    <button type="button"
+                                                            @click="openImageModal('{{ $keu->lampiran_url }}', 'Bukti Nota Pengeluaran: {{ $keu->jenis_transaksi ?: 'Biaya Aset' }}')"
+                                                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold hover:bg-rose-100 transition-colors">
+                                                        <i class="ti ti-photo text-rose-600"></i>
+                                                        Lihat Bukti / Nota
+                                                    </button>
+                                                @else
+                                                    <a href="{{ $keu->lampiran_url }}" target="_blank"
+                                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold hover:bg-slate-200 transition-colors">
+                                                        <i class="ti ti-paperclip text-slate-600"></i>
+                                                        Lihat Dokumen Nota
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="flex-shrink-0 flex items-center justify-between sm:justify-end gap-3 self-end sm:self-center">
                                         <span class="text-xs sm:text-sm font-extrabold text-rose-600 font-mono whitespace-nowrap tracking-tight">
@@ -1053,7 +1071,7 @@
                                                     <i class="ti ti-pencil text-sm"></i>
                                                 </button>
                                                 <form method="POST" action="{{ route('aset.keuangan.destroy', $keu->id) }}"
-                                                      onsubmit="return confirm('{{ !empty($keu->agenda_id) ? 'PERINGATAN: Catatan biaya ini terhubung dengan Agenda. Menghapus data ini juga akan MENGHAPUS agenda terkait secara permanen! Lanjutkan?' : 'Apakah Anda yakin ingin menghapus catatan biaya ini?' }}');" class="inline">
+                                                      onsubmit="return confirm('{{ !empty($keu->agenda_id) ? 'PERINGATAN: Catatan biaya ini terhubung dengan Agenda dan Jurnal. Menghapus data ini juga akan MENGHAPUS agenda serta catatan jurnal terkait secara permanen! Lanjutkan?' : 'Apakah Anda yakin ingin menghapus catatan biaya ini?' }}');" class="inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
@@ -1112,23 +1130,30 @@
                                         @endif
                                     </div>
 
-                                    @if(auth()->check() && auth()->user()->role === 'super_admin' && ! $jurnal->is_dari_agenda)
-                                        <div class="flex items-center gap-1">
-                                            <button type="button" @click="openEditModal('jurnal', @js($jurnal))"
-                                                    class="p-1 rounded-lg text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 transition-colors"
-                                                    title="Edit Catatan Jurnal">
-                                                <i class="ti ti-pencil text-sm"></i>
-                                            </button>
-                                            <form method="POST" action="{{ route('aset.jurnal.destroy', $jurnal->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan jurnal ini?');" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                        class="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                                                        title="Hapus Catatan Jurnal">
-                                                    <i class="ti ti-trash text-sm"></i>
+                                    @if(auth()->check() && auth()->user()->role === 'super_admin')
+                                        @if(! $jurnal->is_dari_agenda)
+                                            <div class="flex items-center gap-1">
+                                                <button type="button" @click="openEditModal('jurnal', @js($jurnal))"
+                                                        class="p-1 rounded-lg text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 transition-colors"
+                                                        title="Edit Catatan Jurnal">
+                                                    <i class="ti ti-pencil text-sm"></i>
                                                 </button>
-                                            </form>
-                                        </div>
+                                                <form method="POST" action="{{ route('aset.jurnal.destroy', $jurnal->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan jurnal ini?');" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                                            title="Hapus Catatan Jurnal">
+                                                        <i class="ti ti-trash text-sm"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 text-[10.5px] font-medium"
+                                                  title="Jurnal otomatis dari agenda terkunci. Hapus melalui tab Keuangan atau Agenda terkait.">
+                                                <i class="ti ti-lock text-xs"></i> Terkunci
+                                            </span>
+                                        @endif
                                     @endif
                                 </div>
 
@@ -1382,6 +1407,23 @@
                             <label class="block font-bold text-slate-700 mb-1">Keterangan Tambahan</label>
                             <textarea name="keterangan" rows="2" :value="editItem?.keterangan || ''"
                                       class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50"></textarea>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Bukti Nota / Lampiran (Opsional)</label>
+                            <template x-if="editItem?.lampiran_url">
+                                <div class="mb-2 p-2 rounded-xl bg-slate-100/80 border border-slate-200 flex items-center justify-between text-xs">
+                                    <div class="flex items-center gap-1.5 truncate">
+                                        <i class="ti ti-file-text text-rose-600 text-sm"></i>
+                                        <span class="truncate font-medium text-slate-700" x-text="editItem?.lampiran ? editItem.lampiran.split('/').pop() : 'Berkas Terlampir'"></span>
+                                    </div>
+                                    <a :href="editItem?.lampiran_url" target="_blank" class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10.5px] font-bold text-cyan-700 hover:bg-cyan-50">
+                                        Lihat
+                                    </a>
+                                </div>
+                            </template>
+                            <input type="file" name="lampiran" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                                   class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 cursor-pointer">
+                            <span class="text-[10.5px] text-slate-400 mt-0.5 block">Format: JPG, PNG, WEBP, PDF, DOC, XLS (Maks. 10MB). Biarkan kosong jika tidak diubah.</span>
                         </div>
                     </div>
                 </template>
@@ -1880,7 +1922,7 @@
             </form>
 
             <!-- 3. Form Keuangan / Pengeluaran Biaya -->
-            <form x-show="modalType === 'keuangan'" x-cloak method="POST" action="{{ route('aset.keuangan.store', $aset->id) }}" class="space-y-3.5 text-xs">
+            <form x-show="modalType === 'keuangan'" x-cloak method="POST" action="{{ route('aset.keuangan.store', $aset->id) }}" enctype="multipart/form-data" class="space-y-3.5 text-xs">
                 @csrf
                 <input type="hidden" name="tipe" value="pengeluaran">
                 <div>
@@ -1917,6 +1959,12 @@
                     <label class="block font-semibold text-slate-700 mb-1">Keterangan Biaya <span class="text-slate-400 font-normal">(Opsional)</span></label>
                     <textarea name="keterangan" rows="2" placeholder="Rincian nota pembayaran, perbaikan, atau keterangan pembelian..."
                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"></textarea>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Bukti Nota / Lampiran <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                    <input type="file" name="lampiran" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                           class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 cursor-pointer">
+                    <p class="text-[10px] text-slate-400 mt-1">Format: JPG, PNG, WEBP, PDF, DOC, XLS (Maks. 10MB)</p>
                 </div>
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" @click="modalOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200">Batal</button>

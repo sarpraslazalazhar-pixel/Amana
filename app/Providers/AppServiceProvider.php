@@ -24,6 +24,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('keuangan_aset') && ! \Illuminate\Support\Facades\Schema::hasColumn('keuangan_aset', 'lampiran')) {
+                \Illuminate\Support\Facades\Schema::table('keuangan_aset', function ($table) {
+                    $table->string('lampiran', 500)->nullable()->after('keterangan');
+                });
+            }
+        } catch (\Throwable $e) {
+            // Abaikan jika koneksi db belum siap
+        }
+
         View::composer(['layouts.header', 'dashboard.index'], function ($view) {
             if (Auth::check()) {
                 $service = app(AgendaReminderService::class);

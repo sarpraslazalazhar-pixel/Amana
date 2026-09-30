@@ -235,25 +235,26 @@ class AsetSubmoduleController extends Controller
         $biayaRiil = (float) ($request->biaya_riil ?? 0);
         $userId = auth()->id() ?? 1;
 
-        // 1. Catat ke Jurnal Kejadian Aset (hanya jika ada lampiran/foto yang diunggah)
-        if ($lampiranPath) {
-            $kejadianJurnal = "Penyelesaian Agenda: {$agenda->nama_agenda}";
-            if ($catatan) {
-                $kejadianJurnal .= "\nCatatan: {$catatan}";
-            }
-
-            JurnalAset::create([
-                'aset_id' => $aset->id,
-                'agenda_id' => $agenda->id,
-                'tanggal' => $tanggalSelesai,
-                'kejadian' => $kejadianJurnal,
-                'lampiran' => $lampiranPath,
-                'tingkat_kerusakan' => null,
-                'status_penanganan' => 'selesai',
-                'user_id' => $userId,
-                'updated_by' => $userId,
-            ]);
+        // 1. Catat ke Jurnal Kejadian Aset (Selalu dibuat saat agenda diselesaikan)
+        $kejadianJurnal = "Penyelesaian Agenda: {$agenda->nama_agenda}";
+        if ($catatan) {
+            $kejadianJurnal .= "\nCatatan: {$catatan}";
         }
+        if ($biayaRiil > 0) {
+            $kejadianJurnal .= "\nBiaya: Rp " . number_format($biayaRiil, 0, ',', '.');
+        }
+
+        JurnalAset::create([
+            'aset_id' => $aset->id,
+            'agenda_id' => $agenda->id,
+            'tanggal' => $tanggalSelesai,
+            'kejadian' => $kejadianJurnal,
+            'lampiran' => $lampiranPath,
+            'tingkat_kerusakan' => null,
+            'status_penanganan' => 'selesai',
+            'user_id' => $userId,
+            'updated_by' => $userId,
+        ]);
 
         // 2. Jika ada biaya riil > 0, catat ke Keuangan Aset (Pengeluaran)
         if ($biayaRiil > 0) {
@@ -265,6 +266,7 @@ class AsetSubmoduleController extends Controller
                 'nominal' => $biayaRiil,
                 'jenis_transaksi' => "Pemeliharaan / Agenda: {$agenda->nama_agenda}",
                 'keterangan' => "Realisasi biaya agenda {$agenda->nama_agenda}.".($catatan ? " Catatan: {$catatan}" : ''),
+                'lampiran' => $lampiranPath,
                 'user_id' => $userId,
                 'updated_by' => $userId,
             ]);
@@ -331,9 +333,18 @@ class AsetSubmoduleController extends Controller
             'nominal' => 'required|numeric|min:0',
             'jenis_transaksi' => 'nullable|string|max:255',
             'keterangan' => 'nullable|string',
+            'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
         ]);
 
         $aset = Aset::findOrFail($asetId);
+
+        $lampiranPath = null;
+        if ($request->hasFile('lampiran') && $request->file('lampiran')->isValid()) {
+            $file = $request->file('lampiran');
+            if ($file->getRealPath()) {
+                $lampiranPath = $this->imageOptimizer->storeAttachmentSmart($file, 'keuangan_lampiran', 'public');
+            }
+        }
 
         KeuanganAset::create([
             'aset_id' => $aset->id,
@@ -342,6 +353,7 @@ class AsetSubmoduleController extends Controller
             'nominal' => $request->nominal,
             'jenis_transaksi' => $request->jenis_transaksi ?: 'Biaya Perawatan',
             'keterangan' => $request->keterangan,
+            'lampiran' => $lampiranPath,
             'user_id' => auth()->id() ?? 1,
         ]);
 
@@ -546,12 +558,18 @@ class AsetSubmoduleController extends Controller
         // Hapus catatan keuangan yang terhubung dengan agenda ini
         KeuanganAset::where('agenda_id', $agenda->id)->delete();
 
+        // Hapus catatan jurnal yang terhubung dengan agenda ini
+        JurnalAset::where('agenda_id', $agenda->id)->delete();
+        JurnalAset::where('aset_id', $aset->id)
+            ->where('kejadian', 'LIKE', "Penyelesaian Agenda: {$namaAgenda}%")
+            ->delete();
+
         $agenda->delete();
 
-        AuditLogger::log('agenda', "Penghapusan agenda '{$namaAgenda}' dan keuangan terkait pada aset {$aset->kode_aset}", $aset);
+        AuditLogger::log('agenda', "Penghapusan agenda '{$namaAgenda}' serta catatan keuangan dan jurnal terkait pada aset {$aset->kode_aset}", $aset);
 
         return redirect()->route('aset.show', ['aset' => $aset->id, 'tab' => 'agenda'])
-            ->with('success', 'Agenda dan catatan keuangan terkait berhasil dihapus.');
+            ->with('success', 'Agenda, catatan keuangan, dan jurnal terkait berhasil dihapus.');
     }
 
     /**
@@ -571,13 +589,27 @@ class AsetSubmoduleController extends Controller
             'nominal' => 'required|numeric|min:0',
             'jenis_transaksi' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
+            'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
         ]);
+
+        $lampiranPath = $keuangan->lampiran;
+        if ($request->hasFile('lampiran') && $request->file('lampiran')->isValid()) {
+            $file = $request->file('lampiran');
+            if ($file->getRealPath()) {
+                $newLampiranPath = $this->imageOptimizer->storeAttachmentSmart($file, 'keuangan_lampiran', 'public');
+                if ($keuangan->lampiran && $this->imageOptimizer->isImage($keuangan->lampiran)) {
+                    $this->imageOptimizer->deleteOldImage($keuangan->lampiran);
+                }
+                $lampiranPath = $newLampiranPath;
+            }
+        }
 
         $keuangan->update([
             'tanggal' => $request->tanggal,
             'nominal' => $request->nominal,
             'jenis_transaksi' => $request->jenis_transaksi,
             'keterangan' => $request->keterangan,
+            'lampiran' => $lampiranPath,
             'updated_by' => auth()->id() ?? 1,
         ]);
 
@@ -595,6 +627,11 @@ class AsetSubmoduleController extends Controller
         $keuangan = KeuanganAset::findOrFail($keuanganId);
         $aset = $keuangan->aset;
         $agenda = $keuangan->agenda;
+        $agendaId = $keuangan->agenda_id;
+
+        if ($keuangan->lampiran && $this->imageOptimizer->isImage($keuangan->lampiran)) {
+            $this->imageOptimizer->deleteOldImage($keuangan->lampiran);
+        }
 
         $keuangan->delete();
 
@@ -602,14 +639,30 @@ class AsetSubmoduleController extends Controller
             $namaAgenda = $agenda->nama_agenda;
             // Hapus seluruh transaksi keuangan lain yang terhubung ke agenda ini
             KeuanganAset::where('agenda_id', $agenda->id)->delete();
+            // Hapus seluruh catatan jurnal yang terhubung ke agenda ini
+            JurnalAset::where('agenda_id', $agenda->id)->delete();
+            JurnalAset::where('aset_id', $aset->id)
+                ->where('kejadian', 'LIKE', "Penyelesaian Agenda: {$namaAgenda}%")
+                ->delete();
             $agenda->delete();
-            AuditLogger::log('agenda', "Penghapusan agenda '{$namaAgenda}' karena catatan keuangan terkait dihapus pada aset {$aset->kode_aset}", $aset);
+            AuditLogger::log('agenda', "Penghapusan agenda '{$namaAgenda}' serta catatan keuangan dan jurnal terkait pada aset {$aset->kode_aset}", $aset);
+        } elseif ($agendaId) {
+            KeuanganAset::where('agenda_id', $agendaId)->delete();
+            JurnalAset::where('agenda_id', $agendaId)->delete();
+        } elseif (str_starts_with((string) $keuangan->jenis_transaksi, 'Pemeliharaan / Agenda:')) {
+            $namaAgenda = trim(str_replace('Pemeliharaan / Agenda:', '', (string) $keuangan->jenis_transaksi));
+            if ($namaAgenda) {
+                JurnalAset::where('aset_id', $aset->id)
+                    ->where('kejadian', 'LIKE', "Penyelesaian Agenda: {$namaAgenda}%")
+                    ->delete();
+                AgendaAset::where('aset_id', $aset->id)->where('nama_agenda', $namaAgenda)->delete();
+            }
         }
 
         AuditLogger::log('keuangan', "Penghapusan transaksi keuangan pada aset {$aset->kode_aset}", $aset);
 
-        $msg = $agenda
-            ? 'Catatan keuangan dan agenda terkait berhasil dihapus.'
+        $msg = ($agenda || $agendaId)
+            ? 'Catatan keuangan, agenda, dan jurnal terkait berhasil dihapus.'
             : 'Catatan keuangan berhasil dihapus.';
 
         return redirect()->route('aset.show', ['aset' => $aset->id, 'tab' => 'keuangan'])

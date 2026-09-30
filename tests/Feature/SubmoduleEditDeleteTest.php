@@ -197,6 +197,47 @@ class SubmoduleEditDeleteTest extends TestCase
         $this->assertDatabaseMissing('keuangan_aset', ['id' => $keuangan->id]);
     }
 
+    public function test_keuangan_dapat_menyimpan_dan_mengubah_lampiran_nota(): void
+    {
+        Storage::fake('public');
+        $fakeNota = UploadedFile::fake()->image('nota_servis.jpg');
+
+        // Simpan keuangan dengan lampiran bukti nota
+        $response = $this->actingAs($this->staff)->post(route('aset.keuangan.store', $this->aset->id), [
+            'tanggal' => '2026-03-05',
+            'nominal' => '500.000',
+            'jenis_transaksi' => 'Pembelian RAM 16GB',
+            'keterangan' => 'Nota toko IT Komputer',
+            'lampiran' => $fakeNota,
+        ]);
+
+        $response->assertRedirect(route('aset.show', $this->aset->id));
+        $response->assertSessionHas('success');
+
+        $keuangan = KeuanganAset::where('jenis_transaksi', 'Pembelian RAM 16GB')->first();
+        $this->assertNotNull($keuangan);
+        $this->assertNotNull($keuangan->lampiran);
+        $this->assertTrue($keuangan->is_image);
+        $this->assertFalse($keuangan->is_pdf);
+        $this->assertNotNull($keuangan->lampiran_url);
+
+        // Edit dengan mengganti lampiran PDF
+        $fakePdf = UploadedFile::fake()->create('invoice_ram.pdf', 100, 'application/pdf');
+        $editResponse = $this->actingAs($this->staff)->put(route('aset.keuangan.update', $keuangan->id), [
+            'tanggal' => '2026-03-05',
+            'nominal' => '500.000',
+            'jenis_transaksi' => 'Pembelian RAM 16GB (Invoice Resmi)',
+            'lampiran' => $fakePdf,
+        ]);
+
+        $editResponse->assertRedirect(route('aset.show', ['aset' => $this->aset->id, 'tab' => 'keuangan']));
+        $keuangan->refresh();
+
+        $this->assertTrue($keuangan->is_pdf);
+        $this->assertFalse($keuangan->is_image);
+        $this->assertStringContainsString('invoice_ram', $keuangan->lampiran);
+    }
+
     public function test_jurnal_manual_dapat_diedit_dan_dihapus(): void
     {
         $jurnal = JurnalAset::create([
@@ -275,7 +316,7 @@ class SubmoduleEditDeleteTest extends TestCase
         $this->assertDatabaseHas('jurnal_aset', ['id' => $jurnalOtomatis->id]);
     }
 
-    public function test_keuangan_dari_agenda_jika_dihapus_juga_menghapus_agenda_terkait(): void
+    public function test_keuangan_dari_agenda_jika_dihapus_juga_menghapus_agenda_dan_jurnal_terkait(): void
     {
         $agenda = AgendaAset::create([
             'aset_id' => $this->aset->id,
@@ -286,7 +327,7 @@ class SubmoduleEditDeleteTest extends TestCase
             'user_id' => $this->admin->id,
         ]);
 
-        // Selesaikan agenda dengan biaya sehingga membuat keuangan otomatis
+        // Selesaikan agenda dengan biaya sehingga membuat keuangan dan jurnal otomatis
         $this->actingAs($this->admin)->post(route('aset.agenda.selesaikan', $agenda->id), [
             'tanggal_selesai' => '2026-06-01',
             'catatan_penyelesaian' => 'Selesai ganti oli',
@@ -297,17 +338,21 @@ class SubmoduleEditDeleteTest extends TestCase
         $this->assertNotNull($keuanganOtomatis);
         $this->assertTrue($keuanganOtomatis->is_dari_agenda);
 
-        // Hapus keuangan otomatis -> harus berhasil dan menghapus agenda terkait
+        $jurnalOtomatis = JurnalAset::where('agenda_id', $agenda->id)->first();
+        $this->assertNotNull($jurnalOtomatis);
+
+        // Hapus keuangan otomatis -> harus berhasil dan menghapus agenda serta jurnal terkait
         $deleteResponse = $this->actingAs($this->staff)->delete(route('aset.keuangan.destroy', $keuanganOtomatis->id));
         $deleteResponse->assertRedirect(route('aset.show', ['aset' => $this->aset->id, 'tab' => 'keuangan']));
         $deleteResponse->assertSessionHas('success');
 
-        // Pastikan keuangan dan agenda sama-sama terhapus
+        // Pastikan keuangan, agenda, dan jurnal sama-sama terhapus
         $this->assertDatabaseMissing('keuangan_aset', ['id' => $keuanganOtomatis->id]);
         $this->assertDatabaseMissing('agenda_aset', ['id' => $agenda->id]);
+        $this->assertDatabaseMissing('jurnal_aset', ['id' => $jurnalOtomatis->id]);
     }
 
-    public function test_agenda_jika_dihapus_juga_menghapus_keuangan_terkait(): void
+    public function test_agenda_jika_dihapus_juga_menghapus_keuangan_dan_jurnal_terkait(): void
     {
         $agenda = AgendaAset::create([
             'aset_id' => $this->aset->id,
@@ -328,13 +373,17 @@ class SubmoduleEditDeleteTest extends TestCase
         $keuangan = KeuanganAset::where('agenda_id', $agenda->id)->first();
         $this->assertNotNull($keuangan);
 
-        // Hapus agenda -> harus menghapus agenda dan keuangan terkait
+        $jurnal = JurnalAset::where('agenda_id', $agenda->id)->first();
+        $this->assertNotNull($jurnal);
+
+        // Hapus agenda -> harus menghapus agenda, keuangan, dan jurnal terkait
         $deleteResponse = $this->actingAs($this->staff)->delete(route('aset.agenda.destroy', $agenda->id));
         $deleteResponse->assertRedirect(route('aset.show', ['aset' => $this->aset->id, 'tab' => 'agenda']));
         $deleteResponse->assertSessionHas('success');
 
-        // Pastikan agenda dan keuangan terhapus
+        // Pastikan agenda, keuangan, dan jurnal terhapus
         $this->assertDatabaseMissing('agenda_aset', ['id' => $agenda->id]);
         $this->assertDatabaseMissing('keuangan_aset', ['id' => $keuangan->id]);
+        $this->assertDatabaseMissing('jurnal_aset', ['id' => $jurnal->id]);
     }
 }
