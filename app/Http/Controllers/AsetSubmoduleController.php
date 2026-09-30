@@ -543,12 +543,15 @@ class AsetSubmoduleController extends Controller
         $aset = $agenda->aset;
         $namaAgenda = $agenda->nama_agenda;
 
+        // Hapus catatan keuangan yang terhubung dengan agenda ini
+        KeuanganAset::where('agenda_id', $agenda->id)->delete();
+
         $agenda->delete();
 
-        AuditLogger::log('agenda', "Penghapusan agenda '{$namaAgenda}' pada aset {$aset->kode_aset}", $aset);
+        AuditLogger::log('agenda', "Penghapusan agenda '{$namaAgenda}' dan keuangan terkait pada aset {$aset->kode_aset}", $aset);
 
         return redirect()->route('aset.show', ['aset' => $aset->id, 'tab' => 'agenda'])
-            ->with('success', 'Agenda berhasil dihapus.');
+            ->with('success', 'Agenda dan catatan keuangan terkait berhasil dihapus.');
     }
 
     /**
@@ -591,17 +594,26 @@ class AsetSubmoduleController extends Controller
     {
         $keuangan = KeuanganAset::findOrFail($keuanganId);
         $aset = $keuangan->aset;
-
-        if ($keuangan->is_dari_agenda) {
-            return back()->with('error', 'Catatan pengeluaran keuangan yang dibuat otomatis dari penyelesaian agenda tidak dapat dihapus.');
-        }
+        $agenda = $keuangan->agenda;
 
         $keuangan->delete();
 
+        if ($agenda) {
+            $namaAgenda = $agenda->nama_agenda;
+            // Hapus seluruh transaksi keuangan lain yang terhubung ke agenda ini
+            KeuanganAset::where('agenda_id', $agenda->id)->delete();
+            $agenda->delete();
+            AuditLogger::log('agenda', "Penghapusan agenda '{$namaAgenda}' karena catatan keuangan terkait dihapus pada aset {$aset->kode_aset}", $aset);
+        }
+
         AuditLogger::log('keuangan', "Penghapusan transaksi keuangan pada aset {$aset->kode_aset}", $aset);
 
+        $msg = $agenda
+            ? 'Catatan keuangan dan agenda terkait berhasil dihapus.'
+            : 'Catatan keuangan berhasil dihapus.';
+
         return redirect()->route('aset.show', ['aset' => $aset->id, 'tab' => 'keuangan'])
-            ->with('success', 'Catatan keuangan berhasil dihapus.');
+            ->with('success', $msg);
     }
 
     /**

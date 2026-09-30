@@ -452,7 +452,7 @@ class AsetController extends Controller
             'kategori', 'barang', 'divisi', 'merk', 'lokasi', 'penanggungJawab',
             'riwayat.user', 'riwayat.updater', 'riwayat.penanggungJawab', 'riwayat.lokasi', 'riwayat.divisi',
             'agenda.user', 'agenda.updater',
-            'keuangan.user', 'keuangan.updater',
+            'keuangan.user', 'keuangan.updater', 'keuangan.agenda',
             'jurnal.user', 'jurnal.updater',
             'lampiran.uploader',
         ])->findOrFail($id);

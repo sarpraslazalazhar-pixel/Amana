@@ -830,7 +830,7 @@
                                                     title="Edit Agenda">
                                                 <i class="ti ti-pencil text-sm"></i>
                                             </button>
-                                            <form method="POST" action="{{ route('aset.agenda.destroy', $agenda->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus agenda ini?');" class="inline">
+                                            <form method="POST" action="{{ route('aset.agenda.destroy', $agenda->id) }}" onsubmit="return confirm('{{ $aset->keuangan->contains('agenda_id', $agenda->id) ? 'PERINGATAN: Agenda ini terhubung dengan catatan pengeluaran di Keuangan. Menghapus agenda ini akan MENGHAPUS catatan keuangan terkait secara permanen! Lanjutkan?' : 'Apakah Anda yakin ingin menghapus agenda ini?' }}');" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
@@ -958,7 +958,7 @@
                                                             title="Edit Agenda">
                                                         <i class="ti ti-pencil text-sm"></i>
                                                     </button>
-                                                    <form method="POST" action="{{ route('aset.agenda.destroy', $agenda->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus agenda ini?');" class="inline">
+                                                    <form method="POST" action="{{ route('aset.agenda.destroy', $agenda->id) }}" onsubmit="return confirm('{{ $aset->keuangan->contains('agenda_id', $agenda->id) ? 'PERINGATAN: Agenda ini terhubung dengan catatan pengeluaran di Keuangan. Menghapus agenda ini akan MENGHAPUS catatan keuangan terkait secara permanen! Lanjutkan?' : 'Apakah Anda yakin ingin menghapus agenda ini?' }}');" class="inline">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit"
@@ -1020,48 +1020,48 @@
                     <div class="space-y-2.5">
                         @forelse($aset->keuangan as $keu)
                             <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 hover:bg-white transition-colors space-y-2">
-                                <div class="flex items-center justify-between gap-3">
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-rose-100 text-rose-800">
+                                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-4">
+                                    <div class="min-w-0 flex-1 space-y-1">
+                                        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide bg-rose-100 text-rose-800 whitespace-nowrap flex-shrink-0">
                                                 Pengeluaran
                                             </span>
-                                            <span class="text-xs font-bold text-slate-900">{{ $keu->jenis_transaksi ?: 'Biaya Perawatan' }}</span>
                                             @if($keu->is_dari_agenda)
-                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
-                                                    <i class="ti ti-link text-[10px]"></i> Otomatis dari Agenda
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap flex-shrink-0">
+                                                    <i class="ti ti-link text-[11px]"></i> Otomatis dari Agenda
                                                 </span>
                                             @endif
+                                            <span class="text-xs font-bold text-slate-900 break-words">{{ $keu->jenis_transaksi ?: 'Biaya Perawatan' }}</span>
                                         </div>
-                                        <div class="text-[11px] text-slate-400 mt-1">
-                                            {{ \Carbon\Carbon::parse($keu->tanggal)->translatedFormat('d M Y') }}
+                                        <div class="text-[11px] text-slate-500 leading-snug">
+                                            <span class="font-medium text-slate-600">{{ \Carbon\Carbon::parse($keu->tanggal)->translatedFormat('d M Y') }}</span>
                                             @if($keu->keterangan)
-                                                • {{ $keu->keterangan }}
+                                                <span class="mx-1 text-slate-300">•</span>
+                                                <span class="text-slate-500">{{ $keu->keterangan }}</span>
                                             @endif
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-2.5">
-                                        <span class="text-xs font-extrabold flex-shrink-0 text-rose-600 font-mono">
+                                    <div class="flex-shrink-0 flex items-center justify-between sm:justify-end gap-3 self-end sm:self-center">
+                                        <span class="text-xs sm:text-sm font-extrabold text-rose-600 font-mono whitespace-nowrap tracking-tight">
                                             - Rp {{ number_format($keu->nominal, 0, ',', '.') }}
                                         </span>
                                         @if(auth()->check() && auth()->user()->role === 'super_admin')
                                             <div class="flex items-center gap-1">
                                                 <button type="button" @click="openEditModal('keuangan', @js($keu))"
-                                                        class="p-1 rounded-lg text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 transition-colors"
+                                                        class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 hover:border-cyan-200 transition-colors shadow-2xs"
                                                         title="Edit Catatan Keuangan">
                                                     <i class="ti ti-pencil text-sm"></i>
                                                 </button>
-                                                @if(! $keu->is_dari_agenda)
-                                                    <form method="POST" action="{{ route('aset.keuangan.destroy', $keu->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan biaya ini?');" class="inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit"
-                                                                class="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                                                                title="Hapus Catatan Keuangan">
-                                                            <i class="ti ti-trash text-sm"></i>
-                                                        </button>
-                                                    </form>
-                                                @endif
+                                                <form method="POST" action="{{ route('aset.keuangan.destroy', $keu->id) }}"
+                                                      onsubmit="return confirm('{{ !empty($keu->agenda_id) ? 'PERINGATAN: Catatan biaya ini terhubung dengan Agenda. Menghapus data ini juga akan MENGHAPUS agenda terkait secara permanen! Lanjutkan?' : 'Apakah Anda yakin ingin menghapus catatan biaya ini?' }}');" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-colors shadow-2xs"
+                                                            title="Hapus Catatan Keuangan">
+                                                        <i class="ti ti-trash text-sm"></i>
+                                                    </button>
+                                                </form>
                                             </div>
                                         @endif
                                     </div>
@@ -1106,8 +1106,8 @@
                                             {{ \Carbon\Carbon::parse($jurnal->tanggal)->format('d M Y') }}
                                         </span>
                                         @if($jurnal->is_dari_agenda)
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
-                                                <i class="ti ti-link text-[10px]"></i> Otomatis dari Agenda
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap flex-shrink-0">
+                                                <i class="ti ti-link text-[11px]"></i> Otomatis dari Agenda
                                             </span>
                                         @endif
                                     </div>

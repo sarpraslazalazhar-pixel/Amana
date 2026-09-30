@@ -275,7 +275,7 @@ class SubmoduleEditDeleteTest extends TestCase
         $this->assertDatabaseHas('jurnal_aset', ['id' => $jurnalOtomatis->id]);
     }
 
-    public function test_keuangan_otomatis_dari_agenda_terkunci_tidak_bisa_dihapus(): void
+    public function test_keuangan_dari_agenda_jika_dihapus_juga_menghapus_agenda_terkait(): void
     {
         $agenda = AgendaAset::create([
             'aset_id' => $this->aset->id,
@@ -297,11 +297,44 @@ class SubmoduleEditDeleteTest extends TestCase
         $this->assertNotNull($keuanganOtomatis);
         $this->assertTrue($keuanganOtomatis->is_dari_agenda);
 
-        // Coba hapus keuangan otomatis -> harus ditolak
+        // Hapus keuangan otomatis -> harus berhasil dan menghapus agenda terkait
         $deleteResponse = $this->actingAs($this->staff)->delete(route('aset.keuangan.destroy', $keuanganOtomatis->id));
-        $deleteResponse->assertSessionHas('error');
+        $deleteResponse->assertRedirect(route('aset.show', ['aset' => $this->aset->id, 'tab' => 'keuangan']));
+        $deleteResponse->assertSessionHas('success');
 
-        // Pastikan keuangan masih ada di database
-        $this->assertDatabaseHas('keuangan_aset', ['id' => $keuanganOtomatis->id]);
+        // Pastikan keuangan dan agenda sama-sama terhapus
+        $this->assertDatabaseMissing('keuangan_aset', ['id' => $keuanganOtomatis->id]);
+        $this->assertDatabaseMissing('agenda_aset', ['id' => $agenda->id]);
+    }
+
+    public function test_agenda_jika_dihapus_juga_menghapus_keuangan_terkait(): void
+    {
+        $agenda = AgendaAset::create([
+            'aset_id' => $this->aset->id,
+            'tipe_agenda' => 'tanggal_tertentu',
+            'nama_agenda' => 'Servis AC Kantor',
+            'tanggal' => '2026-06-15',
+            'status' => 'pending',
+            'user_id' => $this->admin->id,
+        ]);
+
+        // Selesaikan agenda dengan biaya
+        $this->actingAs($this->admin)->post(route('aset.agenda.selesaikan', $agenda->id), [
+            'tanggal_selesai' => '2026-06-15',
+            'catatan_penyelesaian' => 'AC selesai dicuci dan tambah freon',
+            'biaya_riil' => '450.000',
+        ]);
+
+        $keuangan = KeuanganAset::where('agenda_id', $agenda->id)->first();
+        $this->assertNotNull($keuangan);
+
+        // Hapus agenda -> harus menghapus agenda dan keuangan terkait
+        $deleteResponse = $this->actingAs($this->staff)->delete(route('aset.agenda.destroy', $agenda->id));
+        $deleteResponse->assertRedirect(route('aset.show', ['aset' => $this->aset->id, 'tab' => 'agenda']));
+        $deleteResponse->assertSessionHas('success');
+
+        // Pastikan agenda dan keuangan terhapus
+        $this->assertDatabaseMissing('agenda_aset', ['id' => $agenda->id]);
+        $this->assertDatabaseMissing('keuangan_aset', ['id' => $keuangan->id]);
     }
 }
