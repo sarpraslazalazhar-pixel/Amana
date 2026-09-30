@@ -101,7 +101,27 @@ class AgendaAset extends Model
             return null;
         }
 
-        return Storage::disk('public')->url($this->lampiran_penyelesaian);
+        return asset('storage/' . ltrim($this->lampiran_penyelesaian, '/'));
+    }
+
+    public function getIsImageAttribute(): bool
+    {
+        if (! $this->lampiran_penyelesaian) {
+            return false;
+        }
+
+        $ext = strtolower(pathinfo($this->lampiran_penyelesaian, PATHINFO_EXTENSION));
+
+        return in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'avif'], true);
+    }
+
+    public function getIsPdfAttribute(): bool
+    {
+        if (! $this->lampiran_penyelesaian) {
+            return false;
+        }
+
+        return strtolower(pathinfo($this->lampiran_penyelesaian, PATHINFO_EXTENSION)) === 'pdf';
     }
 
     /**

@@ -57,6 +57,57 @@ class JurnalAset extends Model
             return null;
         }
 
-        return Storage::disk('public')->url($this->lampiran);
+        return asset('storage/' . ltrim($this->lampiran, '/'));
+    }
+
+    public function getIsImageAttribute(): bool
+    {
+        if (! $this->lampiran) {
+            return false;
+        }
+
+        $ext = strtolower(pathinfo($this->lampiran, PATHINFO_EXTENSION));
+
+        return in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'avif'], true);
+    }
+
+    public function getIsPdfAttribute(): bool
+    {
+        if (! $this->lampiran) {
+            return false;
+        }
+
+        return strtolower(pathinfo($this->lampiran, PATHINFO_EXTENSION)) === 'pdf';
+    }
+
+    public function getLampiranFileNameAttribute(): ?string
+    {
+        if (! $this->lampiran) {
+            return null;
+        }
+
+        return basename($this->lampiran);
+    }
+
+    public function getIconClassAttribute(): string
+    {
+        if ($this->is_image) {
+            return 'ti-photo';
+        }
+
+        if ($this->is_pdf) {
+            return 'ti-file-type-pdf';
+        }
+
+        $ext = strtolower(pathinfo((string) $this->lampiran, PATHINFO_EXTENSION));
+        if (in_array($ext, ['xls', 'xlsx', 'csv'], true)) {
+            return 'ti-file-type-xls';
+        }
+
+        if (in_array($ext, ['doc', 'docx'], true)) {
+            return 'ti-file-type-doc';
+        }
+
+        return 'ti-paperclip';
     }
 }

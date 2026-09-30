@@ -802,12 +802,21 @@
                                                     </p>
                                                 @endif
                                                 @if($agenda->lampiran_penyelesaian_url)
-                                                    <div class="pt-0.5">
-                                                        <a href="{{ $agenda->lampiran_penyelesaian_url }}" target="_blank"
-                                                           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors">
-                                                            <i class="ti ti-paperclip text-emerald-600"></i>
-                                                            Lihat Dokumen / Lampiran Bukti
-                                                        </a>
+                                                    <div class="pt-0.5 flex items-center gap-1.5 flex-wrap">
+                                                        @if($agenda->is_image)
+                                                            <button type="button"
+                                                                    @click="openImageModal('{{ $agenda->lampiran_penyelesaian_url }}', 'Bukti Agenda: {{ $agenda->nama_agenda }}')"
+                                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors">
+                                                                <i class="ti ti-photo text-emerald-600"></i>
+                                                                Lihat Foto Bukti
+                                                            </button>
+                                                        @else
+                                                            <a href="{{ $agenda->lampiran_penyelesaian_url }}" target="_blank"
+                                                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors">
+                                                                <i class="ti ti-paperclip text-emerald-600"></i>
+                                                                Lihat Dokumen Bukti
+                                                            </a>
+                                                        @endif
                                                     </div>
                                                 @endif
                                             </div>
@@ -922,12 +931,21 @@
                                                         </p>
                                                     @endif
                                                     @if($agenda->lampiran_penyelesaian_url)
-                                                        <div class="pt-0.5">
-                                                            <a href="{{ $agenda->lampiran_penyelesaian_url }}" target="_blank"
-                                                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors">
-                                                                <i class="ti ti-paperclip text-emerald-600"></i>
-                                                                Lihat Dokumen / Lampiran Bukti
-                                                            </a>
+                                                        <div class="pt-0.5 flex items-center gap-1.5 flex-wrap">
+                                                            @if($agenda->is_image)
+                                                                <button type="button"
+                                                                        @click="openImageModal('{{ $agenda->lampiran_penyelesaian_url }}', 'Bukti Agenda: {{ $agenda->nama_agenda }}')"
+                                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors">
+                                                                    <i class="ti ti-photo text-emerald-600"></i>
+                                                                    Lihat Foto Bukti
+                                                                </button>
+                                                            @else
+                                                                <a href="{{ $agenda->lampiran_penyelesaian_url }}" target="_blank"
+                                                                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors">
+                                                                    <i class="ti ti-paperclip text-emerald-600"></i>
+                                                                    Lihat Dokumen Bukti
+                                                                </a>
+                                                            @endif
                                                         </div>
                                                     @endif
                                                 </div>
@@ -1117,13 +1135,52 @@
                                 <p class="text-xs font-medium text-slate-800 whitespace-pre-line">{{ $jurnal->kejadian }}</p>
 
                                 @if($jurnal->lampiran_url)
-                                    <div class="pt-1">
-                                        <a href="{{ $jurnal->lampiran_url }}" target="_blank"
-                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 font-bold text-xs transition-colors shadow-2xs">
-                                            <i class="ti ti-paperclip text-emerald-600"></i>
-                                            Lihat / Unduh Lampiran File
-                                        </a>
-                                    </div>
+                                    @if($jurnal->is_image)
+                                        <div class="pt-2">
+                                            <div class="flex items-start gap-3 p-2.5 rounded-xl bg-white border border-slate-200/80 max-w-md shadow-2xs">
+                                                <!-- Thumbnail with Lightbox click -->
+                                                <div class="relative group cursor-pointer shrink-0 overflow-hidden rounded-lg border border-slate-200 w-20 h-20 bg-slate-100"
+                                                     @click="openImageModal('{{ $jurnal->lampiran_url }}', 'Lampiran Jurnal - {{ $aset->kode_aset }} ({{ \Carbon\Carbon::parse($jurnal->tanggal)->format('d M Y') }})')">
+                                                    <img src="{{ $jurnal->lampiran_url }}" alt="Lampiran Jurnal"
+                                                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200">
+                                                    <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                                        <i class="ti ti-zoom-in text-base"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="min-w-0 flex-1 flex flex-col justify-between h-20 py-0.5">
+                                                    <div>
+                                                        <div class="flex items-center gap-1 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
+                                                            <i class="ti ti-photo"></i>
+                                                            <span>Foto / Gambar Bukti</span>
+                                                        </div>
+                                                        <p class="text-xs font-semibold text-slate-700 truncate mt-0.5">
+                                                            {{ $jurnal->lampiran_file_name }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <button type="button"
+                                                                @click="openImageModal('{{ $jurnal->lampiran_url }}', 'Lampiran Jurnal - {{ $aset->kode_aset }} ({{ \Carbon\Carbon::parse($jurnal->tanggal)->format('d M Y') }})')"
+                                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] border border-emerald-200 transition-colors">
+                                                            <i class="ti ti-eye"></i> Perbesar
+                                                        </button>
+                                                        <a href="{{ $jurnal->lampiran_url }}" target="_blank"
+                                                           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 font-medium text-[11px] border border-slate-200 transition-colors">
+                                                            <i class="ti ti-external-link"></i> Tab Baru
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="pt-1">
+                                            <a href="{{ $jurnal->lampiran_url }}" target="_blank"
+                                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 font-bold text-xs transition-colors shadow-2xs">
+                                                <i class="ti {{ $jurnal->icon_class }} text-emerald-600"></i>
+                                                <span>{{ $jurnal->lampiran_file_name ?: 'Lihat / Unduh Dokumen' }}</span>
+                                                <i class="ti ti-download text-slate-400 text-xs ml-1"></i>
+                                            </a>
+                                        </div>
+                                    @endif
                                 @endif
 
                                 <!-- Audit Info Pembuat & Pengedit -->

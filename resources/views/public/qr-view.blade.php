@@ -468,11 +468,19 @@
                                         <span>{{ \Carbon\Carbon::parse($jur->tanggal)->format('d/m/Y') }}</span>
                                     </div>
                                     <p class="font-medium text-slate-800">{{ $jur->kejadian }}</p>
-                                    @if($jur->lampiran)
-                                        <a href="{{ Storage::disk('public')->url($jur->lampiran) }}" target="_blank"
-                                           class="inline-flex items-center gap-1 text-[10px] text-indigo-600 hover:underline pt-0.5">
-                                            <i class="ti ti-paperclip"></i> Lihat Lampiran Jurnal
-                                        </a>
+                                    @if($jur->lampiran_url)
+                                        @if($jur->is_image)
+                                            <div class="pt-1">
+                                                <a href="{{ $jur->lampiran_url }}" target="_blank" class="block max-w-[200px]">
+                                                    <img src="{{ $jur->lampiran_url }}" alt="Lampiran Jurnal" class="rounded-lg max-h-28 object-cover border border-slate-200">
+                                                </a>
+                                            </div>
+                                        @else
+                                            <a href="{{ $jur->lampiran_url }}" target="_blank"
+                                               class="inline-flex items-center gap-1 text-[10px] text-indigo-600 hover:underline pt-0.5">
+                                                <i class="ti {{ $jur->icon_class }}"></i> Lihat Lampiran ({{ strtoupper(pathinfo($jur->lampiran, PATHINFO_EXTENSION)) }})
+                                            </a>
+                                        @endif
                                     @endif
                                 </div>
                             @empty

@@ -198,6 +198,7 @@ Route::get('/storage/{path}', function (string $path) {
 
     return response($disk->get($path), 200, [
         'Content-Type' => $mimeType,
+        'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
         'Cache-Control' => 'public, max-age=31536000, immutable',
     ]);
 })->where('path', '.*')->name('storage.fallback');
