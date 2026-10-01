@@ -61,7 +61,7 @@
                     <div class="flex flex-wrap items-center gap-4 mt-2 text-[11px] text-slate-400">
                         <span class="flex items-center gap-1">
                             <i class="ti ti-calendar"></i>
-                            Bergabung {{ $user->created_at ? $user->created_at->translatedFormat('d F Y') : '-' }}
+                            Terdaftar {{ $user->created_at ? $user->created_at->translatedFormat('d F Y') : '-' }}
                         </span>
                         @if($user->penanggungJawab)
                             <span class="flex items-center gap-1 text-emerald-600 font-semibold">
