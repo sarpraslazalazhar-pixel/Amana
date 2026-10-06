@@ -202,6 +202,11 @@ Route::middleware(['auth'])->group(function () {
     // Rute Detail Aset & PDF (didefinisikan setelah /aset/create agar tidak tertelan wildcard {aset})
     Route::get('/aset/{aset}', [AsetController::class, 'show'])->name('aset.show');
     Route::get('/aset/{aset}/pdf', [AsetController::class, 'pdf'])->name('aset.pdf');
+
+    // Modul Pengaturan: Profil Akun Mandiri (Ubah Data Profil & Ganti Kata Sandi)
+    Route::get('/profil', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profil', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
 
 // Public QR Scan Portal (Tanpa Login)
