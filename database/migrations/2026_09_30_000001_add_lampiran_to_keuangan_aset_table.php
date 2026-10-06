@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('keuangan_aset', function (Blueprint $table) {
-            $table->string('lampiran', 500)->nullable()->after('keterangan');
-        });
+        if (Schema::hasTable('keuangan_aset') && ! Schema::hasColumn('keuangan_aset', 'lampiran')) {
+            Schema::table('keuangan_aset', function (Blueprint $table) {
+                $table->string('lampiran', 500)->nullable()->after('keterangan');
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('keuangan_aset', function (Blueprint $table) {
-            $table->dropColumn(['lampiran']);
-        });
+        if (Schema::hasTable('keuangan_aset') && Schema::hasColumn('keuangan_aset', 'lampiran')) {
+            Schema::table('keuangan_aset', function (Blueprint $table) {
+                $table->dropColumn(['lampiran']);
+            });
+        }
     }
 };
