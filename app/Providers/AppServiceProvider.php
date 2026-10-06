@@ -30,6 +30,16 @@ class AppServiceProvider extends ServiceProvider
                     $table->string('lampiran', 500)->nullable()->after('keterangan');
                 });
             }
+
+            if (\Illuminate\Support\Facades\Schema::hasTable('divisi')) {
+                \Illuminate\Support\Facades\DB::table('divisi')
+                    ->where('kode_divisi', '7')
+                    ->where('nama_divisi', 'LIKE', '%Satuan Audit Internal%')
+                    ->update([
+                        'nama_divisi' => 'Kantor Perwakilan (KPw)',
+                        'keterangan' => 'Aset',
+                    ]);
+            }
         } catch (\Throwable $e) {
             // Abaikan jika koneksi db belum siap
         }

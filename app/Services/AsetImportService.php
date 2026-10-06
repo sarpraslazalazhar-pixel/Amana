@@ -656,7 +656,7 @@ class AsetImportService
 
                     // Tentukan Klasifikasi / Jenis dari Divisi
                     $divisi = Divisi::find($divisiId);
-                    $jenis = ($divisi && in_array($divisi->kode_divisi, ['5', '6'], true)) ? 'kelolaan' : 'tetap';
+                    $jenis = ($divisi && in_array($divisi->kode_divisi, ['5', '6', '7'], true)) ? 'kelolaan' : 'tetap';
 
                     $aset = Aset::create([
                         'nama_aset' => mb_substr(trim($item->nama_aset_mentah ?: 'Aset Tanpa Nama'), 0, 255),

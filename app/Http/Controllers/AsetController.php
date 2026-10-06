@@ -317,11 +317,11 @@ class AsetController extends Controller
         ]);
 
         // Tentukan Jenis Aset:
-        // - Divisi 6 (Wakaf): Fleksibel bisa pilih 'kelolaan' atau 'tetap' (misal: pengadaan dari hak nazir)
+        // - Divisi 6 (Wakaf) & Divisi 7 (KPw): Fleksibel bisa pilih 'kelolaan' atau 'tetap'
         // - Divisi 5 (Program): Otomatis 'kelolaan'
         // - Divisi lainnya: Otomatis 'tetap'
         $divisi = Divisi::find($request->divisi_id);
-        if ($divisi && $divisi->kode_divisi === '6') {
+        if ($divisi && in_array($divisi->kode_divisi, ['6', '7'], true)) {
             $jenis = in_array($request->jenis, ['tetap', 'kelolaan'], true) ? $request->jenis : 'kelolaan';
         } elseif ($divisi && $divisi->kode_divisi === '5') {
             $jenis = 'kelolaan';
@@ -596,12 +596,12 @@ class AsetController extends Controller
         ]);
 
         // Tentukan Jenis Aset:
-        // - Divisi 6 (Wakaf): Fleksibel bisa pilih 'kelolaan' atau 'tetap' (misal: pengadaan dari hak nazir)
+        // - Divisi 6 (Wakaf) & Divisi 7 (KPw): Fleksibel bisa pilih 'kelolaan' atau 'tetap'
         // - Divisi 5 (Program): Otomatis 'kelolaan'
         // - Divisi lainnya: Otomatis 'tetap'
         if ($request->filled('divisi_id')) {
             $divisi = Divisi::find($request->divisi_id);
-            if ($divisi && $divisi->kode_divisi === '6') {
+            if ($divisi && in_array($divisi->kode_divisi, ['6', '7'], true)) {
                 $jenis = in_array($request->jenis, ['tetap', 'kelolaan'], true) ? $request->jenis : ($aset->jenis ?: 'kelolaan');
             } elseif ($divisi && $divisi->kode_divisi === '5') {
                 $jenis = 'kelolaan';

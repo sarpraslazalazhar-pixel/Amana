@@ -352,7 +352,8 @@
                             <div class="flex items-center space-x-3 min-w-0">
                                 <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                     @if($ast->foto_utama)
-                                        <img src="{{ Storage::disk('public')->url($ast->foto_utama) }}" alt="{{ $ast->nama_aset }}" class="w-full h-full object-cover">
+                                        <img src="{{ asset('storage/' . $ast->foto_utama) }}" alt="{{ $ast->nama_aset }}" class="w-full h-full object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                                        <i class="ti ti-box text-slate-400 text-lg" style="display: none;"></i>
                                     @else
                                         <i class="ti ti-box text-slate-400 text-lg"></i>
                                     @endif

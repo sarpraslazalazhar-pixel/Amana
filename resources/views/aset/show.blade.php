@@ -1609,7 +1609,7 @@
                           return (this.allDivisi || []).find(d => String(d.id) === String(this.divisiId));
                       },
                       get isDivisiWakaf() {
-                          return this.selectedDivisi && String(this.selectedDivisi.kode_divisi) === '6';
+                          return this.selectedDivisi && ['6', '7'].includes(String(this.selectedDivisi.kode_divisi));
                       },
                       get jenisAset() {
                           if (this.isDivisiWakaf) return this.jenisWakaf === 'tetap' ? 'tetap' : 'kelolaan';
@@ -1696,12 +1696,12 @@
                                          placeholder="-- Pilih Divisi Pengampu --" />
                 </div>
 
-                <!-- Pilihan Jenis Aset (Khusus Divisi Wakaf pada Mutasi Riwayat) -->
+                <!-- Pilihan Jenis Aset (Khusus Divisi Wakaf / KPw pada Mutasi Riwayat) -->
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1">
                         Jenis Aset
                         <template x-if="isDivisiWakaf">
-                            <span class="text-[10px] text-emerald-600 font-semibold">(Pilihan Khusus Wakaf)</span>
+                            <span class="text-[10px] text-emerald-600 font-semibold" x-text="selectedDivisi?.kode_divisi === '6' ? '(Pilihan Khusus Wakaf)' : '(Pilihan Khusus KPw)'"></span>
                         </template>
                         <template x-if="!isDivisiWakaf">
                             <span class="text-[10px] text-slate-400 font-normal">(Otomatis dari Divisi)</span>
@@ -1729,12 +1729,13 @@
                                             : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
                                         class="px-3 py-2 text-xs font-bold rounded-xl border flex items-center justify-center gap-1.5 transition-all">
                                     <span class="w-2 h-2 rounded-full" :class="jenisAset === 'tetap' ? 'bg-emerald-500' : 'bg-slate-300'"></span>
-                                    <span>Tetap (Hak Nazir)</span>
+                                    <span x-text="selectedDivisi?.kode_divisi === '6' ? 'Tetap (Hak Nazir)' : 'Tetap (Inventaris)'"></span>
                                 </button>
                             </div>
                             <p class="text-[10px] text-slate-500 leading-tight">
-                                <span class="font-semibold text-emerald-700">Khusus Wakaf:</span>
-                                Pilih <b>Kelolaan</b> untuk aset wakaf umum, atau <b>Tetap</b> jika dibeli dengan hak nazir.
+                                <span class="font-semibold text-emerald-700" x-text="selectedDivisi?.kode_divisi === '6' ? 'Khusus Wakaf:' : 'Khusus KPw:'"></span>
+                                <span x-show="selectedDivisi?.kode_divisi === '6'">Pilih <b>Kelolaan</b> untuk aset wakaf umum, atau <b>Tetap</b> jika dibeli dengan hak nazir.</span>
+                                <span x-show="selectedDivisi?.kode_divisi === '7'">Pilih <b>Kelolaan</b> untuk aset operasional program, atau <b>Tetap</b> untuk aset inventaris kantor perwakilan.</span>
                             </p>
                         </div>
                     </template>

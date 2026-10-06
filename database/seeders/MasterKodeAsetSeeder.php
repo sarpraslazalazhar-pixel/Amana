@@ -22,7 +22,7 @@ class MasterKodeAsetSeeder extends Seeder
             ['kode_divisi' => '4', 'nama_divisi' => 'Keuangan', 'keterangan' => 'Aset Tetap'],
             ['kode_divisi' => '5', 'nama_divisi' => 'Program', 'keterangan' => 'Aset dalam Kelolaan'],
             ['kode_divisi' => '6', 'nama_divisi' => 'Wakaf', 'keterangan' => 'Aset'],
-            ['kode_divisi' => '7', 'nama_divisi' => 'Satuan Audit Internal (SAI)', 'keterangan' => 'Aset Tetap'],
+            ['kode_divisi' => '7', 'nama_divisi' => 'Kantor Perwakilan (KPw)', 'keterangan' => 'Aset'],
         ];
 
         foreach ($divisiList as $div) {

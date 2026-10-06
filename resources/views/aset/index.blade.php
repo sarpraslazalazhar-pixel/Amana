@@ -59,10 +59,12 @@
                 @endif
             </button>
 
-            <a href="{{ route('aset.import.index') }}"
-               class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-200 shadow-sm transition-all hover:border-slate-300">
-                <i class="ti ti-file-import mr-1.5 text-cyan-600 text-sm"></i> Impor Excel
-            </a>
+            @if(auth()->check() && auth()->user()->role === 'super_admin')
+                <a href="{{ route('aset.import.index') }}"
+                   class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-200 shadow-sm transition-all hover:border-slate-300">
+                    <i class="ti ti-file-import mr-1.5 text-cyan-600 text-sm"></i> Impor Excel
+                </a>
+            @endif
 
             <a href="{{ route($config['export_route'], request()->query()) }}"
                class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-200 shadow-sm transition-all hover:border-slate-300">

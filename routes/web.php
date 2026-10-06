@@ -94,83 +94,114 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/aset/qr/download-pdf', [QrPrintController::class, 'downloadPdf'])->name('aset.qr.download-pdf');
     Route::post('/aset/qr/print-direct', [QrPrintController::class, 'printDirect'])->name('aset.qr.print-direct');
 
-    Route::post('/aset/preview-kode', [AsetController::class, 'previewKode'])->name('aset.preview-kode');
-    Route::get('/aset/{aset}/pdf', [AsetController::class, 'pdf'])->name('aset.pdf');
-    Route::resource('aset', AsetController::class);
-
-    // Sub-Modul Aset (Riwayat, Mutasi, Agenda, Keuangan, Jurnal, Ubah Status)
-    Route::post('/aset/{aset}/preview-mutasi', [AsetSubmoduleController::class, 'previewMutasi'])->name('aset.preview-mutasi');
-    Route::post('/aset/{aset}/mutasi', [AsetSubmoduleController::class, 'mutasi'])->name('aset.mutasi');
-    Route::post('/aset/{aset}/riwayat', [AsetSubmoduleController::class, 'storeRiwayat'])->name('aset.riwayat.store');
-    Route::put('/riwayat/{riwayat}', [AsetSubmoduleController::class, 'updateRiwayat'])->name('aset.riwayat.update');
-    Route::delete('/riwayat/{riwayat}', [AsetSubmoduleController::class, 'destroyRiwayat'])->name('aset.riwayat.destroy');
-
-    Route::post('/aset/{aset}/agenda', [AsetSubmoduleController::class, 'storeAgenda'])->name('aset.agenda.store');
-    Route::put('/agenda/{agenda}', [AsetSubmoduleController::class, 'updateAgenda'])->name('aset.agenda.update');
-    Route::delete('/agenda/{agenda}', [AsetSubmoduleController::class, 'destroyAgenda'])->name('aset.agenda.destroy');
-    Route::post('/agenda/{agenda}/selesai', [AsetSubmoduleController::class, 'selesaikanAgenda'])->name('aset.agenda.selesaikan');
-    Route::patch('/agenda/{agenda}/toggle', [AsetSubmoduleController::class, 'toggleAgendaStatus'])->name('aset.agenda.toggle');
+    // Agenda Reminders Polling
     Route::get('/agenda/reminders', function (AgendaReminderService $service) {
         return response()->json($service->getReminderData());
     })->name('agenda.reminders');
 
-    Route::post('/aset/{aset}/keuangan', [AsetSubmoduleController::class, 'storeKeuangan'])->name('aset.keuangan.store');
-    Route::put('/keuangan/{keuangan}', [AsetSubmoduleController::class, 'updateKeuangan'])->name('aset.keuangan.update');
-    Route::delete('/keuangan/{keuangan}', [AsetSubmoduleController::class, 'destroyKeuangan'])->name('aset.keuangan.destroy');
-
-    Route::post('/aset/{aset}/jurnal', [AsetSubmoduleController::class, 'storeJurnal'])->name('aset.jurnal.store');
-    Route::put('/jurnal/{jurnal}', [AsetSubmoduleController::class, 'updateJurnal'])->name('aset.jurnal.update');
-    Route::delete('/jurnal/{jurnal}', [AsetSubmoduleController::class, 'destroyJurnal'])->name('aset.jurnal.destroy');
-    Route::patch('/jurnal/{jurnal}/status', [AsetSubmoduleController::class, 'updateJurnalStatus'])->name('aset.jurnal.status');
-
-    Route::post('/aset/{aset}/status', [AsetSubmoduleController::class, 'ubahStatus'])->name('aset.status.update');
-
-    // Lampiran Dokumen Aset
-    Route::post('/aset/{aset}/lampiran', [LampiranAsetController::class, 'store'])->name('aset.lampiran.store');
+    // Rute Publik Aset Terautentikasi (Dapat diakses Viewer & Super Admin)
+    Route::get('/aset', [AsetController::class, 'index'])->name('aset.index');
     Route::get('/lampiran/{lampiran}/download', [LampiranAsetController::class, 'download'])->name('aset.lampiran.download');
-    Route::delete('/lampiran/{lampiran}', [LampiranAsetController::class, 'destroy'])->name('aset.lampiran.destroy');
 
-    // Data Master
-    Route::resource('data/lokasi', LokasiController::class)->names('data.lokasi');
-    Route::resource('data/penanggung-jawab', PenanggungJawabController::class)->names('data.penanggung-jawab');
-    Route::resource('data/kategori', KategoriController::class)->names('data.kategori');
-    Route::resource('data/merk', MerkController::class)->names('data.merk')->except(['create', 'show', 'edit']);
-    Route::post('data/kategori/{kategori}/barang', [KategoriController::class, 'storeBarang'])->name('data.kategori.barang.store');
-    Route::put('data/kategori/barang/{barang}', [KategoriController::class, 'updateBarang'])->name('data.kategori.barang.update');
-    Route::delete('data/kategori/barang/{barang}', [KategoriController::class, 'destroyBarang'])->name('data.kategori.barang.destroy');
+    // =========================================================================
+    // MODUL DENGAN HAK AKSES KHUSUS SUPER ADMIN (RBAC)
+    // =========================================================================
+    Route::middleware(['role:super_admin'])->group(function () {
+        // Modul Impor Data Aset
+        Route::get('/aset/import', [AsetController::class, 'importIndex'])->name('aset.import.index');
+        Route::post('/aset/import/upload', [AsetController::class, 'importUpload'])->name('aset.import.upload');
+        Route::get('/aset/import/{batch}', [AsetController::class, 'importPreview'])->name('aset.import.preview');
+        Route::post('/aset/import/item/{item}', [AsetController::class, 'importUpdateItem'])->name('aset.import.item.update');
+        Route::post('/aset/import/{batch}/bulk-assign', [AsetController::class, 'importBulkAssign'])->name('aset.import.bulk-assign');
+        Route::post('/aset/import/{batch}/commit', [AsetController::class, 'importCommit'])->name('aset.import.commit');
+        Route::delete('/aset/import/{batch}', [AsetController::class, 'importDeleteBatch'])->name('aset.import.destroy');
+        Route::get('/aset/import/{batch}/summary', [AsetController::class, 'importDownloadSummary'])->name('aset.import.summary');
 
-    // Modul Log Audit
-    Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+        // Form Pembuatan Aset Baru & Preview Kode
+        Route::get('/aset/create', [AsetController::class, 'create'])->name('aset.create');
+        Route::post('/aset', [AsetController::class, 'store'])->name('aset.store');
+        Route::post('/aset/preview-kode', [AsetController::class, 'previewKode'])->name('aset.preview-kode');
 
-    // Modul Pengaturan: Konfigurasi QR Code & Portal Scan Publik
-    Route::get('/pengaturan/qr-config', [QrConfigController::class, 'index'])->name('pengaturan.qr-config.index');
-    Route::post('/pengaturan/qr-config', [QrConfigController::class, 'update'])->name('pengaturan.qr-config.update');
-    Route::post('/pengaturan/qr-config/reset', [QrConfigController::class, 'reset'])->name('pengaturan.qr-config.reset');
+        // Form Pengubahan & Penghapusan Aset
+        Route::get('/aset/{aset}/edit', [AsetController::class, 'edit'])->name('aset.edit');
+        Route::put('/aset/{aset}', [AsetController::class, 'update'])->name('aset.update');
+        Route::delete('/aset/{aset}', [AsetController::class, 'destroy'])->name('aset.destroy');
 
-    // Modul Pengaturan: Manajemen Pengguna
-    Route::prefix('sistem/users')->name('sistem.users.')->group(function () {
-        Route::get('/', [UserController::class, 'index'])->name('index');
-        Route::post('/', [UserController::class, 'store'])->name('store');
-        Route::put('/{user}', [UserController::class, 'update'])->name('update');
-        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
-        Route::post('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');
-        Route::patch('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
+        // Sub-Modul Aset: Mutasi & Status
+        Route::post('/aset/{aset}/preview-mutasi', [AsetSubmoduleController::class, 'previewMutasi'])->name('aset.preview-mutasi');
+        Route::post('/aset/{aset}/mutasi', [AsetSubmoduleController::class, 'mutasi'])->name('aset.mutasi');
+        Route::post('/aset/{aset}/status', [AsetSubmoduleController::class, 'ubahStatus'])->name('aset.status.update');
+
+        // Sub-Modul Aset: Riwayat
+        Route::post('/aset/{aset}/riwayat', [AsetSubmoduleController::class, 'storeRiwayat'])->name('aset.riwayat.store');
+        Route::put('/riwayat/{riwayat}', [AsetSubmoduleController::class, 'updateRiwayat'])->name('aset.riwayat.update');
+        Route::delete('/riwayat/{riwayat}', [AsetSubmoduleController::class, 'destroyRiwayat'])->name('aset.riwayat.destroy');
+
+        // Sub-Modul Aset: Agenda
+        Route::post('/aset/{aset}/agenda', [AsetSubmoduleController::class, 'storeAgenda'])->name('aset.agenda.store');
+        Route::put('/agenda/{agenda}', [AsetSubmoduleController::class, 'updateAgenda'])->name('aset.agenda.update');
+        Route::delete('/agenda/{agenda}', [AsetSubmoduleController::class, 'destroyAgenda'])->name('aset.agenda.destroy');
+        Route::post('/agenda/{agenda}/selesai', [AsetSubmoduleController::class, 'selesaikanAgenda'])->name('aset.agenda.selesaikan');
+        Route::patch('/agenda/{agenda}/toggle', [AsetSubmoduleController::class, 'toggleAgendaStatus'])->name('aset.agenda.toggle');
+
+        // Sub-Modul Aset: Keuangan
+        Route::post('/aset/{aset}/keuangan', [AsetSubmoduleController::class, 'storeKeuangan'])->name('aset.keuangan.store');
+        Route::put('/keuangan/{keuangan}', [AsetSubmoduleController::class, 'updateKeuangan'])->name('aset.keuangan.update');
+        Route::delete('/keuangan/{keuangan}', [AsetSubmoduleController::class, 'destroyKeuangan'])->name('aset.keuangan.destroy');
+
+        // Sub-Modul Aset: Jurnal
+        Route::post('/aset/{aset}/jurnal', [AsetSubmoduleController::class, 'storeJurnal'])->name('aset.jurnal.store');
+        Route::put('/jurnal/{jurnal}', [AsetSubmoduleController::class, 'updateJurnal'])->name('aset.jurnal.update');
+        Route::delete('/jurnal/{jurnal}', [AsetSubmoduleController::class, 'destroyJurnal'])->name('aset.jurnal.destroy');
+        Route::patch('/jurnal/{jurnal}/status', [AsetSubmoduleController::class, 'updateJurnalStatus'])->name('aset.jurnal.status');
+
+        // Sub-Modul Aset: Lampiran
+        Route::post('/aset/{aset}/lampiran', [LampiranAsetController::class, 'store'])->name('aset.lampiran.store');
+        Route::delete('/lampiran/{lampiran}', [LampiranAsetController::class, 'destroy'])->name('aset.lampiran.destroy');
+
+        // Data Master
+        Route::resource('data/lokasi', LokasiController::class)->names('data.lokasi');
+        Route::resource('data/penanggung-jawab', PenanggungJawabController::class)->names('data.penanggung-jawab');
+        Route::resource('data/kategori', KategoriController::class)->names('data.kategori');
+        Route::resource('data/merk', MerkController::class)->names('data.merk')->except(['create', 'show', 'edit']);
+        Route::post('data/kategori/{kategori}/barang', [KategoriController::class, 'storeBarang'])->name('data.kategori.barang.store');
+        Route::put('data/kategori/barang/{barang}', [KategoriController::class, 'updateBarang'])->name('data.kategori.barang.update');
+        Route::delete('data/kategori/barang/{barang}', [KategoriController::class, 'destroyBarang'])->name('data.kategori.barang.destroy');
+
+        // Modul Log Audit
+        Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
+        // Modul Pengaturan: Konfigurasi QR Code & Portal Scan Publik
+        Route::get('/pengaturan/qr-config', [QrConfigController::class, 'index'])->name('pengaturan.qr-config.index');
+        Route::post('/pengaturan/qr-config', [QrConfigController::class, 'update'])->name('pengaturan.qr-config.update');
+        Route::post('/pengaturan/qr-config/reset', [QrConfigController::class, 'reset'])->name('pengaturan.qr-config.reset');
+
+        // Modul Pengaturan: Manajemen Pengguna
+        Route::prefix('sistem/users')->name('sistem.users.')->group(function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::put('/{user}', [UserController::class, 'update'])->name('update');
+            Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+            Route::post('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');
+            Route::patch('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
+        });
+
+        // Utilitas Admin: Buat Symlink Storage
+        Route::get('/admin/storage-link', function () {
+            try {
+                Artisan::call('storage:link');
+                $output = Artisan::output();
+
+                return redirect()->route('dashboard')->with('success', 'Symlink storage berhasil diproses: '.trim($output));
+            } catch (Throwable $e) {
+                return redirect()->route('dashboard')->with('error', 'Gagal membuat symlink: '.$e->getMessage());
+            }
+        })->name('admin.storage.link');
     });
 
-    // Modul Pengaturan: Profil Akun Mandiri (Ubah Data Profil & Ganti Kata Sandi)
-    Route::get('/profil', [ProfileController::class, 'index'])->name('profile.index');
-    Route::put('/profil', [ProfileController::class, 'updateProfile'])->name('profile.update');
-    Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
-
-    // Utilitas Admin: Buat Symlink Storage (berguna untuk hosting cPanel/LiteSpeed tanpa akses terminal SSH)
-    Route::get('/admin/storage-link', function () {
-        if (auth()->user()?->role !== 'super_admin') {
-            abort(403, 'Akses terbatas hanya untuk Super Admin.');
-        }
-
-        try {
-            Artisan::call('storage:link');
-            $output = Artisan::output();
+    // Rute Detail Aset & PDF (didefinisikan setelah /aset/create agar tidak tertelan wildcard {aset})
+    Route::get('/aset/{aset}', [AsetController::class, 'show'])->name('aset.show');
+    Route::get('/aset/{aset}/pdf', [AsetController::class, 'pdf'])->name('aset.pdf');
 
             return redirect()->route('dashboard')->with('success', 'Symlink storage berhasil diproses: '.trim($output));
         } catch (Throwable $e) {

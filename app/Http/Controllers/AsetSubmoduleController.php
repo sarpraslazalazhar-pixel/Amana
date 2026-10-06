@@ -71,11 +71,11 @@ class AsetSubmoduleController extends Controller
             $aset->divisi_id = $mutationResult['new_divisi_id'];
         }
 
-        // Tentukan Jenis Aset: Khusus Divisi 6 (Wakaf) fleksibel kelolaan / tetap (misal: pengadaan hak nazir)
+        // Tentukan Jenis Aset: Khusus Divisi 6 (Wakaf) & Divisi 7 (KPw) fleksibel kelolaan / tetap
         $activeDivisiId = $mutationResult['new_divisi_id'] ?? $targetDivisiId ?? $aset->divisi_id;
         $divisiBaru = \App\Models\Divisi::find($activeDivisiId);
 
-        if ($divisiBaru && $divisiBaru->kode_divisi === '6') {
+        if ($divisiBaru && in_array($divisiBaru->kode_divisi, ['6', '7'], true)) {
             $aset->jenis = in_array($request->jenis, ['tetap', 'kelolaan'], true)
                 ? $request->jenis
                 : ($aset->jenis ?: 'kelolaan');

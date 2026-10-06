@@ -40,13 +40,13 @@ class Aset extends Model
         }
 
         if ($this->relationLoaded('divisi') && $this->divisi) {
-            return in_array($this->divisi->kode_divisi, ['5', '6'], true) ? 'Aset dalam Kelolaan' : 'Aset Tetap';
+            return in_array($this->divisi->kode_divisi, ['5', '6', '7'], true) ? 'Aset dalam Kelolaan' : 'Aset Tetap';
         }
 
         if ($this->divisi_id) {
             $kode = $this->divisi?->kode_divisi;
             if ($kode) {
-                return in_array($kode, ['5', '6'], true) ? 'Aset dalam Kelolaan' : 'Aset Tetap';
+                return in_array($kode, ['5', '6', '7'], true) ? 'Aset dalam Kelolaan' : 'Aset Tetap';
             }
         }
 
@@ -62,7 +62,7 @@ class Aset extends Model
                     ->orWhere(function ($sub) {
                         $sub->whereNull('jenis')
                             ->whereHas('divisi', function ($d) {
-                                $d->whereIn('kode_divisi', ['5', '6']);
+                                $d->whereIn('kode_divisi', ['5', '6', '7']);
                             });
                     });
             });
@@ -72,7 +72,7 @@ class Aset extends Model
                     ->orWhere(function ($sub) {
                         $sub->whereNull('jenis')
                             ->whereHas('divisi', function ($d) {
-                                $d->whereNotIn('kode_divisi', ['5', '6']);
+                                $d->whereNotIn('kode_divisi', ['5', '6', '7']);
                             });
                     });
             });
