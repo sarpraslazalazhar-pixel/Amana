@@ -202,12 +202,6 @@ Route::middleware(['auth'])->group(function () {
     // Rute Detail Aset & PDF (didefinisikan setelah /aset/create agar tidak tertelan wildcard {aset})
     Route::get('/aset/{aset}', [AsetController::class, 'show'])->name('aset.show');
     Route::get('/aset/{aset}/pdf', [AsetController::class, 'pdf'])->name('aset.pdf');
-
-            return redirect()->route('dashboard')->with('success', 'Symlink storage berhasil diproses: '.trim($output));
-        } catch (Throwable $e) {
-            return redirect()->route('dashboard')->with('error', 'Gagal membuat symlink: '.$e->getMessage());
-        }
-    })->name('admin.storage.link');
 });
 
 // Public QR Scan Portal (Tanpa Login)
