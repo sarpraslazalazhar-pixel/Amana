@@ -449,9 +449,9 @@
                                     <span class="font-mono text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60">
                                         {{ $jnl->aset->kode_aset ?? '-' }}
                                     </span>
-                                    <span class="text-xs font-bold text-slate-900 truncate">
+                                    <a href="{{ route('aset.show', $jnl->aset_id) }}?tab=jurnal" class="text-xs font-bold text-slate-900 hover:text-emerald-600 truncate">
                                         {{ $jnl->aset->nama_aset ?? 'Aset' }}
-                                    </span>
+                                    </a>
                                 </div>
                                 <div class="mt-1 text-xs text-slate-700 font-medium line-clamp-2">
                                     {{ $jnl->kejadian }}
@@ -501,9 +501,9 @@
                                     <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold uppercase bg-rose-100 text-rose-800">
                                         Pengeluaran
                                     </span>
-                                    <span class="font-bold text-xs text-slate-900 truncate">
+                                    <a href="{{ route('aset.show', $keu->aset_id) }}?tab=keuangan" class="font-bold text-xs text-slate-900 hover:text-emerald-600 truncate">
                                         {{ $keu->keterangan ?: ($keu->jenis_transaksi ?: 'Biaya Perawatan') }}
-                                    </span>
+                                    </a>
                                 </div>
                                 <div class="mt-0.5 text-[10px] text-slate-400 truncate">
                                     {{ $keu->aset->nama_aset ?? '-' }} ({{ $keu->aset->kode_aset ?? '-' }})
