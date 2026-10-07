@@ -26,6 +26,15 @@ class JurnalAset extends Model
         'tanggal' => 'date',
     ];
 
+    protected $appends = [
+        'lampiran_url',
+        'is_image',
+        'is_pdf',
+        'lampiran_file_name',
+        'is_dari_agenda',
+        'icon_class',
+    ];
+
     public function aset(): BelongsTo
     {
         return $this->belongsTo(Aset::class);

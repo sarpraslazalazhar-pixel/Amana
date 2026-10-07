@@ -114,11 +114,15 @@ class ImageOptimizerService
                 return $this->optimizeAndStore($file, $directory, self::DEFAULT_MAX_DIMENSION, self::DEFAULT_QUALITY, $disk);
             } catch (Throwable) {
                 // Fallback jika gagal decode gambar: simpan biasa
-                return $file->store($directory, $disk);
             }
         }
 
-        return $file->store($directory, $disk);
+        $baseName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $slug = Str::slug($baseName, '_');
+        $extension = $file->getClientOriginalExtension() ?: ($file->guessExtension() ?: 'bin');
+        $filename = time() . '_' . ($slug ?: 'file') . '.' . $extension;
+
+        return $file->storeAs($directory, $filename, $disk);
     }
 
     /**

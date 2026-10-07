@@ -130,8 +130,10 @@ class AgendaSelesaiIntegrationTest extends TestCase
 
         $fakePdf = UploadedFile::fake()->create('nota_sparepart.pdf', 300, 'application/pdf');
 
+        $tanggalSelesai = now()->toDateString();
+
         $response = $this->actingAs($this->staff)->post(route('aset.agenda.selesaikan', $agenda->id), [
-            'tanggal_selesai' => '2026-09-15',
+            'tanggal_selesai' => $tanggalSelesai,
             'catatan_penyelesaian' => 'Thermal paste diganti dengan merk Arctic MX-4, kipas cadangan dipasang.',
             'biaya_riil' => '450.000', // format bertitik
             'lampiran' => $fakePdf,
@@ -152,7 +154,7 @@ class AgendaSelesaiIntegrationTest extends TestCase
         $this->assertEquals($agenda->lampiran_penyelesaian, $jurnal->lampiran);
         $this->assertEquals('selesai', $jurnal->status_penanganan);
         $this->assertEquals($this->staff->id, $jurnal->user_id);
-        $this->assertEquals('2026-09-15', $jurnal->tanggal->toDateString());
+        $this->assertEquals($tanggalSelesai, $jurnal->tanggal->toDateString());
 
         // Record Keuangan terbuat dengan tipe pengeluaran & nominal 450.000
         $this->assertDatabaseHas('keuangan_aset', [
@@ -163,7 +165,7 @@ class AgendaSelesaiIntegrationTest extends TestCase
         ]);
 
         $keuangan = KeuanganAset::where('aset_id', $this->aset->id)->first();
-        $this->assertEquals('2026-09-15', $keuangan->tanggal->toDateString());
+        $this->assertEquals($tanggalSelesai, $keuangan->tanggal->toDateString());
         $this->assertStringContainsString('Penggantian Thermal Paste', $keuangan->jenis_transaksi);
     }
 

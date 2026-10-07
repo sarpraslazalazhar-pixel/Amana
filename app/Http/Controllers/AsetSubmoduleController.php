@@ -235,26 +235,28 @@ class AsetSubmoduleController extends Controller
         $biayaRiil = (float) ($request->biaya_riil ?? 0);
         $userId = auth()->id() ?? 1;
 
-        // 1. Catat ke Jurnal Kejadian Aset (Selalu dibuat saat agenda diselesaikan)
-        $kejadianJurnal = "Penyelesaian Agenda: {$agenda->nama_agenda}";
-        if ($catatan) {
-            $kejadianJurnal .= "\nCatatan: {$catatan}";
-        }
-        if ($biayaRiil > 0) {
-            $kejadianJurnal .= "\nBiaya: Rp " . number_format($biayaRiil, 0, ',', '.');
-        }
+        // 1. Catat ke Jurnal Kejadian Aset (Hanya jika ada lampiran foto/dokumen)
+        if ($lampiranPath) {
+            $kejadianJurnal = "Penyelesaian Agenda: {$agenda->nama_agenda}";
+            if ($catatan) {
+                $kejadianJurnal .= "\nCatatan: {$catatan}";
+            }
+            if ($biayaRiil > 0) {
+                $kejadianJurnal .= "\nBiaya: Rp " . number_format($biayaRiil, 0, ',', '.');
+            }
 
-        JurnalAset::create([
-            'aset_id' => $aset->id,
-            'agenda_id' => $agenda->id,
-            'tanggal' => $tanggalSelesai,
-            'kejadian' => $kejadianJurnal,
-            'lampiran' => $lampiranPath,
-            'tingkat_kerusakan' => null,
-            'status_penanganan' => 'selesai',
-            'user_id' => $userId,
-            'updated_by' => $userId,
-        ]);
+            JurnalAset::create([
+                'aset_id' => $aset->id,
+                'agenda_id' => $agenda->id,
+                'tanggal' => $tanggalSelesai,
+                'kejadian' => $kejadianJurnal,
+                'lampiran' => $lampiranPath,
+                'tingkat_kerusakan' => null,
+                'status_penanganan' => 'selesai',
+                'user_id' => $userId,
+                'updated_by' => $userId,
+            ]);
+        }
 
         // 2. Jika ada biaya riil > 0, catat ke Keuangan Aset (Pengeluaran)
         if ($biayaRiil > 0) {
@@ -356,6 +358,18 @@ class AsetSubmoduleController extends Controller
             'lampiran' => $lampiranPath,
             'user_id' => auth()->id() ?? 1,
         ]);
+
+        if ($lampiranPath) {
+            JurnalAset::create([
+                'aset_id' => $aset->id,
+                'tanggal' => $request->tanggal,
+                'kejadian' => "Pengeluaran Biaya: " . ($request->jenis_transaksi ?: 'Biaya Perawatan') . ($request->keterangan ? "\nCatatan: {$request->keterangan}" : "") . "\nBiaya: Rp " . number_format((float) $request->nominal, 0, ',', '.'),
+                'lampiran' => $lampiranPath,
+                'status_penanganan' => 'selesai',
+                'user_id' => auth()->id() ?? 1,
+                'updated_by' => auth()->id() ?? 1,
+            ]);
+        }
 
         $nominalFormatted = 'Rp '.number_format((float) $request->nominal, 0, ',', '.');
         AuditLogger::log('keuangan', "Pengeluaran biaya sebesar {$nominalFormatted} dicatat pada {$aset->kode_aset}", $aset);
@@ -612,6 +626,107 @@ class AsetSubmoduleController extends Controller
             'lampiran' => $lampiranPath,
             'updated_by' => auth()->id() ?? 1,
         ]);
+
+        if ($lampiranPath) {
+            if ($keuangan->agenda_id) {
+                $jurnal = JurnalAset::where('agenda_id', $keuangan->agenda_id)->first();
+                if ($jurnal) {
+                    $jurnal->update([
+                        'lampiran' => $lampiranPath,
+                        'updated_by' => auth()->id() ?? 1,
+                    ]);
+                } else {
+                    $agenda = AgendaAset::find($keuangan->agenda_id);
+                    $namaAgenda = $agenda ? $agenda->nama_agenda : 'Agenda';
+                    $catatan = $agenda ? $agenda->catatan_penyelesaian : null;
+                    $kejadianJurnal = "Penyelesaian Agenda: {$namaAgenda}";
+                    if ($catatan) {
+                        $kejadianJurnal .= "\nCatatan: {$catatan}";
+                    }
+                    if ($keuangan->nominal > 0) {
+                        $kejadianJurnal .= "\nBiaya: Rp " . number_format((float) $keuangan->nominal, 0, ',', '.');
+                    }
+                    JurnalAset::create([
+                        'aset_id' => $aset->id,
+                        'agenda_id' => $keuangan->agenda_id,
+                        'tanggal' => $keuangan->tanggal,
+                        'kejadian' => $kejadianJurnal,
+                        'lampiran' => $lampiranPath,
+                        'tingkat_kerusakan' => null,
+                        'status_penanganan' => 'selesai',
+                        'user_id' => auth()->id() ?? 1,
+                        'updated_by' => auth()->id() ?? 1,
+                    ]);
+                }
+                AgendaAset::where('id', $keuangan->agenda_id)->update([
+                    'lampiran_penyelesaian' => $lampiranPath,
+                    'updated_by' => auth()->id() ?? 1,
+                ]);
+            } elseif (str_starts_with((string) $keuangan->jenis_transaksi, 'Pemeliharaan / Agenda:')) {
+                $namaAgenda = trim(str_replace('Pemeliharaan / Agenda:', '', (string) $keuangan->jenis_transaksi));
+                $jurnal = JurnalAset::where('aset_id', $aset->id)
+                    ->where('kejadian', 'LIKE', "Penyelesaian Agenda: {$namaAgenda}%")
+                    ->first();
+                if ($jurnal) {
+                    $jurnal->update([
+                        'lampiran' => $lampiranPath,
+                        'updated_by' => auth()->id() ?? 1,
+                    ]);
+                } else {
+                    $agenda = AgendaAset::where('aset_id', $aset->id)->where('nama_agenda', $namaAgenda)->first();
+                    $catatan = $agenda ? $agenda->catatan_penyelesaian : null;
+                    $kejadianJurnal = "Penyelesaian Agenda: {$namaAgenda}";
+                    if ($catatan) {
+                        $kejadianJurnal .= "\nCatatan: {$catatan}";
+                    }
+                    if ($keuangan->nominal > 0) {
+                        $kejadianJurnal .= "\nBiaya: Rp " . number_format((float) $keuangan->nominal, 0, ',', '.');
+                    }
+                    JurnalAset::create([
+                        'aset_id' => $aset->id,
+                        'agenda_id' => $agenda?->id,
+                        'tanggal' => $keuangan->tanggal,
+                        'kejadian' => $kejadianJurnal,
+                        'lampiran' => $lampiranPath,
+                        'tingkat_kerusakan' => null,
+                        'status_penanganan' => 'selesai',
+                        'user_id' => auth()->id() ?? 1,
+                        'updated_by' => auth()->id() ?? 1,
+                    ]);
+                }
+                AgendaAset::where('aset_id', $aset->id)
+                    ->where('nama_agenda', $namaAgenda)
+                    ->update([
+                        'lampiran_penyelesaian' => $lampiranPath,
+                        'updated_by' => auth()->id() ?? 1,
+                    ]);
+            } else {
+                $jurnal = JurnalAset::where('aset_id', $aset->id)
+                    ->where(function ($q) use ($keuangan) {
+                        $q->where('kejadian', 'LIKE', "%{$keuangan->jenis_transaksi}%")
+                            ->orWhere('kejadian', 'LIKE', '%Pengeluaran Biaya%');
+                    })
+                    ->whereNull('agenda_id')
+                    ->first();
+
+                if ($jurnal) {
+                    $jurnal->update([
+                        'lampiran' => $lampiranPath,
+                        'updated_by' => auth()->id() ?? 1,
+                    ]);
+                } else {
+                    JurnalAset::create([
+                        'aset_id' => $aset->id,
+                        'tanggal' => $keuangan->tanggal,
+                        'kejadian' => "Pengeluaran Biaya: " . ($keuangan->jenis_transaksi ?: 'Biaya Perawatan') . ($keuangan->keterangan ? "\nCatatan: {$keuangan->keterangan}" : "") . "\nBiaya: Rp " . number_format((float) $keuangan->nominal, 0, ',', '.'),
+                        'lampiran' => $lampiranPath,
+                        'status_penanganan' => 'selesai',
+                        'user_id' => auth()->id() ?? 1,
+                        'updated_by' => auth()->id() ?? 1,
+                    ]);
+                }
+            }
+        }
 
         AuditLogger::log('keuangan', "Pembaruan transaksi keuangan pada aset {$aset->kode_aset}", $aset);
 

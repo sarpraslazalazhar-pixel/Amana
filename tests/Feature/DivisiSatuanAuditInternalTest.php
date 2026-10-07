@@ -186,6 +186,9 @@ class DivisiSatuanAuditInternalTest extends TestCase
 
         $response = $this->actingAs($this->admin)->put(route('aset.update', $aset->id), [
             'nama_aset' => 'Aset KPw Diubah Menjadi Tetap',
+            'sifat_barang' => 'D',
+            'tanggal_pembelian' => '2026-10-06',
+            'toko_distributor' => 'Vendor',
             'kategori_id' => $this->kategori->id,
             'barang_id' => $this->barang->id,
             'divisi_id' => $this->divisiKpw->id,
@@ -197,8 +200,7 @@ class DivisiSatuanAuditInternalTest extends TestCase
             'jenis' => 'tetap',
         ]);
 
-        $response->assertRedirect(route('aset.tetap'));
-
+        $response->assertRedirect(route('aset.show', $aset->id));
         $aset->refresh();
         $this->assertEquals('tetap', $aset->jenis);
         $this->assertEquals('Aset Tetap', $aset->klasifikasi);

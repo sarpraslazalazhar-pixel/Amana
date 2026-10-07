@@ -221,6 +221,11 @@ class SubmoduleEditDeleteTest extends TestCase
         $this->assertFalse($keuangan->is_pdf);
         $this->assertNotNull($keuangan->lampiran_url);
 
+        // Pastikan lampiran otomatis masuk ke Jurnal
+        $jurnalTerkait = JurnalAset::where('aset_id', $this->aset->id)->first();
+        $this->assertNotNull($jurnalTerkait);
+        $this->assertEquals($keuangan->lampiran, $jurnalTerkait->lampiran);
+        $this->assertStringContainsString('Pembelian RAM 16GB', $jurnalTerkait->kejadian);
         // Edit dengan mengganti lampiran PDF
         $fakePdf = UploadedFile::fake()->create('invoice_ram.pdf', 100, 'application/pdf');
         $editResponse = $this->actingAs($this->staff)->put(route('aset.keuangan.update', $keuangan->id), [
@@ -236,6 +241,11 @@ class SubmoduleEditDeleteTest extends TestCase
         $this->assertTrue($keuangan->is_pdf);
         $this->assertFalse($keuangan->is_image);
         $this->assertStringContainsString('invoice_ram', $keuangan->lampiran);
+
+        // Pastikan lampiran jurnal ikut ter-update
+        $jurnalTerkait->refresh();
+        $this->assertEquals($keuangan->lampiran, $jurnalTerkait->lampiran);
+        $this->assertTrue($jurnalTerkait->is_pdf);
     }
 
     public function test_jurnal_manual_dapat_diedit_dan_dihapus(): void
@@ -327,11 +337,14 @@ class SubmoduleEditDeleteTest extends TestCase
             'user_id' => $this->admin->id,
         ]);
 
-        // Selesaikan agenda dengan biaya sehingga membuat keuangan dan jurnal otomatis
+        // Selesaikan agenda dengan biaya dan lampiran sehingga membuat keuangan dan jurnal otomatis
+        Storage::fake('public');
+        $fakeNota = UploadedFile::fake()->image('nota_oli.jpg');
         $this->actingAs($this->admin)->post(route('aset.agenda.selesaikan', $agenda->id), [
             'tanggal_selesai' => '2026-06-01',
             'catatan_penyelesaian' => 'Selesai ganti oli',
             'biaya_riil' => '300.000',
+            'lampiran' => $fakeNota,
         ]);
 
         $keuanganOtomatis = KeuanganAset::where('agenda_id', $agenda->id)->first();
@@ -363,11 +376,14 @@ class SubmoduleEditDeleteTest extends TestCase
             'user_id' => $this->admin->id,
         ]);
 
-        // Selesaikan agenda dengan biaya
+        // Selesaikan agenda dengan biaya dan lampiran
+        Storage::fake('public');
+        $fakeNota = UploadedFile::fake()->image('nota_ac.jpg');
         $this->actingAs($this->admin)->post(route('aset.agenda.selesaikan', $agenda->id), [
             'tanggal_selesai' => '2026-06-15',
             'catatan_penyelesaian' => 'AC selesai dicuci dan tambah freon',
             'biaya_riil' => '450.000',
+            'lampiran' => $fakeNota,
         ]);
 
         $keuangan = KeuanganAset::where('agenda_id', $agenda->id)->first();
@@ -385,5 +401,47 @@ class SubmoduleEditDeleteTest extends TestCase
         $this->assertDatabaseMissing('agenda_aset', ['id' => $agenda->id]);
         $this->assertDatabaseMissing('keuangan_aset', ['id' => $keuangan->id]);
         $this->assertDatabaseMissing('jurnal_aset', ['id' => $jurnal->id]);
+    }
+    public function test_update_keuangan_dari_agenda_sinkronisasi_lampiran_ke_jurnal_dan_agenda(): void
+    {
+        Storage::fake('public');
+
+        $agenda = AgendaAset::create([
+            'aset_id' => $this->aset->id,
+            'tipe_agenda' => 'tanggal_tertentu',
+            'nama_agenda' => 'Perbaikan Pompa Air',
+            'tanggal' => '2026-07-01',
+            'status' => 'pending',
+            'user_id' => $this->admin->id,
+        ]);
+
+        // Selesaikan tanpa lampiran
+        $this->actingAs($this->admin)->post(route('aset.agenda.selesaikan', $agenda->id), [
+            'tanggal_selesai' => '2026-07-01',
+            'catatan_penyelesaian' => 'Pompa diperbaiki',
+            'biaya_riil' => '150.000',
+        ]);
+
+        $keuangan = KeuanganAset::where('agenda_id', $agenda->id)->first();
+        $this->assertNull($keuangan->lampiran);
+        $this->assertNull(JurnalAset::where('agenda_id', $agenda->id)->first());
+
+        // Update keuangan dengan lampiran nota baru
+        $fakeNota = UploadedFile::fake()->image('nota_pompa.jpg');
+        $this->actingAs($this->staff)->put(route('aset.keuangan.update', $keuangan->id), [
+            'tanggal' => '2026-07-01',
+            'nominal' => '150.000',
+            'jenis_transaksi' => 'Pemeliharaan / Agenda: Perbaikan Pompa Air',
+            'lampiran' => $fakeNota,
+        ]);
+
+        $keuangan->refresh();
+        $jurnal = JurnalAset::where('agenda_id', $agenda->id)->first();
+        $this->assertNotNull($jurnal);
+        $agenda->refresh();
+
+        $this->assertNotNull($keuangan->lampiran);
+        $this->assertEquals($keuangan->lampiran, $jurnal->lampiran);
+        $this->assertEquals($keuangan->lampiran, $agenda->lampiran_penyelesaian);
     }
 }

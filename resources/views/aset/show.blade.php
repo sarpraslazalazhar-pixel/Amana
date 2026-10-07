@@ -440,54 +440,107 @@
             </div>
 
             <!-- 6. LAMPIRAN -->
+            @php
+                $lampiranKeuangan = ($aset->keuangan ?? collect())->filter(fn($k) => !empty($k->lampiran));
+                $totalDokumen = ($aset->lampiran ? $aset->lampiran->count() : 0) + $lampiranKeuangan->count();
+            @endphp
             <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                         <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-bold text-xs">6</span>
                         LAMPIRAN
-                        @if($aset->lampiran && $aset->lampiran->count() > 0)
-                            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">{{ $aset->lampiran->count() }}</span>
+                        @if($totalDokumen > 0)
+                            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">{{ $totalDokumen }}</span>
                         @endif
                     </h3>
-                    <span class="text-xs text-slate-400 font-medium">Dokumen Pendukung</span>
+                    <span class="text-xs text-slate-400 font-medium">Dokumen Pendukung & Bukti Biaya</span>
                 </div>
 
-                @if($aset->lampiran && $aset->lampiran->count() > 0)
+                @if($totalDokumen > 0)
                     <div class="space-y-2">
-                        @foreach($aset->lampiran as $lampiran)
-                            <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70 hover:border-emerald-200 transition-colors">
+                        @if($aset->lampiran && $aset->lampiran->count() > 0)
+                            @foreach($aset->lampiran as $lampiran)
+                                <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70 hover:border-emerald-200 transition-colors">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center border shrink-0
+                                            {{ $lampiran->is_pdf ? 'bg-rose-50 text-rose-600 border-rose-100' : ($lampiran->is_image ? 'bg-cyan-50 text-cyan-600 border-cyan-100' : 'bg-amber-50 text-amber-600 border-amber-100') }}">
+                                            <i class="ti {{ $lampiran->icon_class }} text-lg"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="text-xs font-bold text-slate-800 truncate" title="{{ $lampiran->file_name }}">
+                                                {{ $lampiran->label ?: $lampiran->file_name }}
+                                            </p>
+                                            <p class="text-[11px] text-slate-400">
+                                                {{ $lampiran->file_name }} • {{ $lampiran->formatted_size }} • {{ $lampiran->created_at->translatedFormat('d M Y, H:i') }}
+                                                @if($lampiran->uploader)
+                                                    • {{ $lampiran->uploader->name }}
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <a href="{{ route('aset.lampiran.download', $lampiran->id) }}"
+                                       class="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200 inline-flex items-center gap-1 transition-colors"
+                                       title="Download {{ $lampiran->file_name }}">
+                                        <i class="ti ti-download text-sm"></i> Download
+                                    </a>
+                                </div>
+                            @endforeach
+                        @endif
+
+                        @foreach($lampiranKeuangan as $keuLampiran)
+                            <div class="flex items-center justify-between p-3.5 bg-rose-50/40 rounded-2xl border border-rose-200/60 hover:border-rose-300 transition-colors">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center border shrink-0
-                                        {{ $lampiran->is_pdf ? 'bg-rose-50 text-rose-600 border-rose-100' : ($lampiran->is_image ? 'bg-cyan-50 text-cyan-600 border-cyan-100' : 'bg-amber-50 text-amber-600 border-amber-100') }}">
-                                        <i class="ti {{ $lampiran->icon_class }} text-lg"></i>
+                                        {{ $keuLampiran->is_pdf ? 'bg-rose-100 text-rose-700 border-rose-200' : ($keuLampiran->is_image ? 'bg-cyan-100 text-cyan-700 border-cyan-200' : 'bg-slate-100 text-slate-700 border-slate-200') }}">
+                                        <i class="ti {{ $keuLampiran->is_image ? 'ti-photo' : ($keuLampiran->is_pdf ? 'ti-file-type-pdf' : 'ti-file-text') }} text-lg"></i>
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="text-xs font-bold text-slate-800 truncate" title="{{ $lampiran->file_name }}">
-                                            {{ $lampiran->label ?: $lampiran->file_name }}
-                                        </p>
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="px-1.5 py-0.2 rounded text-[9.5px] font-extrabold uppercase bg-rose-100 text-rose-700">Keuangan</span>
+                                            <p class="text-xs font-bold text-slate-800 truncate" title="{{ $keuLampiran->jenis_transaksi }}">
+                                                Nota Keuangan: {{ $keuLampiran->jenis_transaksi ?: 'Biaya Perawatan' }}
+                                            </p>
+                                        </div>
                                         <p class="text-[11px] text-slate-400">
-                                            {{ $lampiran->file_name }} • {{ $lampiran->formatted_size }} • {{ $lampiran->created_at->translatedFormat('d M Y, H:i') }}
-                                            @if($lampiran->uploader)
-                                                • {{ $lampiran->uploader->name }}
+                                            {{ $keuLampiran->lampiran_file_name ?: basename($keuLampiran->lampiran) }} • {{ \Carbon\Carbon::parse($keuLampiran->tanggal)->translatedFormat('d M Y') }} • Rp {{ number_format($keuLampiran->nominal, 0, ',', '.') }}
+                                            @if($keuLampiran->user)
+                                                • {{ $keuLampiran->user->name }}
                                             @endif
                                         </p>
                                     </div>
                                 </div>
-                                <a href="{{ route('aset.lampiran.download', $lampiran->id) }}"
-                                   class="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200 inline-flex items-center gap-1 transition-colors"
-                                   title="Download {{ $lampiran->file_name }}">
-                                    <i class="ti ti-download text-sm"></i> Download
-                                </a>
+                                <div class="shrink-0 flex items-center gap-1.5">
+                                    @if($keuLampiran->is_image)
+                                        <button type="button"
+                                                @click="openImageModal('{{ $keuLampiran->lampiran_url }}', 'Nota Keuangan: {{ $keuLampiran->jenis_transaksi ?: 'Biaya Aset' }}')"
+                                                class="px-3 py-1.5 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-700 text-xs font-bold border border-cyan-200 inline-flex items-center gap-1 transition-colors"
+                                                title="Lihat Foto Bukti">
+                                            <i class="ti ti-photo text-sm"></i> Lihat
+                                        </button>
+                                    @else
+                                        <a href="{{ $keuLampiran->lampiran_url }}" target="_blank" download
+                                           class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 inline-flex items-center gap-1 transition-colors"
+                                           title="Unduh / Buka Dokumen">
+                                            <i class="ti ti-download text-sm"></i> Download
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
                         @endforeach
                     </div>
 
                     @if(auth()->check() && auth()->user()->role === 'super_admin')
-                        <div class="pt-1">
+                        <div class="pt-1 flex items-center justify-between text-xs font-bold">
                             <a href="{{ route('aset.edit', $aset->id) }}"
-                               class="text-xs font-bold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1">
-                                <i class="ti ti-pencil text-sm"></i> Kelola Lampiran
+                               class="text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1">
+                                <i class="ti ti-pencil text-sm"></i> Kelola Dokumen Master
                             </a>
+                            @if($lampiranKeuangan->count() > 0)
+                                <button type="button" @click="activeTab = 'keuangan'"
+                                        class="text-rose-600 hover:text-rose-700 inline-flex items-center gap-1 cursor-pointer">
+                                    <i class="ti ti-cash text-sm"></i> Lihat di Tab Keuangan
+                                </button>
+                            @endif
                         </div>
                     @endif
                 @else
@@ -498,7 +551,7 @@
                             </div>
                             <div>
                                 <p class="text-xs font-bold text-slate-600">Belum Ada Lampiran</p>
-                                <p class="text-[11px] text-slate-400">{{ $aset->no_invoice ? 'No Invoice: ' . $aset->no_invoice : 'Belum ada dokumen fisik dilampirkan' }}</p>
+                                <p class="text-[11px] text-slate-400">{{ $aset->no_invoice ? 'No Invoice: ' . $aset->no_invoice : 'Belum ada dokumen fisik atau bukti nota dilampirkan' }}</p>
                             </div>
                         </div>
                         @if(auth()->check() && auth()->user()->role === 'super_admin')
@@ -1410,13 +1463,13 @@
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 mb-1">Bukti Nota / Lampiran (Opsional)</label>
-                            <template x-if="editItem?.lampiran_url">
+                            <template x-if="editItem?.lampiran_url || editItem?.lampiran">
                                 <div class="mb-2 p-2 rounded-xl bg-slate-100/80 border border-slate-200 flex items-center justify-between text-xs">
                                     <div class="flex items-center gap-1.5 truncate">
                                         <i class="ti ti-file-text text-rose-600 text-sm"></i>
                                         <span class="truncate font-medium text-slate-700" x-text="editItem?.lampiran ? editItem.lampiran.split('/').pop() : 'Berkas Terlampir'"></span>
                                     </div>
-                                    <a :href="editItem?.lampiran_url" target="_blank" class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10.5px] font-bold text-cyan-700 hover:bg-cyan-50">
+                                    <a :href="editItem?.lampiran_url || ('/storage/' + editItem?.lampiran)" target="_blank" class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10.5px] font-bold text-cyan-700 hover:bg-cyan-50">
                                         Lihat
                                     </a>
                                 </div>
@@ -1443,6 +1496,17 @@
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 mb-1">Ganti Dokumen / Foto Bukti (Opsional)</label>
+                            <template x-if="editItem?.lampiran_url || editItem?.lampiran">
+                                <div class="mb-2 p-2 rounded-xl bg-slate-100/80 border border-slate-200 flex items-center justify-between text-xs">
+                                    <div class="flex items-center gap-1.5 truncate">
+                                        <i class="ti ti-file-text text-cyan-600 text-sm"></i>
+                                        <span class="truncate font-medium text-slate-700" x-text="editItem?.lampiran ? editItem.lampiran.split('/').pop() : 'Berkas Terlampir'"></span>
+                                    </div>
+                                    <a :href="editItem?.lampiran_url || ('/storage/' + editItem?.lampiran)" target="_blank" class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10.5px] font-bold text-cyan-700 hover:bg-cyan-50">
+                                        Lihat
+                                    </a>
+                                </div>
+                            </template>
                             <input type="file" name="lampiran" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 cursor-pointer">
                             <span class="text-[10.5px] text-slate-400 mt-0.5 block">Biarkan kosong jika tidak ingin mengubah dokumen lampiran.</span>
