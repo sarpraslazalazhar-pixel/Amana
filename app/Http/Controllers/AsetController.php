@@ -541,7 +541,7 @@ class AsetController extends Controller
     {
         $aset = Aset::with(['barang', 'divisi', 'lampiran'])->findOrFail($id);
         $kategoriList = Kategori::with('barang')->orderBy('nama_kategori')->get();
-        $barangList = Barang::where('kategori_id', $aset->kategori_id)->orderBy('nama_barang')->get();
+        $barangList = Barang::with('kategori')->orderBy('nama_barang')->get();
         $divisiList = Divisi::orderBy('kode_divisi')->get();
         $merkList = Merk::orderBy('nama_merk')->get();
         $lokasiList = Lokasi::orderBy('nama_lokasi')->get();
@@ -593,6 +593,10 @@ class AsetController extends Controller
             'deskripsi' => 'nullable|string',
             'keterangan_tambahan' => 'nullable|string',
             'foto_utama' => 'nullable|image|max:10240',
+            'sifat_barang' => 'required|in:D,S',
+            'barang_id' => 'required|exists:barang,id',
+            'cara_perolehan' => 'nullable|in:1,2',
+            'status_barang' => 'nullable|in:1,2',
         ]);
 
         // Tentukan Jenis Aset:
@@ -645,6 +649,7 @@ class AsetController extends Controller
             'deskripsi', 'tanggal_pembelian', 'toko_distributor', 'no_invoice',
             'jumlah_unit', 'harga_satuan', 'harga_total', 'umur_ekonomis_tahun',
             'nilai_residu', 'penyusutan_per_bulan', 'foto_utama', 'keterangan_tambahan', 'jenis',
+            'sifat_barang', 'barang_id', 'cara_perolehan', 'status_barang',
         ]);
 
         // 2. Deteksi perubahan Lokasi, Penanggung Jawab, atau Divisi untuk Riwayat Aset (Mutasi Fisik)
@@ -669,6 +674,31 @@ class AsetController extends Controller
             $jenisBaru = $jenis === 'kelolaan' ? 'Kelolaan' : 'Tetap (Hak Nazir)';
             $mutasiLogs[] = "Jenis aset dialihkan dari '{$jenisLama}' ke '{$jenisBaru}'";
         }
+        if ($aset->sifat_barang !== $request->sifat_barang) {
+            $sifatLama = $aset->sifat_barang === 'D' ? 'Dinamis' : 'Statis';
+            $sifatBaru = $request->sifat_barang === 'D' ? 'Dinamis' : 'Statis';
+            $mutasiLogs[] = "Sifat barang berubah dari '{$sifatLama}' ke '{$sifatBaru}'";
+        }
+        if ($aset->barang_id != $request->barang_id) {
+            $barangLama = $aset->barang->nama_barang ?? '-';
+            $barangBaru = Barang::find($request->barang_id)?->nama_barang ?? '-';
+            $mutasiLogs[] = "Nama barang berubah dari '{$barangLama}' ke '{$barangBaru}'";
+        }
+        if ($aset->kategori_id != $request->kategori_id) {
+            $kategoriLama = $aset->kategori->nama_kategori ?? '-';
+            $kategoriBaru = Kategori::find($request->kategori_id)?->nama_kategori ?? '-';
+            $mutasiLogs[] = "Kategori berubah dari '{$kategoriLama}' ke '{$kategoriBaru}'";
+        }
+        if ($request->filled('cara_perolehan') && $aset->cara_perolehan !== $request->cara_perolehan) {
+            $caraLama = $aset->cara_perolehan === '2' ? 'Hibah/Donasi' : 'Beli';
+            $caraBaru = $request->cara_perolehan === '2' ? 'Hibah/Donasi' : 'Beli';
+            $mutasiLogs[] = "Cara perolehan berubah dari '{$caraLama}' ke '{$caraBaru}'";
+        }
+        if ($request->filled('status_barang') && $aset->status_barang !== $request->status_barang) {
+            $statusLama = $aset->status_barang === '2' ? 'Second' : 'Baru';
+            $statusBaru = $request->status_barang === '2' ? 'Second' : 'Baru';
+            $mutasiLogs[] = "Kondisi perolehan berubah dari '{$statusLama}' ke '{$statusBaru}'";
+        }
 
         $oldKode = $aset->kode_aset;
         $mutationResult = null;
@@ -678,6 +708,14 @@ class AsetController extends Controller
             $targetDivisiId = $request->divisi_id ?? $aset->divisi_id;
             $targetPjId = $request->penanggung_jawab_id ?? $aset->penanggung_jawab_id;
             $targetLokasiId = $request->lokasi_id ?? $aset->lokasi_id;
+            // Terapkan nilai baru ke model agar KodeAsetGenerator membaca sifat/barang/kategori terbaru
+            $aset->sifat_barang = $request->sifat_barang ?? $aset->sifat_barang;
+            $aset->barang_id = $request->barang_id ?? $aset->barang_id;
+            $aset->kategori_id = $request->kategori_id ?? $aset->kategori_id;
+            $aset->cara_perolehan = $request->cara_perolehan ?? $aset->cara_perolehan;
+            $aset->status_barang = $request->status_barang ?? $aset->status_barang;
+            $aset->tanggal_pembelian = $request->tanggal_pembelian ?? $aset->tanggal_pembelian;
+            $aset->load(['barang', 'kategori']);
             $mutationResult = KodeAsetGenerator::regenerateForMutation(
                 $aset,
                 $targetPjId ? (int) $targetPjId : null,
@@ -730,6 +768,10 @@ class AsetController extends Controller
             'foto_utama' => $fotoPath,
             'keterangan_tambahan' => $request->keterangan_tambahan,
             'jenis' => $jenis,
+            'sifat_barang' => $request->sifat_barang,
+            'barang_id' => $request->barang_id,
+            'cara_perolehan' => $request->cara_perolehan ?? $aset->cara_perolehan,
+            'status_barang' => $request->status_barang ?? $aset->status_barang,
         ];
 
         if ($mutationResult && $mutationResult['changed']) {

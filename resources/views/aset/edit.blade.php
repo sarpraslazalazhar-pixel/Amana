@@ -154,7 +154,7 @@
 
                 <div class="sm:col-span-2">
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori Aset <span class="text-rose-500">*</span></label>
-                    <select name="kategori_id" required x-model="kategoriId" @change="onKategoriChange"
+                    <select name="kategori_id" required x-model="kategoriId" @change="onKategoriChange()"
                             class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors">
                         <option value="">-- Pilih Kategori --</option>
                         @foreach($kategoriList as $kat)
@@ -162,6 +162,47 @@
                                 {{ $kat->nama_kategori }} ({{ $kat->kode_kategori }})
                             </option>
                         @endforeach
+                    </select>
+                </div>
+
+                <!-- Sifat Barang Switch (Dinamis / Statis) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Sifat Barang <span class="text-rose-500">*</span></label>
+                    <select name="sifat_barang" required x-model="sifatBarang"
+                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors font-bold text-slate-800">
+                        <option value="D">D — Dinamis (Dipegang Khusus oleh Amil)</option>
+                        <option value="S">S — Statis (Ditempatkan di Ruangan/Bersama)</option>
+                    </select>
+                    <p class="text-[10px] text-slate-400 mt-1">Dinamis menggunakan NIA Amil, Statis menggunakan Kode Lokasi.</p>
+                </div>
+
+                <!-- Nama Barang / Jenis Barang -->
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Barang / Jenis Barang <span class="text-rose-500">*</span></label>
+                    <x-searchable-select name="barang_id"
+                                         :dynamicItems="'filteredBarang'"
+                                         model="barangId"
+                                         :required="true"
+                                         placeholder="-- Cari / Pilih Jenis Barang --" />
+                </div>
+
+                <!-- Cara Perolehan -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Cara Perolehan <span class="text-rose-500">*</span></label>
+                    <select name="cara_perolehan" required x-model="caraPerolehan"
+                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors">
+                        <option value="1">1 — Beli</option>
+                        <option value="2">2 — Hibah / Donasi Barang</option>
+                    </select>
+                </div>
+
+                <!-- Kondisi Perolehan -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kondisi Perolehan <span class="text-rose-500">*</span></label>
+                    <select name="status_barang" required x-model="statusBarang"
+                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors">
+                        <option value="1">1 — Baru</option>
+                        <option value="2">2 — Second</option>
                     </select>
                 </div>
             </div>
@@ -601,6 +642,12 @@ document.addEventListener('alpine:init', () => {
         nilaiResidu: @js((int) old('nilai_residu', (int) $aset->nilai_residu)),
         nilaiResiduDisplay: @js((int) old('nilai_residu', (int) $aset->nilai_residu) > 0 ? number_format((float) str_replace('.', '', (string) old('nilai_residu', (int) $aset->nilai_residu)), 0, ',', '.') : ''),
         merkId: @js((string) old('merk_id', $aset->merk_id)),
+        sifatBarang: @js((string) old('sifat_barang', $aset->sifat_barang ?? 'D')),
+        barangId: @js((string) old('barang_id', $aset->barang_id)),
+        allBarang: @js($barangList->map(fn($b) => ['id' => $b->id, 'code' => $b->kode_barang, 'title' => $b->nama_barang, 'subtitle' => $b->kategori?->nama_kategori ?? '', 'kategori_id' => $b->kategori_id])->values()->all()),
+        filteredBarang: [],
+        caraPerolehan: @js((string) old('cara_perolehan', $aset->cara_perolehan ?? '1')),
+        statusBarang: @js((string) old('status_barang', $aset->status_barang ?? '1')),
         merkItemsDynamic: @js($merkItems),
         merkModalOpen: false,
         merkSaving: false,
@@ -617,6 +664,7 @@ document.addEventListener('alpine:init', () => {
             if (this.isTanah) {
                 this.umurTahun = 0;
             }
+            this.filterBarang(false);
         },
 
         get selectedKategori() {
@@ -634,6 +682,16 @@ document.addEventListener('alpine:init', () => {
         onKategoriChange() {
             if (this.isTanah) {
                 this.umurTahun = 0;
+            }
+            this.filterBarang(true);
+        },
+
+        filterBarang(resetSelection) {
+            this.filteredBarang = (this.allBarang || [])
+                .filter(b => String(b.kategori_id) === String(this.kategoriId))
+                .map(b => ({ id: b.id, code: b.code, title: b.title, subtitle: b.subtitle }));
+            if (resetSelection) {
+                this.barangId = this.filteredBarang.length === 1 ? String(this.filteredBarang[0].id) : '';
             }
         },
 

@@ -136,6 +136,8 @@ class ImageOptimizationFeatureTest extends TestCase
 
         $response = $this->actingAs($this->admin)->put(route('aset.update', $aset->id), [
             'nama_aset' => 'Laptop ROG Baru',
+            'sifat_barang' => $aset->sifat_barang,
+            'barang_id' => $aset->barang_id,
             'kategori_id' => $this->kategori->id,
             'merk_id' => $this->merk->id,
             'lokasi_id' => $this->lokasi->id,

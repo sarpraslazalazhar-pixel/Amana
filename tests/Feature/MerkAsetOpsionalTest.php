@@ -175,6 +175,8 @@ class MerkAsetOpsionalTest extends TestCase
 
         $response = $this->actingAs($this->admin)->put(route('aset.update', $aset->id), [
             'nama_aset' => 'Laptop Dell Inspiron Updated',
+            'sifat_barang' => $aset->sifat_barang,
+            'barang_id' => $aset->barang_id,
             'divisi_id' => $this->divisi->id,
             'kategori_id' => $this->kategori->id,
             'merk_id' => '', // kosongkan merk

@@ -351,4 +351,163 @@ class AsetMutasiKodeTest extends TestCase
         $this->assertEquals($this->divisi2->id, $aset->divisi_id);
         $this->assertEquals($this->pj1->id, $aset->penanggung_jawab_id);
     }
+    private function baseUpdatePayload(Aset $aset, array $overrides = []): array
+    {
+        return array_merge([
+            'nama_aset'           => $aset->nama_aset,
+            'sifat_barang'        => $aset->sifat_barang,
+            'barang_id'           => $aset->barang_id,
+            'kategori_id'         => $aset->kategori_id,
+            'divisi_id'           => $aset->divisi_id,
+            'cara_perolehan'      => $aset->cara_perolehan,
+            'status_barang'       => $aset->status_barang,
+            'merk_id'             => $aset->merk_id,
+            'lokasi_id'           => $aset->lokasi_id,
+            'penanggung_jawab_id' => $aset->penanggung_jawab_id,
+            'tanggal_pembelian'   => '2025-01-15',
+            'toko_distributor'    => 'Store',
+            'jumlah_unit'         => 1,
+            'harga_satuan'        => 10000000,
+            'umur_ekonomis_tahun' => 4,
+            'jenis'               => $aset->jenis,
+        ], $overrides);
+    }
+
+    public function test_edit_form_menampilkan_sifat_barang_dan_nama_barang()
+    {
+        $aset = Aset::create([
+            'nama_aset'           => 'Monitor Test',
+            'sifat_barang'        => 'S',
+            'kode_aset'           => 'EL14S111211202501',
+            'kategori_id'         => $this->kategori->id,
+            'barang_id'           => $this->barang->id,
+            'divisi_id'           => $this->divisi1->id,
+            'merk_id'             => $this->merk->id,
+            'lokasi_id'           => $this->lokasi1->id,
+            'penanggung_jawab_id' => $this->pj1->id,
+            'cara_perolehan'      => '1',
+            'status_barang'       => '1',
+            'tanggal_pembelian'   => '2025-01-15',
+            'toko_distributor'    => 'Store',
+            'jumlah_unit'         => 1,
+            'harga_satuan'        => 5000000,
+            'harga_total'         => 5000000,
+            'umur_ekonomis_tahun' => 4,
+            'penyusutan_per_bulan'=> 104166.67,
+            'nomor_urut'          => 1,
+            'status'              => 'aktif',
+            'jenis'               => 'tetap',
+            'created_by'          => $this->admin->id,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('aset.edit', $aset->id));
+
+        $response->assertOk();
+        $response->assertSee('sifat_barang');
+        $response->assertSee('barang_id');
+        $response->assertSee('Dinamis');
+        $response->assertSee('Statis');
+    }
+
+    public function test_edit_sifat_barang_dari_S_ke_D_mengubah_kode_dan_mencatat_riwayat()
+    {
+        $initialCode = 'EL14S111211202501';
+        $aset = Aset::create([
+            'nama_aset'           => 'Printer Kantor',
+            'sifat_barang'        => 'S',
+            'kode_aset'           => $initialCode,
+            'kategori_id'         => $this->kategori->id,
+            'barang_id'           => $this->barang->id,
+            'divisi_id'           => $this->divisi1->id,
+            'merk_id'             => $this->merk->id,
+            'lokasi_id'           => $this->lokasi1->id,
+            'penanggung_jawab_id' => $this->pj1->id,
+            'cara_perolehan'      => '1',
+            'status_barang'       => '1',
+            'tanggal_pembelian'   => '2025-01-15',
+            'toko_distributor'    => 'Store',
+            'jumlah_unit'         => 1,
+            'harga_satuan'        => 5000000,
+            'harga_total'         => 5000000,
+            'umur_ekonomis_tahun' => 4,
+            'penyusutan_per_bulan'=> 104166.67,
+            'nomor_urut'          => 1,
+            'status'              => 'aktif',
+            'jenis'               => 'tetap',
+            'created_by'          => $this->admin->id,
+        ]);
+
+        // Ubah sifat S → D, PJ tetap pj1 (kode 050), divisi1 (kode 2)
+        $response = $this->actingAs($this->admin)->put(
+            route('aset.update', $aset->id),
+            $this->baseUpdatePayload($aset, ['sifat_barang' => 'D'])
+        );
+
+        $response->assertRedirect(route('aset.show', $aset->id));
+        $aset->refresh();
+
+        $this->assertEquals('D', $aset->sifat_barang);
+        // Kode ke-3 berubah dari S ke D; komponen ke-4 dari lokasi (111) ke PIC (050)
+        $this->assertEquals('EL14D050211202501', $aset->kode_aset);
+        $this->assertEquals($initialCode, $aset->kode_aset_lama);
+        $this->assertDatabaseHas('riwayat_aset', [
+            'aset_id'             => $aset->id,
+            'kode_aset_sebelumnya'=> $initialCode,
+            'kode_aset_baru'      => 'EL14D050211202501',
+        ]);
+    }
+
+    public function test_edit_barang_id_mengubah_komponen_kode_aset()
+    {
+        $barang2 = Barang::create([
+            'nama_barang' => 'Monitor',
+            'kode_barang' => '22',
+            'kategori_id' => $this->kategori->id,
+        ]);
+
+        $initialCode = 'EL14D050211202501';
+        $aset = Aset::create([
+            'nama_aset'           => 'Laptop Edit Barang',
+            'sifat_barang'        => 'D',
+            'kode_aset'           => $initialCode,
+            'kategori_id'         => $this->kategori->id,
+            'barang_id'           => $this->barang->id,
+            'divisi_id'           => $this->divisi1->id,
+            'merk_id'             => $this->merk->id,
+            'lokasi_id'           => $this->lokasi1->id,
+            'penanggung_jawab_id' => $this->pj1->id,
+            'cara_perolehan'      => '1',
+            'status_barang'       => '1',
+            'tanggal_pembelian'   => '2025-01-15',
+            'toko_distributor'    => 'Store',
+            'jumlah_unit'         => 1,
+            'harga_satuan'        => 10000000,
+            'harga_total'         => 10000000,
+            'umur_ekonomis_tahun' => 4,
+            'penyusutan_per_bulan'=> 208333.33,
+            'nomor_urut'          => 1,
+            'status'              => 'aktif',
+            'jenis'               => 'tetap',
+            'created_by'          => $this->admin->id,
+        ]);
+
+        // Ubah barang dari kode 14 (Laptop) ke kode 22 (Monitor)
+        $response = $this->actingAs($this->admin)->put(
+            route('aset.update', $aset->id),
+            $this->baseUpdatePayload($aset, ['barang_id' => $barang2->id])
+        );
+
+        $response->assertRedirect(route('aset.show', $aset->id));
+        $aset->refresh();
+
+        $this->assertEquals($barang2->id, $aset->barang_id);
+        // Komponen ke-2 berubah dari 14 ke 22
+        $this->assertEquals('EL22D050211202501', $aset->kode_aset);
+        $this->assertEquals($initialCode, $aset->kode_aset_lama);
+        $this->assertDatabaseHas('riwayat_aset', [
+            'aset_id'             => $aset->id,
+            'kode_aset_sebelumnya'=> $initialCode,
+            'kode_aset_baru'      => 'EL22D050211202501',
+        ]);
+    }
 }

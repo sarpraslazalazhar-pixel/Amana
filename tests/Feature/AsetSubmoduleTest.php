@@ -43,16 +43,23 @@ class AsetSubmoduleTest extends TestCase
         ]);
 
         $kategori = Kategori::create(['nama_kategori' => 'Elektronik', 'kode_kategori' => 'ELK']);
+        $barang = Barang::create(['nama_barang' => 'Laptop', 'kode_barang' => '14', 'kategori_id' => $kategori->id]);
+        $divisi = Divisi::create(['nama_divisi' => 'Sekretariat', 'kode_divisi' => '2']);
         $merk = Merk::create(['nama_merk' => 'Asus']);
         $this->lokasi1 = Lokasi::create(['nama_lokasi' => 'Ruang IT', 'kode_lokasi' => 'IT01']);
         $this->lokasi2 = Lokasi::create(['nama_lokasi' => 'Ruang HR', 'kode_lokasi' => 'HR01']);
-        $this->pj1 = PenanggungJawab::create(['nama' => 'Budi Santoso', 'jabatan' => 'Staff IT']);
-        $this->pj2 = PenanggungJawab::create(['nama' => 'Siti Rahma', 'jabatan' => 'Staff HR']);
+        $this->pj1 = PenanggungJawab::create(['nama' => 'Budi Santoso', 'jabatan' => 'Staff IT', 'divisi_id' => $divisi->id]);
+        $this->pj2 = PenanggungJawab::create(['nama' => 'Siti Rahma', 'jabatan' => 'Staff HR', 'divisi_id' => $divisi->id]);
 
         $this->aset = Aset::create([
             'nama_aset' => 'Laptop ROG',
             'kode_aset' => 'ELK-2026-IT01-0001',
+            'sifat_barang' => 'D',
             'kategori_id' => $kategori->id,
+            'barang_id' => $barang->id,
+            'divisi_id' => $divisi->id,
+            'cara_perolehan' => '1',
+            'status_barang' => '1',
             'merk_id' => $merk->id,
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
@@ -233,6 +240,8 @@ class AsetSubmoduleTest extends TestCase
             'umur_ekonomis_tahun' => 5,
             'nilai_residu' => 1000000,
             'jenis' => 'tetap',
+            'sifat_barang' => $this->aset->sifat_barang,
+            'barang_id' => $this->aset->barang_id,
         ]);
 
         $response->assertRedirect(route('aset.show', $this->aset->id));
@@ -261,6 +270,8 @@ class AsetSubmoduleTest extends TestCase
             'umur_ekonomis_tahun' => 5,
             'nilai_residu' => 0,
             'jenis' => 'tetap',
+            'sifat_barang' => $this->aset->sifat_barang,
+            'barang_id' => $this->aset->barang_id,
             'foto_utama' => $file,
         ]);
 
@@ -385,6 +396,8 @@ class AsetSubmoduleTest extends TestCase
             'jumlah_unit' => 1,
             'harga_satuan' => 15000000,
             'umur_ekonomis_tahun' => 5,
+            'sifat_barang' => $this->aset->sifat_barang,
+            'barang_id' => $this->aset->barang_id,
         ]);
 
         $response->assertRedirect(route('aset.show', $this->aset->id));

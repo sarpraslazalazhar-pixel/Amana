@@ -171,6 +171,8 @@ class GedungTanahNominalOpsionalTest extends TestCase
 
         $response = $this->actingAs($this->admin)->put(route('aset.update', $aset->id), [
             'nama_aset' => 'Gedung Lama Diperbarui',
+            'sifat_barang' => $aset->sifat_barang,
+            'barang_id' => $aset->barang_id,
             'kategori_id' => $this->kategoriGD->id,
             'merk_id' => $this->merk->id,
             'lokasi_id' => $this->lokasi->id,
