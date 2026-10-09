@@ -142,4 +142,38 @@ class MasterLokasiTest extends TestCase
 
         $this->assertDatabaseHas('lokasi', ['id' => $lokasi->id]);
     }
+
+    public function test_super_admin_dapat_mengubah_kode_lokasi_dengan_angka_tanpa_padding(): void
+    {
+        $admin = User::factory()->create(['role' => 'super_admin']);
+        $lokasi = Lokasi::where('kode_lokasi', '100')->first();
+
+        $response = $this->actingAs($admin)->put(route('data.lokasi.update', $lokasi->id), [
+            'kode_lokasi' => '5',
+            'nama_lokasi' => 'Kantor Cirendeu Unit 5',
+        ]);
+
+        $response->assertRedirect(route('data.lokasi.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('lokasi', [
+            'id' => $lokasi->id,
+            'kode_lokasi' => '005',
+        ]);
+    }
+
+    public function test_update_lokasi_gagal_validasi_dan_tidak_crash_jika_kode_lokasi_sudah_digunakan(): void
+    {
+        $admin = User::factory()->create(['role' => 'super_admin']);
+        // 100 sudah ada di seeder, 110 sudah ada di seeder
+        $lokasi = Lokasi::where('kode_lokasi', '110')->first();
+
+        // Coba ganti kode_lokasi ke '100' (atau '100') yang sudah dipakai lokasi lain
+        $response = $this->actingAs($admin)->put(route('data.lokasi.update', $lokasi->id), [
+            'kode_lokasi' => '100',
+            'nama_lokasi' => 'Ruang Tabrakan Kode',
+        ]);
+
+        $response->assertSessionHasErrors(['kode_lokasi']);
+    }
 }

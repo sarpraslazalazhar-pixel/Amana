@@ -83,7 +83,9 @@ class LampiranAsetController extends Controller
             return back()->withErrors(['lampiran' => 'File tidak ditemukan di server.']);
         }
 
-        return $disk->download($lampiran->file_path, $lampiran->file_name);
+        $safeFileName = str_replace(['/', '\\', '"', "\n", "\r"], '_', $lampiran->file_name);
+
+        return $disk->download($lampiran->file_path, $safeFileName);
     }
 
     /**

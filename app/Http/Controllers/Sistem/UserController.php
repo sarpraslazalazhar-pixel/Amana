@@ -84,6 +84,17 @@ class UserController extends Controller
     {
         $this->authorizeSuperAdmin();
 
+        if ($request->filled('email')) {
+            $request->merge([
+                'email' => strtolower(trim($request->email)),
+            ]);
+        }
+        if ($request->filled('name')) {
+            $request->merge([
+                'name' => trim($request->name),
+            ]);
+        }
+
         $request->validate([
             'name' => 'required|string|max:150',
             'email' => 'required|email|max:150|unique:users,email',
@@ -94,8 +105,8 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
-            'name' => trim($request->name),
-            'email' => strtolower(trim($request->email)),
+            'name' => $request->name,
+            'email' => $request->email,
             'role' => $request->role,
             'password' => Hash::make($request->password),
             'is_active' => $request->boolean('is_active', true),
@@ -125,6 +136,17 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $this->authorizeSuperAdmin();
+
+        if ($request->filled('email')) {
+            $request->merge([
+                'email' => strtolower(trim($request->email)),
+            ]);
+        }
+        if ($request->filled('name')) {
+            $request->merge([
+                'name' => trim($request->name),
+            ]);
+        }
 
         $request->validate([
             'name' => 'required|string|max:150',
@@ -161,8 +183,8 @@ class UserController extends Controller
         }
 
         $user->update([
-            'name' => trim($request->name),
-            'email' => strtolower(trim($request->email)),
+            'name' => $request->name,
+            'email' => $request->email,
             'role' => $request->role,
             'is_active' => $request->boolean('is_active'),
         ]);

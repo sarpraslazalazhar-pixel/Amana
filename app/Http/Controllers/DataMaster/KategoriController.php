@@ -85,16 +85,20 @@ class KategoriController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->filled('kode_kategori')) {
+            $request->merge([
+                'kode_kategori' => strtoupper(trim($request->kode_kategori))
+            ]);
+        }
+
         $request->validate([
             'kode_kategori' => 'required|string|size:2|unique:kategori,kode_kategori',
             'nama_kategori' => 'required|string|max:100',
             'keterangan' => 'nullable|string',
         ]);
 
-        $kode = strtoupper(trim($request->kode_kategori));
-
         $kategori = Kategori::create([
-            'kode_kategori' => $kode,
+            'kode_kategori' => $request->kode_kategori,
             'nama_kategori' => $request->nama_kategori,
             'keterangan' => $request->keterangan,
         ]);
@@ -109,16 +113,20 @@ class KategoriController extends Controller
     {
         $kategori = Kategori::findOrFail($id);
 
+        if ($request->filled('kode_kategori')) {
+            $request->merge([
+                'kode_kategori' => strtoupper(trim($request->kode_kategori))
+            ]);
+        }
+
         $request->validate([
             'kode_kategori' => 'required|string|size:2|unique:kategori,kode_kategori,'.$kategori->id,
             'nama_kategori' => 'required|string|max:100',
             'keterangan' => 'nullable|string',
         ]);
 
-        $kode = strtoupper(trim($request->kode_kategori));
-
         $kategori->update([
-            'kode_kategori' => $kode,
+            'kode_kategori' => $request->kode_kategori,
             'nama_kategori' => $request->nama_kategori,
             'keterangan' => $request->keterangan,
         ]);
@@ -163,6 +171,11 @@ class KategoriController extends Controller
     public function storeBarang(Request $request, $kategori_id)
     {
         $kategori = Kategori::findOrFail($kategori_id);
+        if ($request->filled('kode_barang')) {
+            $request->merge([
+                'kode_barang' => str_pad(trim($request->kode_barang), 2, '0', STR_PAD_LEFT)
+            ]);
+        }
 
         $request->validate([
             'kode_barang' => 'required|string|size:2',
@@ -170,7 +183,7 @@ class KategoriController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
-        $kodeBarang = str_pad(trim($request->kode_barang), 2, '0', STR_PAD_LEFT);
+        $kodeBarang = $request->kode_barang;
 
         $exists = Barang::where('kategori_id', $kategori->id)
             ->where('kode_barang', $kodeBarang)
@@ -197,6 +210,11 @@ class KategoriController extends Controller
     public function updateBarang(Request $request, $id)
     {
         $barang = Barang::with('kategori')->findOrFail($id);
+        if ($request->filled('kode_barang')) {
+            $request->merge([
+                'kode_barang' => str_pad(trim($request->kode_barang), 2, '0', STR_PAD_LEFT)
+            ]);
+        }
 
         $request->validate([
             'kode_barang' => 'required|string|size:2',
@@ -204,7 +222,7 @@ class KategoriController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
-        $kodeBarang = str_pad(trim($request->kode_barang), 2, '0', STR_PAD_LEFT);
+        $kodeBarang = $request->kode_barang;
 
         $exists = Barang::where('kategori_id', $barang->kategori_id)
             ->where('kode_barang', $kodeBarang)

@@ -36,8 +36,17 @@ class MerkController extends Controller
     {
         $this->authorizeAdmin();
 
+        $request->merge(['nama_merk' => trim($request->nama_merk)]);
+
         $validated = $request->validate([
-            'nama_merk' => 'required|string|max:150|unique:merk,nama_merk',
+            'nama_merk' => [
+                'required',
+                'string',
+                'max:150',
+                \Illuminate\Validation\Rule::unique('merk', 'nama_merk')->where(function ($query) use ($request) {
+                    return $query->whereRaw('LOWER(nama_merk) = ?', strtolower($request->nama_merk));
+                })
+            ],
         ]);
 
         $merk = Merk::create($validated);
@@ -60,8 +69,17 @@ class MerkController extends Controller
 
         $merk = Merk::findOrFail($id);
 
+        $request->merge(['nama_merk' => trim($request->nama_merk)]);
+
         $validated = $request->validate([
-            'nama_merk' => 'required|string|max:150|unique:merk,nama_merk,'.$merk->id,
+            'nama_merk' => [
+                'required',
+                'string',
+                'max:150',
+                \Illuminate\Validation\Rule::unique('merk', 'nama_merk')->ignore($merk->id)->where(function ($query) use ($request) {
+                    return $query->whereRaw('LOWER(nama_merk) = ?', strtolower($request->nama_merk));
+                })
+            ],
         ]);
 
         $lama = $merk->nama_merk;

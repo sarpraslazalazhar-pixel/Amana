@@ -29,6 +29,11 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
+        $request->merge([
+            'name' => trim($request->name),
+            'email' => strtolower(trim($request->email)),
+        ]);
+
         $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'email' => [
@@ -46,8 +51,8 @@ class ProfileController extends Controller
 
         $oldEmail = $user->email;
         $user->update([
-            'name' => trim($request->name),
-            'email' => strtolower(trim($request->email)),
+            'name' => $request->name,
+            'email' => $request->email,
         ]);
 
         AuditLogger::log(

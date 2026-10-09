@@ -225,6 +225,32 @@ class AsetSubmoduleTest extends TestCase
         $this->assertEquals('selesai', $jurnal->status_penanganan);
     }
 
+    public function test_update_aset_tanpa_mengirim_cara_perolehan_dan_status_barang_tidak_error_null_constraint(): void
+    {
+        $response = $this->actingAs($this->admin)->put(route('aset.update', $this->aset->id), [
+            'nama_aset' => 'Aset Diubah Nama',
+            'divisi_id' => $this->aset->divisi_id,
+            'kategori_id' => $this->aset->kategori_id,
+            'barang_id' => $this->aset->barang_id,
+            'sifat_barang' => 'D',
+            'penanggung_jawab_id' => $this->aset->penanggung_jawab_id,
+            'lokasi_id' => $this->aset->lokasi_id,
+            'tanggal_pembelian' => '2026-09-25',
+            'toko_distributor' => 'Vendor',
+            'jumlah_unit' => 1,
+            'harga_satuan' => 10000000,
+            'umur_ekonomis_tahun' => 4,
+            'jenis' => 'kelolaan',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('aset.show', $this->aset->id));
+
+        $this->aset->refresh();
+        $this->assertNotNull($this->aset->cara_perolehan);
+        $this->assertNotNull($this->aset->status_barang);
+    }
+
     public function test_update_aset_tanpa_foto(): void
     {
         $response = $this->actingAs($this->admin)->put(route('aset.update', $this->aset->id), [

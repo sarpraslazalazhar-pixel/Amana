@@ -294,8 +294,8 @@ class AsetController extends Controller
             'kategori_id' => 'required|exists:kategori,id',
             'barang_id' => 'required|exists:barang,id',
             'divisi_id' => 'required|exists:divisi,id',
-            'cara_perolehan' => 'required|in:1,2',
-            'status_barang' => 'required|in:1,2',
+            'cara_perolehan' => 'nullable|in:1,2',
+            'status_barang' => 'nullable|in:1,2',
             'merk_id' => 'nullable|exists:merk,id',
             'lokasi_id' => 'required|exists:lokasi,id',
             'penanggung_jawab_id' => 'required|exists:penanggung_jawab,id',
@@ -337,8 +337,8 @@ class AsetController extends Controller
             'penanggung_jawab_id' => $request->penanggung_jawab_id,
             'lokasi_id' => $request->lokasi_id,
             'divisi_id' => $request->divisi_id,
-            'cara_perolehan' => $request->cara_perolehan,
-            'status_barang' => $request->status_barang,
+            'cara_perolehan' => $request->filled('cara_perolehan') ? $request->cara_perolehan : '1',
+            'status_barang' => $request->filled('status_barang') ? $request->status_barang : '1',
             'tanggal_pembelian' => $request->tanggal_pembelian,
         ]);
 
@@ -377,8 +377,8 @@ class AsetController extends Controller
             'kategori_id' => $request->kategori_id,
             'barang_id' => $request->barang_id,
             'divisi_id' => $request->divisi_id,
-            'cara_perolehan' => $request->cara_perolehan,
-            'status_barang' => $request->status_barang,
+            'cara_perolehan' => $request->filled('cara_perolehan') ? $request->cara_perolehan : '1',
+            'status_barang' => $request->filled('status_barang') ? $request->status_barang : '1',
             'nomor_urut' => $nomorUrut,
             'merk_id' => $request->filled('merk_id') ? $request->merk_id : null,
             'tipe_model' => $request->tipe_model,
@@ -712,8 +712,8 @@ class AsetController extends Controller
             $aset->sifat_barang = $request->sifat_barang ?? $aset->sifat_barang;
             $aset->barang_id = $request->barang_id ?? $aset->barang_id;
             $aset->kategori_id = $request->kategori_id ?? $aset->kategori_id;
-            $aset->cara_perolehan = $request->cara_perolehan ?? $aset->cara_perolehan;
-            $aset->status_barang = $request->status_barang ?? $aset->status_barang;
+            $aset->cara_perolehan = $request->filled('cara_perolehan') ? $request->cara_perolehan : $aset->cara_perolehan;
+            $aset->status_barang = $request->filled('status_barang') ? $request->status_barang : $aset->status_barang;
             $aset->tanggal_pembelian = $request->tanggal_pembelian ?? $aset->tanggal_pembelian;
             $aset->load(['barang', 'kategori']);
             $mutationResult = KodeAsetGenerator::regenerateForMutation(
@@ -770,8 +770,8 @@ class AsetController extends Controller
             'jenis' => $jenis,
             'sifat_barang' => $request->sifat_barang,
             'barang_id' => $request->barang_id,
-            'cara_perolehan' => $request->cara_perolehan ?? $aset->cara_perolehan,
-            'status_barang' => $request->status_barang ?? $aset->status_barang,
+            'cara_perolehan' => $request->filled('cara_perolehan') ? $request->cara_perolehan : $aset->cara_perolehan,
+            'status_barang' => $request->filled('status_barang') ? $request->status_barang : $aset->status_barang,
         ];
 
         if ($mutationResult && $mutationResult['changed']) {

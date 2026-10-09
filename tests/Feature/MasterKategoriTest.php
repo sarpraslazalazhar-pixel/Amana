@@ -132,6 +132,27 @@ class MasterKategoriTest extends TestCase
         ]);
     }
 
+    public function test_validasi_kode_barang_tanpa_padding_ditangani_dengan_benar(): void
+    {
+        $admin = User::factory()->create(['role' => 'super_admin']);
+        $kategori = Kategori::first();
+
+        // Menambahkan barang pertama dengan kode '98'
+        Barang::create([
+            'kategori_id' => $kategori->id,
+            'kode_barang' => '98',
+            'nama_barang' => 'Barang Pertama',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('data.kategori.barang.store', $kategori->id), [
+            'kode_barang' => '98', // testing existing code
+            'nama_barang' => 'Barang Duplikat',
+            'keterangan' => 'Test padding',
+        ]);
+
+        $response->assertSessionHasErrors(['error' => "Kode barang [98] sudah digunakan pada kategori {$kategori->nama_kategori}."]);
+    }
+
     public function test_barang_dapat_dihapus_jika_tidak_memiliki_aset(): void
     {
         $admin = User::factory()->create(['role' => 'super_admin']);

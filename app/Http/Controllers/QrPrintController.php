@@ -72,8 +72,10 @@ class QrPrintController extends Controller
         $preSelectedIds = [];
         if ($request->filled('selected_ids')) {
             $raw = $request->selected_ids;
-            $preSelectedIds = is_array($raw) ? $raw : explode(',', (string) $raw);
-            $preSelectedIds = array_filter(array_map('trim', $preSelectedIds));
+            $arr = is_array($raw) ? $raw : explode(',', (string) $raw);
+            $preSelectedIds = array_filter(array_map(function($id) {
+                return is_string($id) || is_numeric($id) ? trim((string)$id) : null;
+            }, $arr));
         }
 
         return view('aset.qr-print.index', compact(
@@ -94,7 +96,7 @@ class QrPrintController extends Controller
     public function preview(Request $request)
     {
         $request->validate([
-            'aset_ids' => 'required|array|min:1',
+            'aset_ids' => 'required|array|min:1|max:500',
             'aset_ids.*' => 'required|integer|exists:aset,id',
             'template_key' => 'required|string',
         ]);
@@ -131,7 +133,7 @@ class QrPrintController extends Controller
     public function downloadPdf(Request $request)
     {
         $request->validate([
-            'aset_ids' => 'required|array|min:1',
+            'aset_ids' => 'required|array|min:1|max:500',
             'aset_ids.*' => 'required|integer|exists:aset,id',
             'template_key' => 'required|string',
         ]);
@@ -183,7 +185,7 @@ class QrPrintController extends Controller
     public function printDirect(Request $request)
     {
         $request->validate([
-            'aset_ids' => 'required|array|min:1',
+            'aset_ids' => 'required|array|min:1|max:500',
             'aset_ids.*' => 'required|integer|exists:aset,id',
             'template_key' => 'required|string',
         ]);

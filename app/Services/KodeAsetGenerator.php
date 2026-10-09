@@ -51,8 +51,8 @@ class KodeAsetGenerator
 
         $urutanPad = str_pad((string) $nomorUrut, 2, '0', STR_PAD_LEFT);
 
-        $kodeAset = sprintf(
-            '%s%s%s%s%s%s%s%s%s',
+        $baseKode = sprintf(
+            '%s%s%s%s%s%s%s%s',
             $validated['kode_kategori'],
             $validated['kode_barang'],
             $validated['sifat_barang'],
@@ -60,9 +60,19 @@ class KodeAsetGenerator
             $validated['kode_divisi'],
             $validated['cara_perolehan'],
             $validated['status_barang'],
-            $validated['tahun'],
-            $urutanPad
+            $validated['tahun']
         );
+
+        $kodeAset = $baseKode . $urutanPad;
+
+        while (Aset::where('kode_aset', $kodeAset)->exists()) {
+            $nomorUrut++;
+            if ($nomorUrut > 99) {
+                throw new \InvalidArgumentException('Batas nomor urut (99) untuk kombinasi ini telah tercapai.');
+            }
+            $urutanPad = str_pad((string) $nomorUrut, 2, '0', STR_PAD_LEFT);
+            $kodeAset = $baseKode . $urutanPad;
+        }
 
         return [
             'kode_aset' => $kodeAset,
@@ -184,8 +194,8 @@ class KodeAsetGenerator
         }
         $urutanPad = str_pad((string) $nomorUrut, 2, '0', STR_PAD_LEFT);
 
-        $newKodeAset = sprintf(
-            '%s%s%s%s%s%s%s%s%s',
+        $baseKode = sprintf(
+            '%s%s%s%s%s%s%s%s',
             $kodeKategori,
             $kodeBarang,
             $sifatBarang,
@@ -193,9 +203,19 @@ class KodeAsetGenerator
             $kodeDivisi,
             $caraPerolehan,
             $statusBarang,
-            $tahun,
-            $urutanPad
+            $tahun
         );
+
+        $newKodeAset = $baseKode . $urutanPad;
+
+        while (Aset::where('kode_aset', $newKodeAset)->where('id', '!=', $aset->id)->exists()) {
+            $nomorUrut++;
+            if ($nomorUrut > 99) {
+                throw new \InvalidArgumentException('Batas nomor urut (99) untuk mutasi aset ini telah tercapai.');
+            }
+            $urutanPad = str_pad((string) $nomorUrut, 2, '0', STR_PAD_LEFT);
+            $newKodeAset = $baseKode . $urutanPad;
+        }
 
         $isChanged = ($newKodeAset !== $aset->kode_aset);
 

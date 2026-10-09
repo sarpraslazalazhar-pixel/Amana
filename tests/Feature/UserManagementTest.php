@@ -171,6 +171,25 @@ class UserManagementTest extends TestCase
         ]);
     }
 
+    public function test_validation_email_normalisation_unique_bug(): void
+    {
+        User::factory()->create([
+            'name' => 'Existing User',
+            'email' => 'user@example.com',
+            'role' => 'viewer',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('sistem.users.store'), [
+            'name' => 'New User',
+            'email' => '  USER@EXAMPLE.COM',
+            'role' => 'viewer',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors(['email']);
+    }
+
     public function test_validation_errors_when_creating_user(): void
     {
         $response = $this->actingAs($this->admin)->post(route('sistem.users.store'), [

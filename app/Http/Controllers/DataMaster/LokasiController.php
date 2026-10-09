@@ -65,6 +65,12 @@ class LokasiController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->filled('kode_lokasi')) {
+            $request->merge([
+                'kode_lokasi' => str_pad(trim($request->kode_lokasi), 3, '0', STR_PAD_LEFT)
+            ]);
+        }
+
         $request->validate([
             'kode_lokasi' => 'required|string|max:10|unique:lokasi,kode_lokasi',
             'nama_lokasi' => 'required|string|max:150',
@@ -74,10 +80,8 @@ class LokasiController extends Controller
             'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
-        $kode = str_pad(trim($request->kode_lokasi), 3, '0', STR_PAD_LEFT);
-
         $lokasi = Lokasi::create([
-            'kode_lokasi' => $kode,
+            'kode_lokasi' => $request->kode_lokasi,
             'nama_lokasi' => $request->nama_lokasi,
             'gedung' => $request->gedung,
             'alamat_lengkap' => $request->alamat_lengkap,
@@ -94,6 +98,12 @@ class LokasiController extends Controller
     {
         $lokasi = Lokasi::findOrFail($id);
 
+        if ($request->filled('kode_lokasi')) {
+            $request->merge([
+                'kode_lokasi' => str_pad(trim($request->kode_lokasi), 3, '0', STR_PAD_LEFT)
+            ]);
+        }
+
         $request->validate([
             'kode_lokasi' => 'required|string|max:10|unique:lokasi,kode_lokasi,'.$lokasi->id,
             'nama_lokasi' => 'required|string|max:150',
@@ -103,10 +113,8 @@ class LokasiController extends Controller
             'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
-        $kode = str_pad(trim($request->kode_lokasi), 3, '0', STR_PAD_LEFT);
-
         $lokasi->update([
-            'kode_lokasi' => $kode,
+            'kode_lokasi' => $request->kode_lokasi,
             'nama_lokasi' => $request->nama_lokasi,
             'gedung' => $request->gedung,
             'alamat_lengkap' => $request->alamat_lengkap,

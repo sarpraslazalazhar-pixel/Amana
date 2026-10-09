@@ -48,9 +48,13 @@ class PublicQrController extends Controller
             $riwayatOld = RiwayatAset::where('kode_aset_sebelumnya', $kode_aset)->first();
             if ($riwayatOld) {
                 $aset = Aset::with($withRelations)->find($riwayatOld->aset_id);
-                $isMutasiRedirect = true;
-                $oldScannedCode = $kode_aset;
-            } else {
+                if ($aset) {
+                    $isMutasiRedirect = true;
+                    $oldScannedCode = $kode_aset;
+                }
+            }
+            
+            if (! $aset) {
                 $aset = Aset::with($withRelations)
                     ->where('kode_aset_lama', $kode_aset)
                     ->orWhere('kode_sistem_lama', $kode_aset)

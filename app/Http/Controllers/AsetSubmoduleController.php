@@ -171,7 +171,7 @@ class AsetSubmoduleController extends Controller
             'tipe_agenda' => 'required|in:mingguan,bulanan,tahunan,tanggal_tertentu',
             'nama_agenda' => 'required|string|max:255',
             'hari' => 'nullable|string|in:senin,selasa,rabu,kamis,jumat,sabtu,minggu',
-            'tanggal_hari' => 'nullable|integer|min:1|max:28',
+            'tanggal_hari' => 'nullable|integer|min:1|max:31',
             'bulan' => 'nullable|integer|min:1|max:12',
             'tanggal' => 'nullable|date',
             'biaya_estimasi' => 'nullable|numeric|min:0',
@@ -601,7 +601,7 @@ class AsetSubmoduleController extends Controller
         $request->validate([
             'tanggal' => 'required|date',
             'nominal' => 'required|numeric|min:0',
-            'jenis_transaksi' => 'required|string|max:255',
+            'jenis_transaksi' => 'nullable|string|max:255',
             'keterangan' => 'nullable|string',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
         ]);
@@ -621,7 +621,7 @@ class AsetSubmoduleController extends Controller
         $keuangan->update([
             'tanggal' => $request->tanggal,
             'nominal' => $request->nominal,
-            'jenis_transaksi' => $request->jenis_transaksi,
+            'jenis_transaksi' => $request->jenis_transaksi ?: 'Biaya Perawatan',
             'keterangan' => $request->keterangan,
             'lampiran' => $lampiranPath,
             'updated_by' => auth()->id() ?? 1,

@@ -24,8 +24,10 @@ class KalenderAsetController extends Controller
     public function index(Request $request)
     {
         $now = Carbon::now();
-        $year = (int) $request->input('year', $now->year);
-        $month = (int) $request->input('month', $now->month);
+        $yearInput = $request->input('year');
+        $monthInput = $request->input('month');
+        $year = is_scalar($yearInput) && is_numeric($yearInput) ? (int) $yearInput : $now->year;
+        $month = is_scalar($monthInput) && is_numeric($monthInput) ? (int) $monthInput : $now->month;
 
         // Validasi input tahun & bulan
         if ($year < 2000 || $year > 2100) {

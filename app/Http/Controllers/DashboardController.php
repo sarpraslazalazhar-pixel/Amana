@@ -54,11 +54,11 @@ class DashboardController extends Controller
         $akumulasiKelolaan = max(0, $nilaiAwalKelolaan - $nilaiSekarangKelolaan);
         $totalAkumulasiPenyusutan = $akumulasiTetap + $akumulasiKelolaan;
 
-        $persentaseNilaiBuku = $totalNilaiAwal > 0
+        $persentaseNilaiBuku = $totalNilaiAwal != 0
             ? round(($totalNilaiSekarang / $totalNilaiAwal) * 100, 1)
-            : 100.0;
+            : ($totalNilaiSekarang > 0 ? 100.0 : 0.0);
 
-        $persentasePenyusutan = $totalNilaiAwal > 0
+        $persentasePenyusutan = $totalNilaiAwal != 0
             ? round(($totalAkumulasiPenyusutan / $totalNilaiAwal) * 100, 1)
             : 0.0;
 
@@ -104,16 +104,16 @@ class DashboardController extends Controller
         $startLastMonth = Carbon::now()->subMonth()->startOfMonth();
         $endLastMonth = Carbon::now()->subMonth()->endOfMonth();
 
-        $unitThisMonth = Aset::whereBetween('tanggal_pembelian', [$startThisMonth, $endThisMonth])->count();
-        $unitLastMonth = Aset::whereBetween('tanggal_pembelian', [$startLastMonth, $endLastMonth])->count();
-        $nilaiThisMonth = (float) Aset::whereBetween('tanggal_pembelian', [$startThisMonth, $endThisMonth])->sum('harga_total');
-        $nilaiLastMonth = (float) Aset::whereBetween('tanggal_pembelian', [$startLastMonth, $endLastMonth])->sum('harga_total');
+        $unitThisMonth = Aset::where('status', 'aktif')->whereBetween('tanggal_pembelian', [$startThisMonth, $endThisMonth])->count();
+        $unitLastMonth = Aset::where('status', 'aktif')->whereBetween('tanggal_pembelian', [$startLastMonth, $endLastMonth])->count();
+        $nilaiThisMonth = (float) Aset::where('status', 'aktif')->whereBetween('tanggal_pembelian', [$startThisMonth, $endThisMonth])->sum('harga_total');
+        $nilaiLastMonth = (float) Aset::where('status', 'aktif')->whereBetween('tanggal_pembelian', [$startLastMonth, $endLastMonth])->sum('harga_total');
 
-        $unitChangePct = $unitLastMonth > 0
+        $unitChangePct = $unitLastMonth != 0
             ? round((($unitThisMonth - $unitLastMonth) / $unitLastMonth) * 100, 1)
             : ($unitThisMonth > 0 ? 100.0 : 0.0);
 
-        $nilaiChangePct = $nilaiLastMonth > 0
+        $nilaiChangePct = $nilaiLastMonth != 0
             ? round((($nilaiThisMonth - $nilaiLastMonth) / $nilaiLastMonth) * 100, 1)
             : ($nilaiThisMonth > 0 ? 100.0 : 0.0);
 

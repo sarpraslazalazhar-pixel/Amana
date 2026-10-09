@@ -154,7 +154,7 @@ class AgendaReminderService
                 return $startOfWeek->addDays($targetIso - 1)->startOfDay();
 
             case 'bulanan':
-                $day = min((int) ($agenda->tanggal_hari ?: 1), $now->daysInMonth);
+                $day = max(1, min((int) ($agenda->tanggal_hari ?: 1), $now->daysInMonth));
 
                 return Carbon::create($now->year, $now->month, $day)->startOfDay();
 
@@ -164,7 +164,7 @@ class AgendaReminderService
                     $targetBulan = 1;
                 }
                 $daysInTargetMonth = Carbon::create($now->year, $targetBulan, 1)->daysInMonth;
-                $day = min((int) ($agenda->tanggal_hari ?: 1), $daysInTargetMonth);
+                $day = max(1, min((int) ($agenda->tanggal_hari ?: 1), $daysInTargetMonth));
 
                 return Carbon::create($now->year, $targetBulan, $day)->startOfDay();
 

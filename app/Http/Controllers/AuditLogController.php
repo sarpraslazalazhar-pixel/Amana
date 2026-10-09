@@ -33,12 +33,21 @@ class AuditLogController extends Controller
             $query->where('aset_id', $request->aset_id);
         }
 
-        if ($request->filled('tgl_dari')) {
-            $query->whereDate('created_at', '>=', $request->tgl_dari);
+        $tglDari = is_scalar($request->tgl_dari) ? strtotime($request->tgl_dari) : false;
+        $tglSampai = is_scalar($request->tgl_sampai) ? strtotime($request->tgl_sampai) : false;
+
+        if ($tglDari && $tglSampai && $tglDari > $tglSampai) {
+            $temp = $tglDari;
+            $tglDari = $tglSampai;
+            $tglSampai = $temp;
         }
 
-        if ($request->filled('tgl_sampai')) {
-            $query->whereDate('created_at', '<=', $request->tgl_sampai);
+        if ($tglDari) {
+            $query->whereDate('created_at', '>=', date('Y-m-d', $tglDari));
+        }
+
+        if ($tglSampai) {
+            $query->whereDate('created_at', '<=', date('Y-m-d', $tglSampai));
         }
 
         $summary = [
