@@ -65,8 +65,8 @@
                     $perPageValue = request('per_page', 15);
                     $perPageOptions = [
                         15 => '15 per hal',
-                        25 => '25 per hal',
-                        50 => '50 per hal',
+                        20 => '20 per hal',
+                        24 => '24 per hal',
                         100 => '100 per hal',
                         250 => '250 per hal',
                         'all' => 'Semua (Maks 500)',

@@ -168,7 +168,7 @@ class AsetController extends Controller
             'total_nilai' => (float) ((clone $query)->sum('harga_total') ?? 0),
         ];
 
-        $allowedPerPage = [10, 15, 25, 50, 100, 250];
+        $allowedPerPage = [10, 15, 20, 24, 100, 250];
         $perPageInput = $request->input('per_page', 15);
         if ($perPageInput === 'all') {
             $perPage = 500;
