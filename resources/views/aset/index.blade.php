@@ -59,6 +59,54 @@
                 @endif
             </button>
 
+            <!-- Dropdown Pilihan Jumlah Tampil (Per Page) -->
+            <div class="relative" x-data="{ openPerPage: false }" @click.outside="openPerPage = false">
+                @php
+                    $perPageValue = request('per_page', 15);
+                    $perPageOptions = [
+                        15 => '15 per hal',
+                        25 => '25 per hal',
+                        50 => '50 per hal',
+                        100 => '100 per hal',
+                        250 => '250 per hal',
+                        'all' => 'Semua (Maks 500)',
+                    ];
+                @endphp
+                <button @click="openPerPage = !openPerPage"
+                        type="button"
+                        class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm hover:border-slate-300">
+                    <i class="ti ti-list-numbers mr-1.5 text-sm text-slate-500"></i>
+                    <span>Tampil: {{ $perPageValue === 'all' ? 'Semua' : $perPageValue }}</span>
+                    <i class="ti ti-chevron-down ml-1.5 text-xs text-slate-400 transition-transform duration-200" :class="openPerPage ? 'rotate-180' : ''"></i>
+                </button>
+
+                <div x-show="openPerPage"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="transform opacity-0 scale-95"
+                     x-transition:enter-end="transform opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="transform opacity-100 scale-100"
+                     x-transition:leave-end="transform opacity-0 scale-95"
+                     x-cloak
+                     class="absolute right-0 mt-2 w-48 rounded-xl bg-white shadow-lg border border-slate-200 py-1.5 z-50">
+                    <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                        Data Per Halaman
+                    </div>
+                    @foreach($perPageOptions as $optValue => $optLabel)
+                        @php
+                            $isSelected = (string)$perPageValue === (string)$optValue;
+                        @endphp
+                        <a href="{{ request()->fullUrlWithQuery(['per_page' => $optValue, 'page' => 1]) }}"
+                           class="flex items-center justify-between px-3 py-2 text-xs transition-colors {{ $isSelected ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-slate-700 hover:bg-slate-50 font-medium' }}">
+                            <span>{{ $optLabel }}</span>
+                            @if($isSelected)
+                                <i class="ti ti-check text-emerald-600 text-sm"></i>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+
             @if(auth()->check() && auth()->user()->role === 'super_admin')
                 <a href="{{ route('aset.import.index') }}"
                    class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-200 shadow-sm transition-all hover:border-slate-300">
@@ -124,6 +172,7 @@
          x-cloak
          class="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm">
         <form method="GET" action="{{ route($config['route']) }}" class="space-y-3">
+            <input type="hidden" name="per_page" value="{{ request('per_page', 15) }}">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 <!-- Search -->
                 <div class="lg:col-span-2">
@@ -213,7 +262,7 @@
                     <button type="submit" class="flex-1 py-2 px-3 rounded-xl bg-slate-800 text-white font-semibold text-xs hover:bg-slate-900 transition-colors flex items-center justify-center">
                         <i class="ti ti-filter mr-1.5 text-xs"></i> Terapkan
                     </button>
-                    <a href="{{ route($config['route']) }}" class="py-2 px-3 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs hover:bg-slate-200 transition-colors flex items-center justify-center" title="Reset Filter">
+                    <a href="{{ route($config['route'], request()->has('per_page') ? ['per_page' => request('per_page')] : []) }}" class="py-2 px-3 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs hover:bg-slate-200 transition-colors flex items-center justify-center" title="Reset Filter">
                         <i class="ti ti-rotate-clockwise mr-1 text-xs"></i> Reset
                     </a>
                 </div>
@@ -312,7 +361,7 @@
                                 <i class="ti ti-box-search mb-2 block text-3xl"></i>
                                 <p class="text-sm font-medium">{{ $config['empty'] }}</p>
                                 @if(request()->anyFilled(['search', 'kategori_id', 'lokasi_id', 'penanggung_jawab_id', 'tgl_dari', 'tgl_sampai']))
-                                    <p class="text-xs text-slate-400 mt-1">Coba sesuaikan atau <a href="{{ route($config['route']) }}" class="text-emerald-600 underline font-medium">reset filter</a> pencarian Anda.</p>
+                                    <p class="text-xs text-slate-400 mt-1">Coba sesuaikan atau <a href="{{ route($config['route'], request()->has('per_page') ? ['per_page' => request('per_page')] : []) }}" class="text-emerald-600 underline font-medium">reset filter</a> pencarian Anda.</p>
                                 @endif
                             </td>
                         </tr>
@@ -321,14 +370,16 @@
             </table>
         </div>
 
-        @if($asetList->hasPages())
+        @if($asetList->total() > 0)
             <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p class="text-xs text-slate-500">
                     Menampilkan <span class="font-medium text-slate-700">{{ $asetList->firstItem() ?? 0 }}</span> sampai <span class="font-medium text-slate-700">{{ $asetList->lastItem() ?? 0 }}</span> dari <span class="font-medium text-slate-700">{{ $asetList->total() }}</span> entri
                 </p>
-                <div>
-                    {{ $asetList->links() }}
-                </div>
+                @if($asetList->hasPages())
+                    <div>
+                        {{ $asetList->links() }}
+                    </div>
+                @endif
             </div>
         @endif
     </div>

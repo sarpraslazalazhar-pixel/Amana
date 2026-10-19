@@ -168,7 +168,17 @@ class AsetController extends Controller
             'total_nilai' => (float) ((clone $query)->sum('harga_total') ?? 0),
         ];
 
-        $asetList = (clone $query)->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+        $allowedPerPage = [10, 15, 25, 50, 100, 250];
+        $perPageInput = $request->input('per_page', 15);
+        if ($perPageInput === 'all') {
+            $perPage = 500;
+        } elseif (in_array((int) $perPageInput, $allowedPerPage, true)) {
+            $perPage = (int) $perPageInput;
+        } else {
+            $perPage = 15;
+        }
+
+        $asetList = (clone $query)->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
 
         $kategoriList = Kategori::orderBy('nama_kategori')->get();
         $lokasiList = Lokasi::orderBy('nama_lokasi')->get();

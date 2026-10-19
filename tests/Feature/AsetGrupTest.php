@@ -59,4 +59,31 @@ class AsetGrupTest extends TestCase
             ->assertSeeText('Total Unit Fisik')
             ->assertSeeText('Akumulasi Nilai');
     }
+
+    public function test_per_page_custom_mengatur_jumlah_pagination(): void
+    {
+        $response = $this->actingAs(User::factory()->create())
+            ->get('/aset/tetap?per_page=25');
+
+        $response->assertOk();
+        $this->assertSame(25, $response->viewData('asetList')->perPage());
+    }
+
+    public function test_per_page_all_mengatur_pagination_menjadi_500(): void
+    {
+        $response = $this->actingAs(User::factory()->create())
+            ->get('/aset/tetap?per_page=all');
+
+        $response->assertOk();
+        $this->assertSame(500, $response->viewData('asetList')->perPage());
+    }
+
+    public function test_per_page_invalid_fallback_ke_default_15(): void
+    {
+        $response = $this->actingAs(User::factory()->create())
+            ->get('/aset/tetap?per_page=invalid');
+
+        $response->assertOk();
+        $this->assertSame(15, $response->viewData('asetList')->perPage());
+    }
 }
