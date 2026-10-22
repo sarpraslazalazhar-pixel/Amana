@@ -22,6 +22,62 @@ class ImageOptimizerService
     public const DEFAULT_QUALITY = 80;
 
     /**
+     * Batas dimensi maksimum gambar mentah sebelum decode (Anti Pixel Flood / Decompression Bomb OOM).
+     */
+    public const MAX_RAW_DIMENSION = 8000;
+
+    /**
+     * Batas piksel maksimum (50 Megapiksel). Mencegah alokasi memori berlebih saat dekompresi GD/Imagick.
+     */
+    public const MAX_RAW_PIXELS = 50_000_000;
+
+    /**
+     * Validasi dimensi gambar dari header file tanpa mendekompresi ke memori penuh (Anti OOM / Decompression Bomb).
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function assertSafeImageDimensions(mixed $source): void
+    {
+        $info = null;
+
+        if ($source instanceof UploadedFile) {
+            $path = $source->getRealPath();
+            if ($path && file_exists($path)) {
+                $info = @getimagesize($path);
+            }
+        } elseif (is_string($source)) {
+            if (file_exists($source)) {
+                $info = @getimagesize($source);
+            } elseif (strlen($source) > 0) {
+                $info = @getimagesizefromstring($source);
+            }
+        }
+
+        if (is_array($info)) {
+            $width = $info[0] ?? 0;
+            $height = $info[1] ?? 0;
+
+            if ($width > self::MAX_RAW_DIMENSION || $height > self::MAX_RAW_DIMENSION || ($width * $height) > self::MAX_RAW_PIXELS) {
+                throw new \InvalidArgumentException(
+                    "Dimensi gambar terlalu besar ({$width}x{$height} piksel). Batas maksimum adalah "
+                    . self::MAX_RAW_DIMENSION . 'x' . self::MAX_RAW_DIMENSION . ' piksel untuk mencegah kehabisan memori server (OOM).'
+                );
+            }
+        }
+    }
+
+    /**
+     * Pastikan batas memori PHP aman saat memproses manipulasi gambar.
+     */
+    private function ensureMemoryLimit(): void
+    {
+        $currentLimit = ini_get('memory_limit');
+        if ($currentLimit !== '-1' && (int) $currentLimit < 512) {
+            @ini_set('memory_limit', '512M');
+        }
+    }
+
+    /**
      * Optimasi file gambar yang diunggah dan simpan ke disk dalam format WebP.
      *
      * @return string Path relatif file yang disimpan
@@ -40,9 +96,12 @@ class ImageOptimizerService
         // Dapatkan path nyata file atau konten
         $source = $file->getRealPath() ?: $file;
 
+        // Cegah decompression bomb sebelum proses decode memori
+        $this->assertSafeImageDimensions($source);
+        $this->ensureMemoryLimit();
+
         // Baca gambar dengan Intervention Image v4
         $image = Image::decode($source);
-
         // Skala turunkan gambar jika melebihi batas resolusi maksimum (mempertahankan rasio aspek)
         $image->scaleDown(width: $maxDimension, height: $maxDimension);
 
@@ -65,8 +124,10 @@ class ImageOptimizerService
         int $maxDimension = self::DEFAULT_MAX_DIMENSION,
         int $quality = self::DEFAULT_QUALITY
     ): string {
+        $this->assertSafeImageDimensions($source);
+        $this->ensureMemoryLimit();
+
         $image = Image::decode($source);
-        $image->scaleDown(width: $maxDimension, height: $maxDimension);
         $encoded = $image->encode(new WebpEncoder(quality: $quality));
 
         return (string) $encoded;

@@ -74,6 +74,7 @@
         this.editModalOpen = true;
     },
     openImageModal(url, title) {
+        if (!url) return;
         this.previewImageUrl = url;
         this.previewImageTitle = title || 'Foto Aset';
         this.imageModalOpen = true;
@@ -246,8 +247,10 @@
                     <!-- Foto Utama Aset -->
                     <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 flex flex-col items-center justify-center text-center min-h-[210px]">
                         @if($aset->foto_utama)
-                            <div class="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-200 shadow-xs w-full h-44"
-                                 @click="openImageModal('{{ asset('storage/' . $aset->foto_utama) }}', '{{ $aset->nama_aset }} ({{ $aset->kode_aset }})')">
+                            <a href="{{ asset('storage/' . $aset->foto_utama) }}" target="_blank"
+                               @click.prevent="openImageModal('{{ asset('storage/' . $aset->foto_utama) }}', '{{ addslashes($aset->nama_aset . ' (' . $aset->kode_aset . ')') }}')"
+                               class="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-200 shadow-xs w-full h-44 block"
+                               title="Lihat Foto Penuh (Klik untuk Lightbox, Klik Kanan untuk Tab Baru)">
                                 <img src="{{ asset('storage/' . $aset->foto_utama) }}" alt="{{ $aset->nama_aset }}"
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                 <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
@@ -256,7 +259,7 @@
                                         Lihat Foto Penuh
                                     </span>
                                 </div>
-                            </div>
+                            </a>
                         @else
                             <div class="w-14 h-14 rounded-2xl bg-slate-200/70 text-slate-400 flex items-center justify-center mb-2">
                                 <i class="ti ti-photo text-2xl"></i>
@@ -268,11 +271,12 @@
 
                     <!-- QR Code AMANA -->
                     <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 flex flex-col items-center justify-between text-center min-h-[210px]">
-                        <div class="p-2 bg-white rounded-xl shadow-xs border border-slate-200 group cursor-pointer hover:border-emerald-300 transition-colors"
-                             @click="openImageModal('{{ $qrApiUrl }}', 'QR Code {{ $aset->kode_aset }}')"
-                             title="Klik untuk memperbesar QR Code">
+                        <a href="{{ $qrApiUrl }}" target="_blank"
+                           @click.prevent="openImageModal('{{ $qrApiUrl }}', 'QR Code {{ $aset->kode_aset }}')"
+                           class="p-2 bg-white rounded-xl shadow-xs border border-slate-200 group cursor-pointer hover:border-emerald-300 transition-colors block"
+                           title="Klik untuk memperbesar QR Code">
                             <img src="{{ $qrApiUrl }}" alt="QR {{ $aset->kode_aset }}" class="w-28 h-28 object-contain">
-                        </div>
+                        </a>
                         <div class="mt-2 space-y-1">
                             <p class="text-xs font-bold text-slate-800">Scan QR Code Publik</p>
                             <a href="{{ $qrUrl }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700">
@@ -478,11 +482,38 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <a href="{{ route('aset.lampiran.download', $lampiran->id) }}"
-                                       class="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200 inline-flex items-center gap-1 transition-colors"
-                                       title="Download {{ $lampiran->file_name }}">
-                                        <i class="ti ti-download text-sm"></i> Download
-                                    </a>
+                                    <div class="shrink-0 flex items-center gap-1.5">
+                                        @if($lampiran->is_image)
+                                            <a href="{{ $lampiran->file_url }}" target="_blank"
+                                               @click.prevent="openImageModal(@js($lampiran->file_url), @js($lampiran->label ?: $lampiran->file_name))"
+                                               class="px-3 py-1.5 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-700 text-xs font-bold border border-cyan-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                               title="Lihat Foto Lampiran">
+                                                <i class="ti ti-photo text-sm"></i> Lihat
+                                            </a>
+                                            <a href="{{ $lampiran->file_url }}" target="_blank"
+                                               class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-xs font-bold border border-slate-200 inline-flex items-center transition-colors cursor-pointer"
+                                               title="Buka di Tab Baru">
+                                                <i class="ti ti-external-link text-sm"></i>
+                                            </a>
+                                        @elseif($lampiran->is_pdf)
+                                            <a href="{{ $lampiran->file_url }}" target="_blank"
+                                               class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                               title="Lihat Dokumen PDF di Tab Baru">
+                                                <i class="ti ti-file-text text-sm"></i> Lihat
+                                            </a>
+                                        @else
+                                            <a href="{{ $lampiran->file_url }}" target="_blank"
+                                               class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold border border-amber-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                               title="Buka Dokumen di Tab Baru">
+                                                <i class="ti ti-file-text text-sm"></i> Lihat
+                                            </a>
+                                        @endif
+                                        <a href="{{ route('aset.lampiran.download', $lampiran->id) }}"
+                                           class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                           title="Download {{ $lampiran->file_name }}">
+                                            <i class="ti ti-download text-sm"></i> Download
+                                        </a>
+                                    </div>
                                 </div>
                             @endforeach
                         @endif
@@ -511,16 +542,42 @@
                                 </div>
                                 <div class="shrink-0 flex items-center gap-1.5">
                                     @if($keuLampiran->is_image)
-                                        <button type="button"
-                                                @click="openImageModal('{{ $keuLampiran->lampiran_url }}', 'Nota Keuangan: {{ $keuLampiran->jenis_transaksi ?: 'Biaya Aset' }}')"
-                                                class="px-3 py-1.5 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-700 text-xs font-bold border border-cyan-200 inline-flex items-center gap-1 transition-colors"
-                                                title="Lihat Foto Bukti">
+                                        <a href="{{ $keuLampiran->lampiran_url }}" target="_blank"
+                                           @click.prevent="openImageModal(@js($keuLampiran->lampiran_url), @js('Nota Keuangan: ' . ($keuLampiran->jenis_transaksi ?: 'Biaya Aset')))"
+                                           class="px-3 py-1.5 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-700 text-xs font-bold border border-cyan-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                           title="Lihat Foto Bukti">
                                             <i class="ti ti-photo text-sm"></i> Lihat
-                                        </button>
+                                        </a>
+                                        <a href="{{ $keuLampiran->lampiran_url }}" target="_blank"
+                                           class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-xs font-bold border border-slate-200 inline-flex items-center transition-colors cursor-pointer"
+                                           title="Buka di Tab Baru">
+                                            <i class="ti ti-external-link text-sm"></i>
+                                        </a>
+                                        <a href="{{ $keuLampiran->lampiran_url }}" download
+                                           class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                           title="Unduh Gambar Bukti">
+                                            <i class="ti ti-download text-sm"></i> Download
+                                        </a>
+                                    @elseif($keuLampiran->is_pdf)
+                                        <a href="{{ $keuLampiran->lampiran_url }}" target="_blank"
+                                           class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                           title="Lihat Dokumen PDF di Tab Baru">
+                                            <i class="ti ti-file-text text-sm"></i> Lihat
+                                        </a>
+                                        <a href="{{ $keuLampiran->lampiran_url }}" download
+                                           class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                           title="Unduh Dokumen PDF">
+                                            <i class="ti ti-download text-sm"></i> Download
+                                        </a>
                                     @else
-                                        <a href="{{ $keuLampiran->lampiran_url }}" target="_blank" download
-                                           class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 inline-flex items-center gap-1 transition-colors"
-                                           title="Unduh / Buka Dokumen">
+                                        <a href="{{ $keuLampiran->lampiran_url }}" target="_blank"
+                                           class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                           title="Buka Dokumen di Tab Baru">
+                                            <i class="ti ti-file-text text-sm"></i> Lihat
+                                        </a>
+                                        <a href="{{ $keuLampiran->lampiran_url }}" download
+                                           class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                           title="Unduh Dokumen">
                                             <i class="ti ti-download text-sm"></i> Download
                                         </a>
                                     @endif
@@ -857,15 +914,21 @@
                                                 @if($agenda->lampiran_penyelesaian_url)
                                                     <div class="pt-0.5 flex items-center gap-1.5 flex-wrap">
                                                         @if($agenda->is_image)
-                                                            <button type="button"
-                                                                    @click="openImageModal('{{ $agenda->lampiran_penyelesaian_url }}', 'Bukti Agenda: {{ $agenda->nama_agenda }}')"
-                                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors">
+                                                            <a href="{{ $agenda->lampiran_penyelesaian_url }}" target="_blank"
+                                                               @click.prevent="openImageModal('{{ $agenda->lampiran_penyelesaian_url }}', 'Bukti Agenda: {{ addslashes($agenda->nama_agenda) }}')"
+                                                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors cursor-pointer"
+                                                               title="Lihat Foto Bukti">
                                                                 <i class="ti ti-photo text-emerald-600"></i>
                                                                 Lihat Foto Bukti
-                                                            </button>
+                                                            </a>
+                                                            <a href="{{ $agenda->lampiran_penyelesaian_url }}" target="_blank"
+                                                               class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200 text-[11px] font-medium hover:bg-slate-200 transition-colors cursor-pointer"
+                                                               title="Buka di Tab Baru">
+                                                                <i class="ti ti-external-link"></i> Tab Baru
+                                                            </a>
                                                         @else
                                                             <a href="{{ $agenda->lampiran_penyelesaian_url }}" target="_blank"
-                                                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors">
+                                                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors cursor-pointer">
                                                                 <i class="ti ti-paperclip text-emerald-600"></i>
                                                                 Lihat Dokumen Bukti
                                                             </a>
@@ -986,15 +1049,21 @@
                                                     @if($agenda->lampiran_penyelesaian_url)
                                                         <div class="pt-0.5 flex items-center gap-1.5 flex-wrap">
                                                             @if($agenda->is_image)
-                                                                <button type="button"
-                                                                        @click="openImageModal('{{ $agenda->lampiran_penyelesaian_url }}', 'Bukti Agenda: {{ $agenda->nama_agenda }}')"
-                                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors">
+                                                                <a href="{{ $agenda->lampiran_penyelesaian_url }}" target="_blank"
+                                                                   @click.prevent="openImageModal('{{ $agenda->lampiran_penyelesaian_url }}', 'Bukti Agenda: {{ addslashes($agenda->nama_agenda) }}')"
+                                                                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors cursor-pointer"
+                                                                   title="Lihat Foto Bukti">
                                                                     <i class="ti ti-photo text-emerald-600"></i>
                                                                     Lihat Foto Bukti
-                                                                </button>
+                                                                </a>
+                                                                <a href="{{ $agenda->lampiran_penyelesaian_url }}" target="_blank"
+                                                                   class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200 text-[11px] font-medium hover:bg-slate-200 transition-colors cursor-pointer"
+                                                                   title="Buka di Tab Baru">
+                                                                    <i class="ti ti-external-link"></i> Tab Baru
+                                                                </a>
                                                             @else
                                                                 <a href="{{ $agenda->lampiran_penyelesaian_url }}" target="_blank"
-                                                                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors">
+                                                                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors cursor-pointer">
                                                                     <i class="ti ti-paperclip text-emerald-600"></i>
                                                                     Lihat Dokumen Bukti
                                                                 </a>
@@ -1096,17 +1165,36 @@
                                         @if($keu->lampiran_url)
                                             <div class="pt-1 flex items-center gap-1.5 flex-wrap">
                                                 @if($keu->is_image)
-                                                    <button type="button"
-                                                            @click="openImageModal('{{ $keu->lampiran_url }}', 'Bukti Nota Pengeluaran: {{ $keu->jenis_transaksi ?: 'Biaya Aset' }}')"
-                                                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold hover:bg-rose-100 transition-colors">
+                                                    <a href="{{ $keu->lampiran_url }}" target="_blank"
+                                                       @click.prevent="openImageModal('{{ $keu->lampiran_url }}', 'Bukti Nota Pengeluaran: {{ addslashes($keu->jenis_transaksi ?: 'Biaya Aset') }}')"
+                                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold hover:bg-rose-100 transition-colors cursor-pointer"
+                                                       title="Lihat Bukti / Nota">
                                                         <i class="ti ti-photo text-rose-600"></i>
                                                         Lihat Bukti / Nota
-                                                    </button>
+                                                    </a>
+                                                    <a href="{{ $keu->lampiran_url }}" target="_blank"
+                                                       class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200 text-[11px] font-medium hover:bg-slate-200 transition-colors cursor-pointer"
+                                                       title="Buka di Tab Baru">
+                                                        <i class="ti ti-external-link"></i> Tab Baru
+                                                    </a>
+                                                    <a href="{{ $keu->lampiran_url }}" download
+                                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold hover:bg-slate-200 transition-colors cursor-pointer"
+                                                       title="Unduh Bukti">
+                                                        <i class="ti ti-download text-slate-600"></i>
+                                                        Download
+                                                    </a>
                                                 @else
                                                     <a href="{{ $keu->lampiran_url }}" target="_blank"
-                                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold hover:bg-slate-200 transition-colors">
-                                                        <i class="ti ti-paperclip text-slate-600"></i>
+                                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold hover:bg-rose-100 transition-colors cursor-pointer"
+                                                       title="Buka Dokumen Nota di Tab Baru">
+                                                        <i class="ti ti-file-text text-rose-600"></i>
                                                         Lihat Dokumen Nota
+                                                    </a>
+                                                    <a href="{{ $keu->lampiran_url }}" download
+                                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold hover:bg-slate-200 transition-colors cursor-pointer"
+                                                       title="Unduh Dokumen Nota">
+                                                        <i class="ti ti-download text-slate-600"></i>
+                                                        Download
                                                     </a>
                                                 @endif
                                             </div>
@@ -1236,11 +1324,12 @@
                                                         </p>
                                                     </div>
                                                     <div class="flex items-center gap-1.5">
-                                                        <button type="button"
-                                                                @click="openImageModal('{{ $jurnal->lampiran_url }}', 'Lampiran Jurnal - {{ $aset->kode_aset }} ({{ \Carbon\Carbon::parse($jurnal->tanggal)->format('d M Y') }})')"
-                                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] border border-emerald-200 transition-colors">
+                                                        <a href="{{ $jurnal->lampiran_url }}" target="_blank"
+                                                           @click.prevent="openImageModal('{{ $jurnal->lampiran_url }}', 'Lampiran Jurnal - {{ $aset->kode_aset }} ({{ \Carbon\Carbon::parse($jurnal->tanggal)->format('d M Y') }})')"
+                                                           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] border border-emerald-200 transition-colors cursor-pointer"
+                                                           title="Perbesar Gambar">
                                                             <i class="ti ti-eye"></i> Perbesar
-                                                        </button>
+                                                        </a>
                                                         <a href="{{ $jurnal->lampiran_url }}" target="_blank"
                                                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 font-medium text-[11px] border border-slate-200 transition-colors">
                                                             <i class="ti ti-external-link"></i> Tab Baru
@@ -2072,7 +2161,7 @@
     <!-- LIGHTBOX MODAL POPUP KHUSUS GAMBAR                      -->
     <!-- ======================================================= -->
     <div x-show="imageModalOpen" x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto"
+         class="fixed inset-0 z-[70] overflow-y-auto"
          aria-labelledby="image-modal-title" role="dialog" aria-modal="true">
         
         <!-- Backdrop with Dark Blur -->
@@ -2087,8 +2176,9 @@
              class="fixed inset-0 bg-slate-950/85 backdrop-blur-md transition-opacity"></div>
 
         <!-- Modal Container -->
-        <div class="flex min-h-full items-center justify-center p-4 sm:p-6 text-center">
+        <div class="relative z-10 flex min-h-full items-center justify-center p-4 sm:p-6 text-center">
             <div x-show="imageModalOpen"
+                 @click.outside="imageModalOpen = false"
                  x-transition:enter="ease-out duration-200"
                  x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                  x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -2096,7 +2186,6 @@
                  x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                  x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                  class="relative transform overflow-hidden rounded-3xl bg-slate-900/95 border border-slate-800 text-left shadow-2xl transition-all max-w-4xl w-full flex flex-col p-2.5">
-                
                 <!-- Modal Top Header & Actions -->
                 <div class="px-4 py-3 flex items-center justify-between border-b border-slate-800/80 bg-slate-900/60 rounded-2xl mb-2">
                     <div class="flex items-center gap-2 truncate mr-3">

@@ -33,13 +33,21 @@
                      if (this.notifOpen && !this.loaded) {
                          this.loading = true;
                          try {
-                             const res = await fetch('{{ route('agenda.reminders') }}');
-                             if (res.ok) {
-                                 this.reminders = await res.json();
-                                 this.totalCount = this.reminders.total_count;
-                                 this.hasCritical = this.reminders.has_critical;
-                                 this.loaded = true;
-                             }
+                            const res = await fetch('{{ route('agenda.reminders') }}', {
+                                credentials: 'same-origin',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            });
+                            if (res.ok) {
+                                this.reminders = await res.json();
+                                this.totalCount = this.reminders.total_count;
+                                this.hasCritical = this.reminders.has_critical;
+                                this.loaded = true;
+                            } else if (res.status === 401) {
+                                window.location.href = '/login?expired=1';
+                            }
                          } catch (e) {
                              console.error(e);
                          } finally {

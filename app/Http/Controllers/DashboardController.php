@@ -36,11 +36,10 @@ class DashboardController extends Controller
         $totalPenyusutanBulan = $penyusutanBulanTetap + $penyusutanBulanKelolaan;
 
         // Total Nilai Sekarang (Nilai Buku Saat Ini) & Akumulasi Penyusutan
-        $asetAktifList = (clone $asetAktifQuery)->get();
         $nilaiSekarangTetap = 0.0;
         $nilaiSekarangKelolaan = 0.0;
 
-        foreach ($asetAktifList as $aset) {
+        foreach ((clone $asetAktifQuery)->cursor() as $aset) {
             $nb = PenyusutanCalculator::hitungNilaiBukuSaatIni($aset);
             if ($aset->jenis === 'tetap') {
                 $nilaiSekarangTetap += $nb;

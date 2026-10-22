@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Aset;
 use App\Models\LampiranAset;
 use App\Services\AuditLogger;
+use App\Services\ImageOptimizerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-
 class LampiranAsetController extends Controller
 {
     /**
@@ -19,6 +19,10 @@ class LampiranAsetController extends Controller
      * Maksimal lampiran per aset.
      */
     private const MAX_FILES_PER_ASET = 5;
+
+    public function __construct(
+        protected ImageOptimizerService $imageOptimizer
+    ) {}
 
     /**
      * Upload lampiran baru ke aset.
@@ -43,21 +47,29 @@ class LampiranAsetController extends Controller
         ], [
             'lampiran_file.required' => 'File lampiran wajib dipilih.',
             'lampiran_file.file' => 'File tidak valid.',
-            'lampiran_file.max' => 'Ukuran file maksimal 5 MB.',
+            'lampiran_file.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 5 MB.',
             'lampiran_file.mimes' => 'Format file harus: ' . strtoupper(implode(', ', self::ALLOWED_EXTENSIONS)) . '.',
         ]);
 
         $file = $request->file('lampiran_file');
 
-        // Simpan file ke storage
-        $path = $file->store('lampiran_aset', 'public');
+        // Simpan file ke storage (gambar otomatis dikompres ke WebP, dokumen non-gambar disimpan apa adanya)
+        $path = $this->imageOptimizer->storeAttachmentSmart($file, 'lampiran_aset', 'public');
+        $isWebp = str_ends_with(strtolower($path), '.webp');
+        $fileName = $isWebp
+            ? pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.webp'
+            : $file->getClientOriginalName();
+        $fileType = $isWebp ? 'image/webp' : ($file->getMimeType() ?: 'application/octet-stream');
+        $fileSize = Storage::disk('public')->exists($path)
+            ? Storage::disk('public')->size($path)
+            : $file->getSize();
 
         $lampiran = LampiranAset::create([
             'aset_id' => $aset->id,
             'file_path' => $path,
-            'file_name' => $file->getClientOriginalName(),
-            'file_size' => $file->getSize(),
-            'file_type' => $file->getMimeType(),
+            'file_name' => $fileName,
+            'file_size' => $fileSize,
+            'file_type' => $fileType,
             'label' => $request->lampiran_label,
             'uploaded_by' => auth()->id(),
         ]);

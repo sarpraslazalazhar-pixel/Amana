@@ -25,8 +25,15 @@ class AsetImportService
     {
         $filePath = is_string($file) ? $file : $file->getRealPath();
         $fileName = $originalName ?? (is_string($file) ? basename($file) : $file->getClientOriginalName());
+        $currentLimit = ini_get('memory_limit');
+        if ($currentLimit !== '-1' && (int) $currentLimit < 512) {
+            @ini_set('memory_limit', '512M');
+        }
 
-        $spreadsheet = IOFactory::load($filePath);
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $reader->setReadEmptyCells(false);
+        $spreadsheet = $reader->load($filePath);
         $worksheet = $spreadsheet->getActiveSheet();
         $rows = $worksheet->toArray(null, true, true, true);
 
@@ -513,10 +520,8 @@ class AsetImportService
     public static function commitBatch(AsetImportBatch $batch, string $duplicateAction = 'update', ?int $userId = null): array
     {
         $userId = $userId ?? auth()->id() ?? 1;
-        $items = $batch->items()->get();
-
         $stats = [
-            'total' => $items->count(),
+            'total' => $batch->items()->count(),
             'success' => 0,
             'updated' => 0,
             'skipped' => 0,
@@ -527,7 +532,7 @@ class AsetImportService
         DB::beginTransaction();
 
         try {
-            foreach ($items as $item) {
+            foreach ($batch->items()->cursor() as $item) {
                 // 1. Validasi kesiapan komponen
                 if (! $item->is_ready) {
                     $item->update([

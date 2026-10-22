@@ -79,12 +79,30 @@ export async function navigateTo(url, pushHistory = true) {
 
     try {
         const response = await fetch(url, {
+            credentials: 'same-origin',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html, application/xhtml+xml',
             }
         });
 
+        // Handle server-side redirection to login page (e.g. session timed out)
+        if (response.redirected && response.url.includes('/login')) {
+            window.location.href = response.url.includes('?')
+                ? `${response.url}&expired=1`
+                : `${response.url}?expired=1`;
+            return;
+        }
+
         if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = '/login?expired=1';
+                return;
+            }
+            if (response.status === 419) {
+                window.location.reload();
+                return;
+            }
             window.location.href = url;
             return;
         }
@@ -92,6 +110,18 @@ export async function navigateTo(url, pushHistory = true) {
         const htmlText = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, 'text/html');
+
+        // Sync CSRF token to prevent 419 Page Expired errors across SPA navigations
+        const newCsrf = doc.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (newCsrf) {
+            const currentCsrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (currentCsrfMeta) {
+                currentCsrfMeta.setAttribute('content', newCsrf);
+            }
+            document.querySelectorAll('input[name="_token"]').forEach(input => {
+                input.value = newCsrf;
+            });
+        }
 
         // 2. Update Document Title
         if (doc.title) {
@@ -217,7 +247,8 @@ export async function navigateTo(url, pushHistory = true) {
 
         // 7. Update Browser History
         if (pushHistory) {
-            history.pushState({ url }, '', url);
+            const finalUrl = response.redirected ? response.url : url;
+            history.pushState({ url: finalUrl }, '', finalUrl);
         }
 
         // 8. Reset Scroll Position of main container

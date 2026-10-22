@@ -431,4 +431,120 @@ class AsetSubmoduleTest extends TestCase
         $this->assertEquals($divisiProgram->id, $this->aset->divisi_id);
         $this->assertEquals('kelolaan', $this->aset->jenis);
     }
+
+    public function test_selesaikan_agenda_rejects_lampiran_kebesaran(): void
+    {
+        $agenda = \App\Models\AgendaAset::create([
+            'aset_id' => $this->aset->id,
+            'nama_agenda' => 'Servis Fan',
+            'tanggal_mulai' => '2026-08-20',
+            'status' => 'belum_selesai',
+            'prioritas' => 'sedang',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('aset.agenda.selesaikan', $agenda->id), [
+            'tanggal_selesai' => '2026-08-21',
+            'lampiran' => UploadedFile::fake()->create('foto_rusak.jpg', 12000, 'image/jpeg'),
+        ]);
+
+        $response->assertSessionHasErrors('lampiran');
+        $errors = session('errors')->get('lampiran');
+        $this->assertStringContainsString('kebesaran', strtolower($errors[0]));
+    }
+
+    public function test_store_keuangan_rejects_lampiran_kebesaran(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('aset.keuangan.store', $this->aset->id), [
+            'tanggal' => '2026-08-20',
+            'nominal' => 500000,
+            'lampiran' => UploadedFile::fake()->create('nota_besar.pdf', 15000, 'application/pdf'),
+        ]);
+
+        $response->assertSessionHasErrors('lampiran');
+        $errors = session('errors')->get('lampiran');
+        $this->assertStringContainsString('kebesaran', strtolower($errors[0]));
+    }
+
+    public function test_store_jurnal_rejects_lampiran_kebesaran(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('aset.jurnal.store', $this->aset->id), [
+            'tanggal' => '2026-08-20',
+            'kejadian' => 'Layar bergaris',
+            'lampiran' => UploadedFile::fake()->create('layar.png', 11000, 'image/png'),
+        ]);
+
+        $response->assertSessionHasErrors('lampiran');
+        $errors = session('errors')->get('lampiran');
+        $this->assertStringContainsString('kebesaran', strtolower($errors[0]));
+    }
+
+    public function test_store_aset_dengan_lampiran_gambar_dikonversi_ke_webp(): void
+    {
+        Storage::fake('public');
+        $kategori = Kategori::first();
+        $barang = Barang::first();
+        $divisi = Divisi::first();
+
+        $response = $this->actingAs($this->admin)->post(route('aset.store'), [
+            'nama_aset' => 'Komputer Baru',
+            'sifat_barang' => 'D',
+            'kategori_id' => $kategori->id,
+            'barang_id' => $barang->id,
+            'divisi_id' => $divisi->id,
+            'cara_perolehan' => '1',
+            'status_barang' => '1',
+            'lokasi_id' => $this->lokasi1->id,
+            'penanggung_jawab_id' => $this->pj1->id,
+            'tanggal_pembelian' => '2026-08-28',
+            'toko_distributor' => 'Vendor IT',
+            'jumlah_unit' => 1,
+            'harga_satuan' => 10000000,
+            'umur_ekonomis_tahun' => 4,
+            'lampiran_files' => [
+                UploadedFile::fake()->image('faktur_pembelian.jpg', 600, 600),
+            ],
+            'lampiran_labels' => [
+                'Faktur Asli',
+            ],
+        ]);
+
+        $response->assertRedirect();
+        $lampiran = \App\Models\LampiranAset::where('label', 'Faktur Asli')->first();
+        $this->assertNotNull($lampiran);
+        $this->assertEquals('faktur_pembelian.webp', $lampiran->file_name);
+        $this->assertEquals('image/webp', $lampiran->file_type);
+        $this->assertStringEndsWith('.webp', $lampiran->file_path);
+        Storage::disk('public')->assertExists($lampiran->file_path);
+    }
+
+    public function test_store_aset_rejects_lampiran_kebesaran(): void
+    {
+        $kategori = Kategori::first();
+        $barang = Barang::first();
+        $divisi = Divisi::first();
+
+        $response = $this->actingAs($this->admin)->post(route('aset.store'), [
+            'nama_aset' => 'Komputer Fail',
+            'sifat_barang' => 'D',
+            'kategori_id' => $kategori->id,
+            'barang_id' => $barang->id,
+            'divisi_id' => $divisi->id,
+            'cara_perolehan' => '1',
+            'status_barang' => '1',
+            'lokasi_id' => $this->lokasi1->id,
+            'penanggung_jawab_id' => $this->pj1->id,
+            'tanggal_pembelian' => '2026-08-28',
+            'toko_distributor' => 'Vendor IT',
+            'jumlah_unit' => 1,
+            'harga_satuan' => 10000000,
+            'umur_ekonomis_tahun' => 4,
+            'lampiran_files' => [
+                UploadedFile::fake()->create('dokumen_raksasa.pdf', 6000, 'application/pdf'),
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('lampiran_files.0');
+        $errors = session('errors')->get('lampiran_files.0');
+        $this->assertStringContainsString('kebesaran', strtolower($errors[0]));
+    }
 }

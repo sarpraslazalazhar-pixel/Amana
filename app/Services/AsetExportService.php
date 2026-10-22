@@ -80,8 +80,13 @@ class AsetExportService
      */
     public static function createSpreadsheet(array $filters = []): Spreadsheet
     {
-        $query = self::buildQuery($filters);
-        $items = $query->orderBy('created_at', 'desc')->get();
+        $currentLimit = ini_get('memory_limit');
+        if ($currentLimit !== '-1' && (int) $currentLimit < 512) {
+            @ini_set('memory_limit', '512M');
+        }
+
+        $query = self::buildQuery($filters)->orderBy('created_at', 'desc');
+        $totalCount = (clone $query)->count();
 
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
@@ -101,7 +106,7 @@ class AsetExportService
         $sheet->mergeCells('A2:Z2');
         $sheet->getStyle('A2')->getFont()->setSize(10)->setColor(new Color('FF64748B'));
 
-        $sheet->setCellValue('A3', 'Diekspor pada: '.Carbon::now()->translatedFormat('d F Y, H:i').' WIB | Total Data: '.$items->count().' Aset');
+        $sheet->setCellValue('A3', 'Diekspor pada: '.Carbon::now()->translatedFormat('d F Y, H:i').' WIB | Total Data: '.$totalCount.' Aset');
         $sheet->mergeCells('A3:Z3');
         $sheet->getStyle('A3')->getFont()->setSize(9)->setItalic(true)->setColor(new Color('FF64748B'));
 
@@ -188,7 +193,7 @@ class AsetExportService
         $rowNum = 7;
         $no = 1;
 
-        foreach ($items as $aset) {
+        foreach ($query->cursor() as $aset) {
             $nilaiBuku = PenyusutanCalculator::hitungNilaiBukuSaatIni($aset);
 
             $sheet->setCellValue('A'.$rowNum, $no++);

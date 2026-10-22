@@ -79,6 +79,14 @@
                         </a>
                     </div>
 
+                    @if(request()->query('expired'))
+                        <div class="mb-5 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center space-x-2.5">
+                            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <span class="font-medium leading-relaxed">Sesi Anda telah berakhir. Silakan masuk kembali untuk melanjutkan.</span>
+                        </div>
+                    @endif
                     @if($errors->any())
                         <div class="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2.5">
                             <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -143,7 +151,7 @@
                         <!-- Remember & Forgot Password -->
                         <div class="flex items-center justify-between pt-0.5 text-xs">
                             <label class="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
-                                <input type="checkbox" name="remember"
+                                <input type="checkbox" name="remember" value="1"
                                        class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/20 focus:ring-offset-0">
                                 <span>Ingat saya</span>
                             </label>

@@ -52,7 +52,7 @@ Route::post('/login', function (Request $request) {
     return back()->withErrors([
         'email' => 'Email/Username atau kata sandi tidak sesuai.',
     ])->onlyInput('email');
-});
+})->middleware('throttle:login');
 
 Route::post('/logout', function (Request $request) {
     Auth::logout();
@@ -69,35 +69,35 @@ Route::middleware(['auth'])->group(function () {
 
     // Daftar Aset per Grup (didaftarkan sebelum resource agar tidak tertelan route show)
     Route::get('/aset/tetap', [AsetController::class, 'tetap'])->name('aset.tetap');
-    Route::get('/aset/tetap/export', [AsetController::class, 'exportTetap'])->name('aset.tetap.export');
+    Route::get('/aset/tetap/export', [AsetController::class, 'exportTetap'])->name('aset.tetap.export')->middleware('throttle:export');
     Route::get('/aset/kelolaan', [AsetController::class, 'kelolaan'])->name('aset.kelolaan');
-    Route::get('/aset/kelolaan/export', [AsetController::class, 'exportKelolaan'])->name('aset.kelolaan.export');
+    Route::get('/aset/kelolaan/export', [AsetController::class, 'exportKelolaan'])->name('aset.kelolaan.export')->middleware('throttle:export');
     Route::get('/aset/non-aktif', [AsetController::class, 'nonAktif'])->name('aset.nonAktif');
-    Route::get('/aset/non-aktif/export', [AsetController::class, 'exportNonAktif'])->name('aset.nonAktif.export');
+    Route::get('/aset/non-aktif/export', [AsetController::class, 'exportNonAktif'])->name('aset.nonAktif.export')->middleware('throttle:export');
 
     // Modul Pusat Ekspor & Impor Aset
     Route::get('/aset/export', [AsetController::class, 'exportIndex'])->name('aset.export.index');
-    Route::get('/aset/export/download', [AsetController::class, 'exportDownload'])->name('aset.export.download');
+    Route::get('/aset/export/download', [AsetController::class, 'exportDownload'])->name('aset.export.download')->middleware('throttle:export');
 
     Route::get('/aset/import', [AsetController::class, 'importIndex'])->name('aset.import.index');
-    Route::post('/aset/import/upload', [AsetController::class, 'importUpload'])->name('aset.import.upload');
+    Route::post('/aset/import/upload', [AsetController::class, 'importUpload'])->name('aset.import.upload')->middleware('throttle:import');
     Route::get('/aset/import/{batch}', [AsetController::class, 'importPreview'])->name('aset.import.preview');
     Route::post('/aset/import/item/{item}', [AsetController::class, 'importUpdateItem'])->name('aset.import.item.update');
     Route::post('/aset/import/{batch}/bulk-assign', [AsetController::class, 'importBulkAssign'])->name('aset.import.bulk-assign');
-    Route::post('/aset/import/{batch}/commit', [AsetController::class, 'importCommit'])->name('aset.import.commit');
+    Route::post('/aset/import/{batch}/commit', [AsetController::class, 'importCommit'])->name('aset.import.commit')->middleware('throttle:import');
     Route::delete('/aset/import/{batch}', [AsetController::class, 'importDeleteBatch'])->name('aset.import.destroy');
-    Route::get('/aset/import/{batch}/summary', [AsetController::class, 'importDownloadSummary'])->name('aset.import.summary');
+    Route::get('/aset/import/{batch}/summary', [AsetController::class, 'importDownloadSummary'])->name('aset.import.summary')->middleware('throttle:export');
 
     // Modul Cetak Label QR Code Massal & PDF
     Route::get('/aset/qr/print', [QrPrintController::class, 'index'])->name('aset.qr.print');
     Route::post('/aset/qr/preview', [QrPrintController::class, 'preview'])->name('aset.qr.preview');
-    Route::post('/aset/qr/download-pdf', [QrPrintController::class, 'downloadPdf'])->name('aset.qr.download-pdf');
+    Route::post('/aset/qr/download-pdf', [QrPrintController::class, 'downloadPdf'])->name('aset.qr.download-pdf')->middleware('throttle:export');
     Route::post('/aset/qr/print-direct', [QrPrintController::class, 'printDirect'])->name('aset.qr.print-direct');
 
     // Agenda Reminders Polling
     Route::get('/agenda/reminders', function (AgendaReminderService $service) {
         return response()->json($service->getReminderData());
-    })->name('agenda.reminders');
+    })->name('agenda.reminders')->middleware('throttle:polling');
 
     // Rute Publik Aset Terautentikasi (Dapat diakses Viewer & Super Admin)
     Route::get('/aset', [AsetController::class, 'index'])->name('aset.index');
@@ -109,13 +109,13 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:super_admin'])->group(function () {
         // Modul Impor Data Aset
         Route::get('/aset/import', [AsetController::class, 'importIndex'])->name('aset.import.index');
-        Route::post('/aset/import/upload', [AsetController::class, 'importUpload'])->name('aset.import.upload');
+        Route::post('/aset/import/upload', [AsetController::class, 'importUpload'])->name('aset.import.upload')->middleware('throttle:import');
         Route::get('/aset/import/{batch}', [AsetController::class, 'importPreview'])->name('aset.import.preview');
         Route::post('/aset/import/item/{item}', [AsetController::class, 'importUpdateItem'])->name('aset.import.item.update');
         Route::post('/aset/import/{batch}/bulk-assign', [AsetController::class, 'importBulkAssign'])->name('aset.import.bulk-assign');
-        Route::post('/aset/import/{batch}/commit', [AsetController::class, 'importCommit'])->name('aset.import.commit');
+        Route::post('/aset/import/{batch}/commit', [AsetController::class, 'importCommit'])->name('aset.import.commit')->middleware('throttle:import');
         Route::delete('/aset/import/{batch}', [AsetController::class, 'importDeleteBatch'])->name('aset.import.destroy');
-        Route::get('/aset/import/{batch}/summary', [AsetController::class, 'importDownloadSummary'])->name('aset.import.summary');
+        Route::get('/aset/import/{batch}/summary', [AsetController::class, 'importDownloadSummary'])->name('aset.import.summary')->middleware('throttle:export');
 
         // Form Pembuatan Aset Baru & Preview Kode
         Route::get('/aset/create', [AsetController::class, 'create'])->name('aset.create');
@@ -201,7 +201,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Rute Detail Aset & PDF (didefinisikan setelah /aset/create agar tidak tertelan wildcard {aset})
     Route::get('/aset/{aset}', [AsetController::class, 'show'])->name('aset.show');
-    Route::get('/aset/{aset}/pdf', [AsetController::class, 'pdf'])->name('aset.pdf');
+    Route::get('/aset/{aset}/pdf', [AsetController::class, 'pdf'])->name('aset.pdf')->middleware('throttle:export');
 
     // Modul Pengaturan: Profil Akun Mandiri (Ubah Data Profil & Ganti Kata Sandi)
     Route::get('/profil', [ProfileController::class, 'index'])->name('profile.index');
@@ -210,7 +210,8 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Public QR Scan Portal (Tanpa Login)
-Route::get('/p/{kode_aset}', [PublicQrController::class, 'show'])->name('public.qr');
+Route::get('/p/{kode_aset}', [PublicQrController::class, 'show'])->name('public.qr')->middleware('throttle:public-qr');
+Route::get('/q/{kode_aset}', fn (string $kode_aset) => redirect()->route('public.qr', $kode_aset))->middleware('throttle:public-qr');
 
 // Fallback Route untuk Public Storage jika symlink 'public/storage' belum/tidak tersedia di server hosting
 Route::get('/storage/{path}', function (string $path) {

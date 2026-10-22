@@ -33,6 +33,7 @@ class KeuanganAset extends Model
         'is_pdf',
         'lampiran_file_name',
         'is_dari_agenda',
+        'icon_class',
     ];
 
     public function aset(): BelongsTo
@@ -96,5 +97,27 @@ class KeuanganAset extends Model
         }
 
         return basename($this->lampiran);
+    }
+
+    public function getIconClassAttribute(): string
+    {
+        if ($this->is_image) {
+            return 'ti-photo';
+        }
+
+        if ($this->is_pdf) {
+            return 'ti-file-type-pdf';
+        }
+
+        $ext = strtolower(pathinfo((string) $this->lampiran, PATHINFO_EXTENSION));
+        if (in_array($ext, ['xls', 'xlsx', 'csv'], true)) {
+            return 'ti-file-type-xls';
+        }
+
+        if (in_array($ext, ['doc', 'docx'], true)) {
+            return 'ti-file-type-doc';
+        }
+
+        return 'ti-file-text';
     }
 }

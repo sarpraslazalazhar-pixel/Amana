@@ -540,6 +540,7 @@
                             <label class="block text-xs font-semibold text-slate-700 mb-1">File Dokumen <span class="text-slate-400 font-normal">(Opsional)</span></label>
                             <input type="file" :name="'lampiran_files[' + index + ']'"
                                    accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
+                                   @change="if ($event.target.files[0] && $event.target.files[0].size > 5 * 1024 * 1024) { alert('Ukuran file ' + $event.target.files[0].name + ' terlalu besar (' + ($event.target.files[0].size / (1024 * 1024)).toFixed(2) + ' MB). Batas maksimal 5 MB!'); $event.target.value = ''; }"
                                    class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 cursor-pointer">
                         </div>
                         <div class="sm:col-span-5">
@@ -563,7 +564,7 @@
                     Tambah Lampiran (<span x-text="lampiranRows.length"></span>/5)
                 </button>
 
-                <p class="text-[10px] text-slate-400">Format: PDF, JPG, PNG, WEBP, DOC, DOCX, XLS, XLSX. Ukuran per file maks. 5 MB.</p>
+                <p class="text-[10px] text-slate-400">Format: PDF, JPG, PNG, WEBP, DOC, DOCX, XLS, XLSX. Ukuran per file maks. 5 MB. Gambar otomatis dikompres ke format WebP.</p>
             </div>
         </div>
 

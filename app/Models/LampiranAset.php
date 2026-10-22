@@ -17,11 +17,17 @@ class LampiranAset extends Model
         'label',
         'uploaded_by',
     ];
-
     protected $casts = [
         'file_size' => 'integer',
     ];
 
+    protected $appends = [
+        'file_url',
+        'is_image',
+        'is_pdf',
+        'formatted_size',
+        'icon_class',
+    ];
     public function aset()
     {
         return $this->belongsTo(Aset::class, 'aset_id');
@@ -49,13 +55,42 @@ class LampiranAset extends Model
 
         return $bytes . ' B';
     }
+    /**
+     * Dapatkan URL publik file lampiran.
+     */
+    public function getFileUrlAttribute(): ?string
+    {
+        if (! $this->file_path) {
+            return null;
+        }
+
+        return asset('storage/' . ltrim($this->file_path, '/'));
+    }
+
 
     /**
      * Cek apakah lampiran adalah file gambar.
      */
     public function getIsImageAttribute(): bool
     {
-        return str_starts_with($this->file_type, 'image/');
+        $type = strtolower((string) $this->file_type);
+        if (! empty($type) && str_starts_with($type, 'image/')) {
+            return true;
+        }
+
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'avif'];
+
+        if (in_array($type, $imageExtensions, true)) {
+            return true;
+        }
+
+        $pathExt = strtolower(pathinfo((string) $this->file_path, PATHINFO_EXTENSION));
+        if (in_array($pathExt, $imageExtensions, true)) {
+            return true;
+        }
+
+        $nameExt = strtolower(pathinfo((string) $this->file_name, PATHINFO_EXTENSION));
+        return in_array($nameExt, $imageExtensions, true);
     }
 
     /**
@@ -63,7 +98,18 @@ class LampiranAset extends Model
      */
     public function getIsPdfAttribute(): bool
     {
-        return $this->file_type === 'application/pdf';
+        $type = strtolower((string) $this->file_type);
+        if ($type === 'application/pdf' || $type === 'pdf') {
+            return true;
+        }
+
+        $pathExt = strtolower(pathinfo((string) $this->file_path, PATHINFO_EXTENSION));
+        if ($pathExt === 'pdf') {
+            return true;
+        }
+
+        $nameExt = strtolower(pathinfo((string) $this->file_name, PATHINFO_EXTENSION));
+        return $nameExt === 'pdf';
     }
 
     /**
@@ -79,12 +125,15 @@ class LampiranAset extends Model
             return 'ti-file-type-pdf';
         }
 
+        $fileType = strtolower((string) $this->file_type);
+        $ext = strtolower(pathinfo((string) ($this->file_name ?: $this->file_path), PATHINFO_EXTENSION));
+
         // Excel harus dicek sebelum Word karena MIME keduanya mengandung 'document'
-        if (str_contains($this->file_type, 'sheet') || str_contains($this->file_type, 'excel')) {
+        if (str_contains($fileType, 'sheet') || str_contains($fileType, 'excel') || in_array($ext, ['xls', 'xlsx', 'csv'], true)) {
             return 'ti-file-type-xls';
         }
 
-        if (str_contains($this->file_type, 'word') || str_contains($this->file_type, 'document')) {
+        if (str_contains($fileType, 'word') || str_contains($fileType, 'document') || in_array($ext, ['doc', 'docx'], true)) {
             return 'ti-file-type-doc';
         }
 

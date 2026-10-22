@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use App\Services\AgendaReminderService;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +27,37 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // =========================================================================
+        // RATE LIMITERS (Proteksi Brute-Force, Spam Polling, QR Scraping & OOM DoS)
+        // =========================================================================
+        RateLimiter::for('login', function (Request $request) {
+            $throttleKey = strtolower((string) $request->input('email')).'|'.$request->ip();
+
+            return Limit::perMinute(app()->runningUnitTests() ? 1000 : 5)->by($throttleKey);
+        });
+
+        RateLimiter::for('polling', function (Request $request) {
+            $key = optional($request->user())->id ?: $request->ip();
+
+            return Limit::perMinute(app()->runningUnitTests() ? 1000 : 60)->by($key);
+        });
+
+        RateLimiter::for('public-qr', function (Request $request) {
+            return Limit::perMinute(app()->runningUnitTests() ? 1000 : 60)->by($request->ip());
+        });
+
+        RateLimiter::for('export', function (Request $request) {
+            $key = optional($request->user())->id ?: $request->ip();
+
+            return Limit::perMinute(app()->runningUnitTests() ? 1000 : 15)->by($key);
+        });
+
+        RateLimiter::for('import', function (Request $request) {
+            $key = optional($request->user())->id ?: $request->ip();
+
+            return Limit::perMinute(app()->runningUnitTests() ? 1000 : 15)->by($key);
+        });
+
         try {
             if (\Illuminate\Support\Facades\Schema::hasTable('keuangan_aset') && ! \Illuminate\Support\Facades\Schema::hasColumn('keuangan_aset', 'lampiran')) {
                 \Illuminate\Support\Facades\Schema::table('keuangan_aset', function ($table) {

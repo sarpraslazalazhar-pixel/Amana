@@ -101,6 +101,8 @@ class LampiranAsetTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('lampiran_file');
+        $errors = session('errors')->get('lampiran_file');
+        $this->assertStringContainsString('kebesaran', strtolower($errors[0]));
         $this->assertDatabaseCount('lampiran_aset', 0);
     }
 
@@ -148,7 +150,49 @@ class LampiranAsetTest extends TestCase
         $this->assertDatabaseHas('lampiran_aset', [
             'aset_id' => $this->aset->id,
             'label' => null,
+            'file_name' => 'foto_nota.webp',
+            'file_type' => 'image/webp',
         ]);
+
+        $lampiran = LampiranAset::first();
+        $this->assertStringEndsWith('.webp', $lampiran->file_path);
+        Storage::disk('public')->assertExists($lampiran->file_path);
+    }
+
+    public function test_upload_gambar_lampiran_png_dikonversi_ke_format_webp(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('aset.lampiran.store', $this->aset->id), [
+            'lampiran_file' => UploadedFile::fake()->image('struk_belanja.png', 1000, 800),
+            'lampiran_label' => 'Bukti Struk',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $lampiran = LampiranAset::where('label', 'Bukti Struk')->first();
+        $this->assertNotNull($lampiran);
+        $this->assertEquals('struk_belanja.webp', $lampiran->file_name);
+        $this->assertEquals('image/webp', $lampiran->file_type);
+        $this->assertStringEndsWith('.webp', $lampiran->file_path);
+        Storage::disk('public')->assertExists($lampiran->file_path);
+    }
+
+    public function test_upload_dokumen_non_gambar_tetap_disimpan_asli_tanpa_konversi(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('aset.lampiran.store', $this->aset->id), [
+            'lampiran_file' => UploadedFile::fake()->create('manual_book.pdf', 500, 'application/pdf'),
+            'lampiran_label' => 'Buku Manual',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $lampiran = LampiranAset::where('label', 'Buku Manual')->first();
+        $this->assertNotNull($lampiran);
+        $this->assertEquals('manual_book.pdf', $lampiran->file_name);
+        $this->assertEquals('application/pdf', $lampiran->file_type);
+        $this->assertStringEndsWith('.pdf', $lampiran->file_path);
+        Storage::disk('public')->assertExists($lampiran->file_path);
     }
 
     // ========================================
@@ -245,5 +289,111 @@ class LampiranAsetTest extends TestCase
 
         $xls = new LampiranAset(['file_type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
         $this->assertEquals('ti-file-type-xls', $xls->icon_class);
+    }
+
+    public function test_file_url_accessor(): void
+    {
+        $lampiran = new LampiranAset(['file_path' => 'lampiran_aset/sample.pdf']);
+        $this->assertEquals(asset('storage/lampiran_aset/sample.pdf'), $lampiran->file_url);
+
+        $empty = new LampiranAset(['file_path' => null]);
+        $this->assertNull($empty->file_url);
+    }
+
+    public function test_show_page_renders_lihat_buttons_for_lampiran_and_keuangan(): void
+    {
+        $imageLampiran = LampiranAset::create([
+            'aset_id' => $this->aset->id,
+            'file_path' => 'lampiran_aset/foto.webp',
+            'file_name' => 'foto.webp',
+            'file_size' => 1024,
+            'file_type' => 'image/webp',
+            'label' => 'Foto Fisik',
+            'uploaded_by' => $this->admin->id,
+        ]);
+
+        $pdfLampiran = LampiranAset::create([
+            'aset_id' => $this->aset->id,
+            'file_path' => 'lampiran_aset/dokumen.pdf',
+            'file_name' => 'dokumen.pdf',
+            'file_size' => 2048,
+            'file_type' => 'application/pdf',
+            'label' => 'Buku Manual',
+            'uploaded_by' => $this->admin->id,
+        ]);
+
+        $keu = \App\Models\KeuanganAset::create([
+            'aset_id' => $this->aset->id,
+            'tanggal' => '2026-10-21',
+            'nominal' => 250000,
+            'jenis_transaksi' => "Servis AC 1/2 PK 'Daikin'",
+            'keterangan' => 'Ganti filter',
+            'lampiran' => 'keuangan/nota_servis.jpg',
+            'user_id' => $this->admin->id,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('aset.show', $this->aset->id));
+
+        $response->assertOk();
+        $response->assertSee('Foto Fisik');
+        $response->assertSee('Buku Manual');
+        $response->assertSee("Servis AC 1/2 PK &#039;Daikin&#039;", false);
+        $response->assertSee('openImageModal(' . \Illuminate\Support\Js::from($imageLampiran->file_url), false);
+        $response->assertSee('openImageModal(' . \Illuminate\Support\Js::from($keu->lampiran_url), false);
+        $response->assertSee(e($pdfLampiran->file_url), false);
+    }
+
+    public function test_is_image_and_is_pdf_fallback_to_extension_when_file_type_is_null_or_empty(): void
+    {
+        $imgNullMime = new LampiranAset([
+            'file_path' => 'lampiran_aset/sample.webp',
+            'file_name' => 'sample.webp',
+            'file_type' => null,
+        ]);
+        $this->assertTrue($imgNullMime->is_image);
+        $this->assertFalse($imgNullMime->is_pdf);
+
+        $imgExtOnly = new LampiranAset([
+            'file_path' => 'lampiran_aset/hash123',
+            'file_name' => 'FOTO_BARANG.JPG',
+            'file_type' => 'jpg',
+        ]);
+        $this->assertTrue($imgExtOnly->is_image);
+
+        $pdfNullMime = new LampiranAset([
+            'file_path' => 'lampiran_aset/manual.PDF',
+            'file_name' => 'manual.pdf',
+            'file_type' => null,
+        ]);
+        $this->assertTrue($pdfNullMime->is_pdf);
+        $this->assertFalse($pdfNullMime->is_image);
+
+        $docFile = new LampiranAset([
+            'file_path' => 'lampiran_aset/berkas.docx',
+            'file_name' => 'berkas.docx',
+            'file_type' => null,
+        ]);
+        $this->assertFalse($docFile->is_image);
+        $this->assertFalse($docFile->is_pdf);
+        $this->assertEquals('ti-file-type-doc', $docFile->icon_class);
+    }
+
+    public function test_show_page_renders_lihat_button_for_generic_document(): void
+    {
+        $docLampiran = LampiranAset::create([
+            'aset_id' => $this->aset->id,
+            'file_path' => 'lampiran_aset/kontrak.docx',
+            'file_name' => 'kontrak.docx',
+            'file_size' => 4096,
+            'file_type' => 'application/octet-stream',
+            'label' => 'Kontrak Pembelian',
+            'uploaded_by' => $this->admin->id,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('aset.show', $this->aset->id));
+        $response->assertOk();
+        $response->assertSee('Kontrak Pembelian');
+        $response->assertSee(e($docLampiran->file_url), false);
+        $response->assertSee('Buka Dokumen di Tab Baru');
     }
 }

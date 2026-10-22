@@ -216,6 +216,10 @@ class AsetSubmoduleController extends Controller
             'catatan_penyelesaian' => 'nullable|string',
             'biaya_riil' => 'nullable|numeric|min:0',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
+        ], [
+            'lampiran.file' => 'Berkas lampiran tidak valid.',
+            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
+            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
         ]);
 
         $agenda = AgendaAset::with('aset')->findOrFail($agendaId);
@@ -336,6 +340,10 @@ class AsetSubmoduleController extends Controller
             'jenis_transaksi' => 'nullable|string|max:255',
             'keterangan' => 'nullable|string',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
+        ], [
+            'lampiran.file' => 'Berkas lampiran tidak valid.',
+            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
+            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
         ]);
 
         $aset = Aset::findOrFail($asetId);
@@ -387,6 +395,10 @@ class AsetSubmoduleController extends Controller
             'tanggal' => 'required|date',
             'kejadian' => 'required|string',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
+        ], [
+            'lampiran.file' => 'Berkas lampiran tidak valid.',
+            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
+            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
         ]);
 
         $aset = Aset::findOrFail($asetId);
@@ -604,6 +616,10 @@ class AsetSubmoduleController extends Controller
             'jenis_transaksi' => 'nullable|string|max:255',
             'keterangan' => 'nullable|string',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
+        ], [
+            'lampiran.file' => 'Berkas lampiran tidak valid.',
+            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
+            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
         ]);
 
         $lampiranPath = $keuangan->lampiran;
@@ -800,6 +816,10 @@ class AsetSubmoduleController extends Controller
             'tanggal' => 'required|date',
             'kejadian' => 'required|string',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
+        ], [
+            'lampiran.file' => 'Berkas lampiran tidak valid.',
+            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
+            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
         ]);
 
         $lampiranPath = $jurnal->lampiran;

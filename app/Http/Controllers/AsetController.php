@@ -168,7 +168,7 @@ class AsetController extends Controller
             'total_nilai' => (float) ((clone $query)->sum('harga_total') ?? 0),
         ];
 
-        $allowedPerPage = [10, 15, 20, 24, 100, 250];
+        $allowedPerPage = [10, 15, 20, 24, 25, 50, 100, 250];
         $perPageInput = $request->input('per_page', 15);
         if ($perPageInput === 'all') {
             $perPage = 500;
@@ -190,9 +190,7 @@ class AsetController extends Controller
     private function exportExcel(Request $request, string $grup)
     {
         $config = $this->grupConfig($grup);
-        $query = $this->buildGrupQuery($request, $grup);
-        $items = $query->orderBy('created_at', 'desc')->get();
-
+        $query = $this->buildGrupQuery($request, $grup)->orderBy('created_at', 'desc');
         $filename = 'rekap_'.str_replace('-', '_', $config['key']).'_'.date('Ymd_His').'.csv';
 
         $headers = [
@@ -203,7 +201,7 @@ class AsetController extends Controller
             'Expires' => '0',
         ];
 
-        $callback = function () use ($items) {
+        $callback = function () use ($query) {
             $handle = fopen('php://output', 'w');
 
             // Write UTF-8 BOM for Excel compatibility
@@ -232,7 +230,7 @@ class AsetController extends Controller
             ]);
 
             $no = 1;
-            foreach ($items as $aset) {
+            foreach ($query->cursor() as $aset) {
                 fputcsv($handle, [
                     $no++,
                     $aset->kode_aset,
@@ -324,6 +322,17 @@ class AsetController extends Controller
             'deskripsi' => 'nullable|string',
             'keterangan_tambahan' => 'nullable|string',
             'foto_utama' => 'nullable|image|max:10240',
+            'lampiran_files' => 'nullable|array|max:5',
+            'lampiran_files.*' => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx',
+            'lampiran_labels' => 'nullable|array|max:5',
+            'lampiran_labels.*' => 'nullable|string|max:255',
+        ], [
+            'foto_utama.image' => 'Foto utama harus berupa file gambar (JPG, PNG, WEBP).',
+            'foto_utama.max' => 'Ukuran foto utama terlalu besar (kebesaran). Maksimal 10 MB.',
+            'lampiran_files.max' => 'Maksimal 5 berkas lampiran yang dapat diunggah sekaligus.',
+            'lampiran_files.*.file' => 'Berkas lampiran tidak valid.',
+            'lampiran_files.*.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 5 MB per file.',
+            'lampiran_files.*.mimes' => 'Format file lampiran tidak didukung. Format yang diizinkan: PDF, JPG, JPEG, PNG, WEBP, DOC, DOCX, XLS, XLSX.',
         ]);
 
         // Tentukan Jenis Aset:
@@ -370,7 +379,7 @@ class AsetController extends Controller
                     $fotoPath = $this->imageOptimizer->optimizeAndStore($file, 'aset_foto');
                 } catch (\Throwable $e) {
                     return back()->withInput()->withErrors([
-                        'foto_utama' => 'Foto gagal diproses. Pastikan format file berupa gambar yang valid dan ukuran di bawah 10MB.',
+                        'foto_utama' => 'Foto gagal diproses: '.$e->getMessage(),
                     ]);
                 }
             } else {
@@ -437,13 +446,22 @@ class AsetController extends Controller
 
             foreach (array_slice($lampiranFiles, 0, $maxLampiran) as $index => $lampiranFile) {
                 if ($lampiranFile && $lampiranFile->isValid()) {
-                    $path = $lampiranFile->store('lampiran_aset', 'public');
+                    $path = $this->imageOptimizer->storeAttachmentSmart($lampiranFile, 'lampiran_aset', 'public');
+                    $isWebp = str_ends_with(strtolower($path), '.webp');
+                    $fileName = $isWebp
+                        ? pathinfo($lampiranFile->getClientOriginalName(), PATHINFO_FILENAME) . '.webp'
+                        : $lampiranFile->getClientOriginalName();
+                    $fileType = $isWebp ? 'image/webp' : ($lampiranFile->getMimeType() ?: 'application/octet-stream');
+                    $fileSize = Storage::disk('public')->exists($path)
+                        ? Storage::disk('public')->size($path)
+                        : $lampiranFile->getSize();
+
                     LampiranAset::create([
                         'aset_id' => $aset->id,
                         'file_path' => $path,
-                        'file_name' => $lampiranFile->getClientOriginalName(),
-                        'file_size' => $lampiranFile->getSize(),
-                        'file_type' => $lampiranFile->getMimeType(),
+                        'file_name' => $fileName,
+                        'file_size' => $fileSize,
+                        'file_type' => $fileType,
                         'label' => $lampiranLabels[$index] ?? null,
                         'uploaded_by' => auth()->id() ?? 1,
                     ]);
@@ -607,6 +625,9 @@ class AsetController extends Controller
             'barang_id' => 'required|exists:barang,id',
             'cara_perolehan' => 'nullable|in:1,2',
             'status_barang' => 'nullable|in:1,2',
+        ], [
+            'foto_utama.image' => 'Foto utama harus berupa file gambar (JPG, PNG, WEBP).',
+            'foto_utama.max' => 'Ukuran foto utama terlalu besar (kebesaran). Maksimal 10 MB.',
         ]);
 
         // Tentukan Jenis Aset:
@@ -642,7 +663,7 @@ class AsetController extends Controller
                     $fotoPath = $newFotoPath;
                 } catch (\Throwable $e) {
                     return back()->withInput()->withErrors([
-                        'foto_utama' => 'Foto gagal diproses. Pastikan format file berupa gambar yang valid dan ukuran di bawah 10MB.',
+                        'foto_utama' => 'Foto gagal diproses: '.$e->getMessage(),
                     ]);
                 }
             } else {
