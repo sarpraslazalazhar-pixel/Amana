@@ -167,8 +167,21 @@
                     <label class="block text-[11px] font-semibold text-slate-600 mb-1">Kategori</label>
                     <x-searchable-select name="kategori_id" :items="$katItems" :value="request('kategori_id', '')" placeholder="-- Semua Kategori --" />
                 </div>
+                <!-- Area / Wilayah Lokasi -->
+                @php
+                    $wilayahItems = collect($wilayahList ?? \App\Models\Lokasi::getWilayahOptions())->map(fn($w, $k) => [
+                        'id' => (string) $k,
+                        'title' => $w['nama'],
+                        'code' => $k,
+                        'subtitle' => 'Rentang: ' . $k,
+                    ])->values()->toArray();
+                @endphp
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Area / Wilayah</label>
+                    <x-searchable-select name="area_lokasi" :items="$wilayahItems" :value="request('area_lokasi', '')" placeholder="-- Semua Area (1xx - 6xx) --" />
+                </div>
 
-                <!-- Lokasi -->
+                <!-- Lokasi Spesifik -->
                 @php
                     $lokItems = $lokasiList->map(fn($l) => ['id' => (string)$l->id, 'title' => $l->nama_lokasi, 'code' => $l->kode_lokasi, 'subtitle' => $l->gedung])->toArray();
                 @endphp
@@ -233,7 +246,7 @@
         </div>
 
         <!-- Tabel List -->
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto cursor-grab" x-drag-scroll title="Klik dan tahan kursor untuk menggeser tabel ke samping">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="border-b border-slate-200/80 bg-slate-50/30 text-slate-400 font-semibold text-[11px] uppercase tracking-wider">

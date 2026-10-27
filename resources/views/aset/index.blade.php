@@ -6,7 +6,7 @@
 @section('content')
 <div class="space-y-6 pb-16"
      x-data="{
-         filterOpen: @js(request()->anyFilled(['search', 'kategori_id', 'lokasi_id', 'penanggung_jawab_id', 'tgl_dari', 'tgl_sampai'])),
+         filterOpen: @js(request()->anyFilled(['search', 'kategori_id', 'area_lokasi', 'lokasi_id', 'penanggung_jawab_id', 'tgl_dari', 'tgl_sampai'])),
          selectedIds: [],
          pageIds: @js($asetList->pluck('id')->map(fn($id) => (int)$id)->toArray()),
 
@@ -54,7 +54,7 @@
                     :class="filterOpen ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm hover:border-slate-300'">
                 <i class="ti ti-adjustments-horizontal mr-1.5 text-sm" :class="filterOpen ? 'text-white' : 'text-slate-500'"></i>
                 <span x-text="filterOpen ? 'Tutup Filter' : 'Filter & Pencarian'">Filter & Pencarian</span>
-                @if(request()->anyFilled(['search', 'kategori_id', 'lokasi_id', 'penanggung_jawab_id', 'tgl_dari', 'tgl_sampai']))
+                @if(request()->anyFilled(['search', 'kategori_id', 'area_lokasi', 'lokasi_id', 'penanggung_jawab_id', 'tgl_dari', 'tgl_sampai']))
                     <span class="ml-2 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-500 text-white">Aktif</span>
                 @endif
             </button>
@@ -112,6 +112,16 @@
                    class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-200 shadow-sm transition-all hover:border-slate-300">
                     <i class="ti ti-file-import mr-1.5 text-cyan-600 text-sm"></i> Impor Excel
                 </a>
+            @endif
+            @if(auth()->check() && auth()->user()->role === 'super_admin')
+                <form method="POST" action="{{ route('aset.rapikan-urutan') }}" class="inline" onsubmit="return confirm('Rapikan nomor urut seluruh aset berdasarkan kronologi tanggal pembelian (umur aset)? Kode fisik lama tetap tersimpan untuk QR scan.');">
+                    @csrf
+                    <button type="submit"
+                            title="Urutkan ulang nomor urut aset secara kronologis (tanggal perolehan) per Barang & Divisi"
+                            class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-200 shadow-sm transition-all hover:border-slate-300">
+                        <i class="ti ti-sort-ascending-numbers mr-1.5 text-indigo-600 text-sm"></i> Rapikan Urutan
+                    </button>
+                </form>
             @endif
 
             <a href="{{ route($config['export_route'], request()->query()) }}"
@@ -205,6 +215,27 @@
                     />
                 </div>
 
+                <!-- Area / Wilayah Lokasi (Ratusan) -->
+                @php
+                    $wilayahFilterItems = collect($wilayahList ?? \App\Models\Lokasi::getWilayahOptions())->map(function($w, $key) {
+                        return [
+                            'id' => (string) $key,
+                            'title' => $w['nama'],
+                            'code' => $key,
+                            'subtitle' => 'Rentang: ' . $key,
+                        ];
+                    })->values()->toArray();
+                @endphp
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Area / Wilayah</label>
+                    <x-searchable-select
+                        name="area_lokasi"
+                        :items="$wilayahFilterItems"
+                        :value="request('area_lokasi', '')"
+                        placeholder="-- Semua Wilayah (1xx - 6xx) --"
+                    />
+                </div>
+
                 <!-- Lokasi -->
                 @php
                     $lokasiFilterItems = $lokasiList->map(fn($lok) => [
@@ -272,7 +303,15 @@
 
     <!-- Data Table Card -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="px-5 py-2.5 bg-slate-50/60 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-400 select-none">
+            <span class="inline-flex items-center gap-1.5 font-medium text-slate-500">
+                <i class="ti ti-arrows-horizontal text-emerald-600 text-xs"></i>
+                <span class="hidden sm:inline">Tabel dapat digeser ke samping menggunakan kursor mouse (drag-to-scroll)</span>
+                <span class="sm:hidden">Geser tabel ke samping</span>
+            </span>
+            <span class="font-mono text-[10px] text-slate-400">Tampil: {{ $asetList->count() }} dari {{ $asetList->total() }} aset</span>
+        </div>
+        <div class="overflow-x-auto cursor-grab" x-drag-scroll title="Klik dan tahan kursor untuk menggeser tabel ke samping">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -327,7 +366,15 @@
                                     {{ $aset->kategori->nama_kategori ?? '-' }}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 text-slate-600 text-xs">{{ $aset->lokasi->nama_lokasi ?? '-' }}</td>
+                            <td class="py-3 px-4 text-xs">
+                                <div class="font-medium text-slate-900">{{ $aset->lokasi->nama_lokasi ?? '-' }}</div>
+                                @if($aset->lokasi)
+                                    <div class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
+                                        <span class="font-mono font-bold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded">{{ $aset->lokasi->kode_lokasi }}</span>
+                                        <span>{{ $aset->lokasi->wilayah_nama }}</span>
+                                    </div>
+                                @endif
+                            </td>
                             <td class="py-3 px-4 text-slate-600 text-xs">{{ $aset->penanggungJawab->nama ?? '-' }}</td>
                             <td class="py-3 px-4 text-slate-600 text-xs">
                                 {{ $aset->tanggal_pembelian ? \Carbon\Carbon::parse($aset->tanggal_pembelian)->format('d/m/Y') : '-' }}
@@ -340,6 +387,7 @@
                                         {{ ucfirst($aset->jenis) }}
                                     </span>
                                 @endif
+                            </td>
                             <td class="py-3 px-4 text-right font-medium text-slate-900 text-xs whitespace-nowrap">
                                 @if($aset->harga_total > 0)
                                     Rp {{ number_format($aset->harga_total, 0, ',', '.') }}
@@ -360,7 +408,7 @@
                             <td colspan="10" class="py-12 text-center text-slate-400">
                                 <i class="ti ti-box-search mb-2 block text-3xl"></i>
                                 <p class="text-sm font-medium">{{ $config['empty'] }}</p>
-                                @if(request()->anyFilled(['search', 'kategori_id', 'lokasi_id', 'penanggung_jawab_id', 'tgl_dari', 'tgl_sampai']))
+                                @if(request()->anyFilled(['search', 'kategori_id', 'area_lokasi', 'lokasi_id', 'penanggung_jawab_id', 'tgl_dari', 'tgl_sampai']))
                                     <p class="text-xs text-slate-400 mt-1">Coba sesuaikan atau <a href="{{ route($config['route'], request()->has('per_page') ? ['per_page' => request('per_page')] : []) }}" class="text-emerald-600 underline font-medium">reset filter</a> pencarian Anda.</p>
                                 @endif
                             </td>

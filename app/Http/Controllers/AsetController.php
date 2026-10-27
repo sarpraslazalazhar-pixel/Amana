@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aset;
-use App\Models\LampiranAset;
 use App\Models\AsetImportBatch;
 use App\Models\AsetImportItem;
 use App\Models\Barang;
 use App\Models\Divisi;
 use App\Models\Kategori;
+use App\Models\LampiranAset;
 use App\Models\Lokasi;
 use App\Models\Merk;
 use App\Models\PenanggungJawab;
@@ -123,6 +123,12 @@ class AsetController extends Controller
         if ($request->filled('kategori_id')) {
             $query->where('kategori_id', $request->kategori_id);
         }
+        // Filter Wilayah / Range Kode Lokasi (cth: "100-199", "100", "200-299", dsb.)
+        if ($request->filled('area_lokasi')) {
+            $query->inWilayahRange($request->area_lokasi);
+        } elseif ($request->filled('lokasi_range')) {
+            $query->inWilayahRange($request->lokasi_range);
+        }
 
         if ($request->filled('lokasi_id')) {
             $query->where('lokasi_id', $request->lokasi_id);
@@ -142,14 +148,39 @@ class AsetController extends Controller
 
         if ($request->filled('search')) {
             $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
+            $wilayahRange = Lokasi::parseWilayahRange($search);
+
+            $query->where(function ($q) use ($search, $wilayahRange) {
                 $q->where('nama_aset', 'LIKE', "%{$search}%")
                     ->orWhere('kode_aset', 'LIKE', "%{$search}%")
+                    ->orWhere('kode_aset_lama', 'LIKE', "%{$search}%")
                     ->orWhere('no_seri', 'LIKE', "%{$search}%")
                     ->orWhere('tipe_model', 'LIKE', "%{$search}%")
                     ->orWhereHas('merk', function ($m) use ($search) {
                         $m->where('nama_merk', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('lokasi', function ($l) use ($search) {
+                        $l->where('nama_lokasi', 'LIKE', "%{$search}%")
+                            ->orWhere('gedung', 'LIKE', "%{$search}%")
+                            ->orWhere('kode_lokasi', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('penanggungJawab', function ($pj) use ($search) {
+                        $pj->where('nama', 'LIKE', "%{$search}%");
                     });
+
+                if ($wilayahRange) {
+                    $min = (string) $wilayahRange['min'];
+                    $max = (string) $wilayahRange['max'];
+                    $prefix = (string) $wilayahRange['prefix'];
+
+                    $q->orWhereHas('lokasi', function ($lq) use ($min, $max, $prefix) {
+                        $lq->whereBetween('kode_lokasi', [$min, $max])
+                            ->orWhere('kode_lokasi', 'LIKE', "{$prefix}%");
+                    })->orWhere(function ($kq) use ($prefix) {
+                        $kq->where('sifat_barang', 'S')
+                            ->where('kode_aset', 'LIKE', "%S{$prefix}%");
+                    });
+                }
             });
         }
 
@@ -181,10 +212,11 @@ class AsetController extends Controller
         $asetList = (clone $query)->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
 
         $kategoriList = Kategori::orderBy('nama_kategori')->get();
-        $lokasiList = Lokasi::orderBy('nama_lokasi')->get();
+        $lokasiList = Lokasi::orderBy('kode_lokasi')->get();
         $penanggungJawabList = PenanggungJawab::with('divisi')->orderBy('nama')->get();
+        $wilayahList = Lokasi::getWilayahOptions();
 
-        return view('aset.index', compact('asetList', 'kategoriList', 'lokasiList', 'penanggungJawabList', 'summary', 'config'));
+        return view('aset.index', compact('asetList', 'kategoriList', 'lokasiList', 'penanggungJawabList', 'summary', 'config', 'wilayahList'));
     }
 
     private function exportExcel(Request $request, string $grup)
@@ -276,6 +308,28 @@ class AsetController extends Controller
         $preview = KodeAsetGenerator::preview($request->all());
 
         return response()->json($preview);
+    }
+
+    public function rapikanUrutan(Request $request)
+    {
+        $barangId = $request->filled('barang_id') ? (int) $request->barang_id : null;
+        $divisiId = $request->filled('divisi_id') ? (int) $request->divisi_id : null;
+
+        $result = KodeAsetGenerator::rapikanUrutan($barangId, $divisiId);
+
+        if ($result['total_updated'] > 0) {
+            AuditLogger::log(
+                'rapikan_urutan',
+                "Merapikan nomor urut {$result['total_updated']} aset berdasarkan umur aset (tanggal perolehan).",
+                null,
+                null,
+                'Aset'
+            );
+
+            return back()->with('success', "Berhasil merapikan nomor urut {$result['total_updated']} aset berdasarkan umur perolehan.");
+        }
+
+        return back()->with('info', 'Semua aset sudah berurutan rapi sesuai umur/tanggal pembelian. Tidak ada perubahan yang diperlukan.');
     }
 
     public function store(Request $request)
@@ -449,7 +503,7 @@ class AsetController extends Controller
                     $path = $this->imageOptimizer->storeAttachmentSmart($lampiranFile, 'lampiran_aset', 'public');
                     $isWebp = str_ends_with(strtolower($path), '.webp');
                     $fileName = $isWebp
-                        ? pathinfo($lampiranFile->getClientOriginalName(), PATHINFO_FILENAME) . '.webp'
+                        ? pathinfo($lampiranFile->getClientOriginalName(), PATHINFO_FILENAME).'.webp'
                         : $lampiranFile->getClientOriginalName();
                     $fileType = $isWebp ? 'image/webp' : ($lampiranFile->getMimeType() ?: 'application/octet-stream');
                     $fileSize = Storage::disk('public')->exists($path)
@@ -844,8 +898,9 @@ class AsetController extends Controller
         $kategoriList = Kategori::orderBy('nama_kategori')->get();
         $divisiList = Divisi::orderBy('kode_divisi')->get();
         $merkList = Merk::orderBy('nama_merk')->get();
-        $lokasiList = Lokasi::orderBy('nama_lokasi')->get();
+        $lokasiList = Lokasi::orderBy('kode_lokasi')->get();
         $pjList = PenanggungJawab::orderBy('nama')->get();
+        $wilayahList = Lokasi::getWilayahOptions();
 
         $previewQuery = AsetExportService::buildQuery($request->all());
         $filteredCount = $previewQuery->count();
@@ -853,7 +908,7 @@ class AsetController extends Controller
 
         return view('aset.export.index', compact(
             'kategoriList', 'divisiList', 'merkList', 'lokasiList', 'pjList',
-            'filteredCount', 'totalCount'
+            'filteredCount', 'totalCount', 'wilayahList'
         ));
     }
 

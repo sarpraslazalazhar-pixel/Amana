@@ -235,6 +235,8 @@ class AsetFuzzyMatcher
             'ROOFTOP' => '140',
             'KLB' => '200',
             'SAWANGAN' => '300',
+            'RGI SENTRA' => '400',
+            'SENTRA' => '400',
             'RGI' => '300',
             'DASAMAS' => '400',
             'CIRENDEU' => '100',

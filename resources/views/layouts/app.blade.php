@@ -50,6 +50,11 @@
                         <span>{{ session('error') }}</span>
                     </div>
                 @endif
+                @if(session('info'))
+                    <div class="mb-6 p-4 rounded-2xl bg-sky-50 border border-sky-200 text-sky-800 text-xs flex items-center justify-between shadow-sm">
+                        <span>{{ session('info') }}</span>
+                    </div>
+                @endif
 
                 @if($errors->any())
                     <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs shadow-sm">

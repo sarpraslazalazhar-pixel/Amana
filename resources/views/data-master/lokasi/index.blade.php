@@ -145,9 +145,19 @@
 
             <!-- Filter & Pencarian Form -->
             <form method="GET" action="{{ route('data.lokasi.index') }}" class="flex flex-wrap items-center gap-2.5">
+                <select name="area_lokasi" onchange="this.form.submit()"
+                        class="px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold text-slate-700">
+                    <option value="">-- Semua Area Kode (1xx-6xx) --</option>
+                    @foreach($wilayahList ?? \App\Models\Lokasi::getWilayahOptions() as $k => $w)
+                        <option value="{{ $k }}" {{ request('area_lokasi') === $k ? 'selected' : '' }}>
+                            {{ $w['label'] }}
+                        </option>
+                    @endforeach
+                </select>
+
                 <select name="gedung" onchange="this.form.submit()"
                         class="px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold text-slate-700">
-                    <option value="">-- Semua Gedung / Wilayah --</option>
+                    <option value="">-- Semua Gedung --</option>
                     @foreach($gedungList as $g)
                         <option value="{{ $g }}" {{ request('gedung') === $g ? 'selected' : '' }}>{{ $g }}</option>
                     @endforeach
@@ -162,7 +172,7 @@
                 <button type="submit" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
                     Filter
                 </button>
-                @if(request()->hasAny(['gedung', 'search']))
+                @if(request()->hasAny(['gedung', 'search', 'area_lokasi']))
                     <a href="{{ route('data.lokasi.index') }}" class="px-3 py-2 text-xs font-bold text-rose-600 hover:text-rose-700">
                         Reset
                     </a>
@@ -171,7 +181,7 @@
         </div>
 
         <!-- Tabel Data -->
-        <div class="overflow-x-auto rounded-2xl border border-slate-200/80">
+        <div class="overflow-x-auto rounded-2xl border border-slate-200/80 cursor-grab" x-drag-scroll title="Klik dan tahan kursor untuk menggeser tabel ke samping">
             <table class="w-full text-left text-xs">
                 <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold text-[11px]">
                     <tr>

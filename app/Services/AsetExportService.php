@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Aset;
+use App\Models\Lokasi;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -41,6 +42,11 @@ class AsetExportService
         if (! empty($filters['merk_id'])) {
             $query->where('merk_id', $filters['merk_id']);
         }
+        if (! empty($filters['area_lokasi'])) {
+            $query->inWilayahRange($filters['area_lokasi']);
+        } elseif (! empty($filters['lokasi_range'])) {
+            $query->inWilayahRange($filters['lokasi_range']);
+        }
 
         if (! empty($filters['lokasi_id'])) {
             $query->where('lokasi_id', $filters['lokasi_id']);
@@ -60,7 +66,9 @@ class AsetExportService
 
         if (! empty($filters['search'])) {
             $search = trim($filters['search']);
-            $query->where(function ($q) use ($search) {
+            $wilayahRange = Lokasi::parseWilayahRange($search);
+
+            $query->where(function ($q) use ($search, $wilayahRange) {
                 $q->where('nama_aset', 'LIKE', "%{$search}%")
                     ->orWhere('kode_aset', 'LIKE', "%{$search}%")
                     ->orWhere('kode_aset_lama', 'LIKE', "%{$search}%")
@@ -68,7 +76,29 @@ class AsetExportService
                     ->orWhere('tipe_model', 'LIKE', "%{$search}%")
                     ->orWhereHas('merk', function ($m) use ($search) {
                         $m->where('nama_merk', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('lokasi', function ($l) use ($search) {
+                        $l->where('nama_lokasi', 'LIKE', "%{$search}%")
+                            ->orWhere('gedung', 'LIKE', "%{$search}%")
+                            ->orWhere('kode_lokasi', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('penanggungJawab', function ($pj) use ($search) {
+                        $pj->where('nama', 'LIKE', "%{$search}%");
                     });
+
+                if ($wilayahRange) {
+                    $min = (string) $wilayahRange['min'];
+                    $max = (string) $wilayahRange['max'];
+                    $prefix = (string) $wilayahRange['prefix'];
+
+                    $q->orWhereHas('lokasi', function ($lq) use ($min, $max, $prefix) {
+                        $lq->whereBetween('kode_lokasi', [$min, $max])
+                            ->orWhere('kode_lokasi', 'LIKE', "{$prefix}%");
+                    })->orWhere(function ($kq) use ($prefix) {
+                        $kq->where('sifat_barang', 'S')
+                            ->where('kode_aset', 'LIKE', "%S{$prefix}%");
+                    });
+                }
             });
         }
 

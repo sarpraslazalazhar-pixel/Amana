@@ -320,7 +320,13 @@
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-1 font-medium">Lokasi Penempatan</span>
-                        <span class="font-bold text-slate-800 text-[13px]">{{ $aset->lokasi->nama_lokasi ?? '-' }}</span>
+                        <div class="font-bold text-slate-800 text-[13px]">{{ $aset->lokasi->nama_lokasi ?? '-' }}</div>
+                        @if($aset->lokasi)
+                            <div class="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
+                                <span class="font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded text-[10px]">{{ $aset->lokasi->kode_lokasi }}</span>
+                                <span>{{ $aset->lokasi->wilayah_nama }}</span>
+                            </div>
+                        @endif
                     </div>
                     <div class="sm:col-span-2">
                         <span class="text-slate-400 block mb-1 font-medium">Penanggung Jawab / Pemegang</span>

@@ -13,17 +13,34 @@ class LokasiController extends Controller
     {
         $query = Lokasi::withCount('aset');
 
+        if ($request->filled('area_lokasi')) {
+            $query->inWilayahRange($request->area_lokasi);
+        } elseif ($request->filled('lokasi_range')) {
+            $query->inWilayahRange($request->lokasi_range);
+        }
+
         if ($request->filled('gedung')) {
             $query->where('gedung', $request->gedung);
         }
 
         if ($request->filled('search')) {
             $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
+            $wilayahRange = Lokasi::parseWilayahRange($search);
+
+            $query->where(function ($q) use ($search, $wilayahRange) {
                 $q->where('nama_lokasi', 'LIKE', "%{$search}%")
                     ->orWhere('kode_lokasi', 'LIKE', "%{$search}%")
                     ->orWhere('gedung', 'LIKE', "%{$search}%")
                     ->orWhere('alamat_lengkap', 'LIKE', "%{$search}%");
+
+                if ($wilayahRange) {
+                    $min = (string) $wilayahRange['min'];
+                    $max = (string) $wilayahRange['max'];
+                    $prefix = (string) $wilayahRange['prefix'];
+
+                    $q->orWhereBetween('kode_lokasi', [$min, $max])
+                        ->orWhere('kode_lokasi', 'LIKE', "{$prefix}%");
+                }
             });
         }
 
@@ -59,15 +76,16 @@ class LokasiController extends Controller
             });
 
         $lokasiList = $query->orderBy('kode_lokasi', 'asc')->paginate(15)->withQueryString();
+        $wilayahList = Lokasi::getWilayahOptions();
 
-        return view('data-master.lokasi.index', compact('lokasiList', 'markersData', 'gedungList', 'summary'));
+        return view('data-master.lokasi.index', compact('lokasiList', 'markersData', 'gedungList', 'summary', 'wilayahList'));
     }
 
     public function store(Request $request)
     {
         if ($request->filled('kode_lokasi')) {
             $request->merge([
-                'kode_lokasi' => str_pad(trim($request->kode_lokasi), 3, '0', STR_PAD_LEFT)
+                'kode_lokasi' => str_pad(trim($request->kode_lokasi), 3, '0', STR_PAD_LEFT),
             ]);
         }
 
@@ -100,7 +118,7 @@ class LokasiController extends Controller
 
         if ($request->filled('kode_lokasi')) {
             $request->merge([
-                'kode_lokasi' => str_pad(trim($request->kode_lokasi), 3, '0', STR_PAD_LEFT)
+                'kode_lokasi' => str_pad(trim($request->kode_lokasi), 3, '0', STR_PAD_LEFT),
             ]);
         }
 

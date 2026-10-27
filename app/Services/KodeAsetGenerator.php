@@ -9,6 +9,7 @@ use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\PenanggungJawab;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class KodeAsetGenerator
@@ -41,12 +42,10 @@ class KodeAsetGenerator
     {
         $validated = self::resolveComponents($params);
 
-        // Cari nomor urut berikutnya berdasarkan kombinasi: Kategori + Barang + Divisi + Tahun
+        // Cari nomor urut berikutnya berdasarkan kombinasi: Barang + Divisi
         $nomorUrut = self::calculateNextSequence(
-            $validated['kategori_id'],
             $validated['barang_id'],
-            $validated['divisi_id'],
-            $validated['tahun']
+            $validated['divisi_id']
         );
 
         $urutanPad = str_pad((string) $nomorUrut, 2, '0', STR_PAD_LEFT);
@@ -63,15 +62,15 @@ class KodeAsetGenerator
             $validated['tahun']
         );
 
-        $kodeAset = $baseKode . $urutanPad;
+        $kodeAset = $baseKode.$urutanPad;
 
         while (Aset::where('kode_aset', $kodeAset)->exists()) {
             $nomorUrut++;
             if ($nomorUrut > 99) {
-                throw new \InvalidArgumentException('Batas nomor urut (99) untuk kombinasi ini telah tercapai.');
+                throw new InvalidArgumentException('Batas nomor urut (99) untuk kombinasi ini telah tercapai.');
             }
             $urutanPad = str_pad((string) $nomorUrut, 2, '0', STR_PAD_LEFT);
-            $kodeAset = $baseKode . $urutanPad;
+            $kodeAset = $baseKode.$urutanPad;
         }
 
         return [
@@ -206,15 +205,15 @@ class KodeAsetGenerator
             $tahun
         );
 
-        $newKodeAset = $baseKode . $urutanPad;
+        $newKodeAset = $baseKode.$urutanPad;
 
         while (Aset::where('kode_aset', $newKodeAset)->where('id', '!=', $aset->id)->exists()) {
             $nomorUrut++;
             if ($nomorUrut > 99) {
-                throw new \InvalidArgumentException('Batas nomor urut (99) untuk mutasi aset ini telah tercapai.');
+                throw new InvalidArgumentException('Batas nomor urut (99) untuk mutasi aset ini telah tercapai.');
             }
             $urutanPad = str_pad((string) $nomorUrut, 2, '0', STR_PAD_LEFT);
-            $newKodeAset = $baseKode . $urutanPad;
+            $newKodeAset = $baseKode.$urutanPad;
         }
 
         $isChanged = ($newKodeAset !== $aset->kode_aset);
@@ -306,6 +305,8 @@ class KodeAsetGenerator
             'sifat_label' => $sifatBarang === 'D' ? 'Dinamis (Amil)' : 'Statis (Lokasi)',
 
             'kode_keempat' => $kodeKeempat,
+            'kode_lokasi' => $sifatBarang === 'S' ? $kodeKeempat : null,
+            'kode_pic' => $sifatBarang === 'D' ? $kodeKeempat : null,
             'label_keempat' => $labelKeempat,
 
             'divisi_id' => $divisi->id,
@@ -323,20 +324,18 @@ class KodeAsetGenerator
     }
 
     /**
-     * Hitung nomor urut berikutnya (01 - 99) berdasarkan kombinasi [Kategori + Barang + Divisi + Tahun].
+     * Hitung nomor urut berikutnya (01 - 99) berdasarkan kombinasi [Barang + Divisi].
      */
-    public static function calculateNextSequence(int $kategoriId, int $barangId, int $divisiId, string $tahun): int
+    public static function calculateNextSequence(int $barangId, int $divisiId): int
     {
-        $maxSequence = Aset::where('kategori_id', $kategoriId)
-            ->where('barang_id', $barangId)
+        $maxSequence = Aset::where('barang_id', $barangId)
             ->where('divisi_id', $divisiId)
-            ->whereYear('tanggal_pembelian', $tahun)
             ->max('nomor_urut');
 
         $next = ($maxSequence !== null) ? ((int) $maxSequence + 1) : 1;
 
         if ($next > 99) {
-            throw new InvalidArgumentException('Batas nomor urut (99) untuk jenis barang, divisi, dan tahun ini telah tercapai.');
+            throw new InvalidArgumentException('Batas nomor urut (99) untuk jenis barang dan divisi ini telah tercapai.');
         }
 
         return $next;
@@ -372,6 +371,8 @@ class KodeAsetGenerator
                 'kode_barang' => $m['brg'],
                 'sifat_barang' => $m['sifat'],
                 'kode_keempat' => $m['keempat'],
+                'kode_lokasi' => $m['sifat'] === 'S' ? $m['keempat'] : null,
+                'kode_pic' => $m['sifat'] === 'D' ? $m['keempat'] : null,
                 'kode_divisi' => $m['div'],
                 'cara_perolehan' => $m['cara'],
                 'status_barang' => $m['status'],
@@ -449,6 +450,8 @@ class KodeAsetGenerator
                 'kode_barang' => $m['brg'],
                 'sifat_barang' => $m['sifat'],
                 'kode_keempat' => $m['keempat'],
+                'kode_lokasi' => $m['sifat'] === 'S' ? $m['keempat'] : null,
+                'kode_pic' => $m['sifat'] === 'D' ? $m['keempat'] : null,
                 'kode_divisi' => $m['div'],
                 'cara_perolehan' => $cara,
                 'status_barang' => $status,
@@ -511,5 +514,94 @@ class KodeAsetGenerator
         }
 
         return null;
+    }
+
+    /**
+     * Rapikan nomor urut dan kode aset berdasarkan umur aset (kronologi tanggal perolehan/pembelian ASC).
+     *
+     * @param  int|null  $barangId  Filter id barang spesifik (opsional)
+     * @param  int|null  $divisiId  Filter id divisi spesifik (opsional)
+     * @param  bool  $dryRun  Jika true, hanya simulasi tanpa menyimpan perubahan ke database
+     * @return array ['total_checked' => int, 'total_updated' => int, 'changes' => array]
+     */
+    public static function rapikanUrutan(?int $barangId = null, ?int $divisiId = null, bool $dryRun = false): array
+    {
+        $groupQuery = Aset::query()
+            ->select('barang_id', 'divisi_id')
+            ->whereNotNull('barang_id')
+            ->whereNotNull('divisi_id');
+
+        if ($barangId !== null) {
+            $groupQuery->where('barang_id', $barangId);
+        }
+        if ($divisiId !== null) {
+            $groupQuery->where('divisi_id', $divisiId);
+        }
+
+        $groups = $groupQuery->groupBy('barang_id', 'divisi_id')->get();
+
+        $changes = [];
+        $totalChecked = 0;
+
+        foreach ($groups as $group) {
+            $asets = Aset::query()
+                ->where('barang_id', $group->barang_id)
+                ->where('divisi_id', $group->divisi_id)
+                ->orderBy('tanggal_pembelian', 'asc')
+                ->orderBy('id', 'asc')
+                ->get(['id', 'nama_aset', 'kode_aset', 'kode_aset_lama', 'nomor_urut']);
+
+            $seq = 1;
+            foreach ($asets as $aset) {
+                $totalChecked++;
+                $newPad = str_pad((string) $seq, 2, '0', STR_PAD_LEFT);
+                $base = substr($aset->kode_aset, 0, -2);
+                $newKode = $base.$newPad;
+
+                $needsUpdate = ((int) $aset->nomor_urut !== $seq) || ($aset->kode_aset !== $newKode);
+
+                if ($needsUpdate) {
+                    $changes[] = [
+                        'id' => $aset->id,
+                        'nama_aset' => $aset->nama_aset,
+                        'old_nomor_urut' => $aset->nomor_urut,
+                        'new_nomor_urut' => $seq,
+                        'old_kode_aset' => $aset->kode_aset,
+                        'new_kode_aset' => $newKode,
+                        'kode_aset_lama_preserved' => empty($aset->kode_aset_lama) ? $aset->kode_aset : null,
+                    ];
+                }
+                $seq++;
+            }
+        }
+
+        if (! $dryRun && count($changes) > 0) {
+            DB::transaction(function () use ($changes) {
+                // Tahap 1: Kode sementara untuk menghindari collision unique key MySQL
+                foreach ($changes as $item) {
+                    Aset::where('id', $item['id'])->update([
+                        'kode_aset' => 'TMP_'.$item['id'],
+                    ]);
+                }
+
+                // Tahap 2: Terapkan kode final & nomor_urut baru
+                foreach ($changes as $item) {
+                    $update = [
+                        'nomor_urut' => $item['new_nomor_urut'],
+                        'kode_aset' => $item['new_kode_aset'],
+                    ];
+                    if ($item['kode_aset_lama_preserved'] !== null) {
+                        $update['kode_aset_lama'] = $item['kode_aset_lama_preserved'];
+                    }
+                    Aset::where('id', $item['id'])->update($update);
+                }
+            });
+        }
+
+        return [
+            'total_checked' => $totalChecked,
+            'total_updated' => count($changes),
+            'changes' => $changes,
+        ];
     }
 }

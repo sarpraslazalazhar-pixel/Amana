@@ -4,12 +4,12 @@ use App\Http\Controllers\AsetController;
 use App\Http\Controllers\AsetSubmoduleController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\LampiranAsetController;
 use App\Http\Controllers\DataMaster\KategoriController;
 use App\Http\Controllers\DataMaster\LokasiController;
 use App\Http\Controllers\DataMaster\MerkController;
 use App\Http\Controllers\DataMaster\PenanggungJawabController;
 use App\Http\Controllers\KalenderAsetController;
+use App\Http\Controllers\LampiranAsetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicQrController;
 use App\Http\Controllers\QrConfigController;
@@ -121,6 +121,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/aset/create', [AsetController::class, 'create'])->name('aset.create');
         Route::post('/aset', [AsetController::class, 'store'])->name('aset.store');
         Route::post('/aset/preview-kode', [AsetController::class, 'previewKode'])->name('aset.preview-kode');
+        Route::post('/aset/rapikan-urutan', [AsetController::class, 'rapikanUrutan'])->name('aset.rapikan-urutan');
 
         // Form Pengubahan & Penghapusan Aset
         Route::get('/aset/{aset}/edit', [AsetController::class, 'edit'])->name('aset.edit');
@@ -229,7 +230,7 @@ Route::get('/storage/{path}', function (string $path) {
 
     return response($disk->get($path), 200, [
         'Content-Type' => $mimeType,
-        'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+        'Content-Disposition' => 'inline; filename="'.basename($path).'"',
         'Cache-Control' => 'public, max-age=31536000, immutable',
     ]);
 })->where('path', '.*')->name('storage.fallback');

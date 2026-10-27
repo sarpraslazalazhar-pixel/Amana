@@ -23,18 +23,48 @@ class QrPrintController extends Controller
         // Filter Pencarian Teks
         if ($request->filled('search')) {
             $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
+            $wilayahRange = Lokasi::parseWilayahRange($search);
+
+            $query->where(function ($q) use ($search, $wilayahRange) {
                 $q->where('nama_aset', 'LIKE', "%{$search}%")
                     ->orWhere('kode_aset', 'LIKE', "%{$search}%")
+                    ->orWhere('kode_aset_lama', 'LIKE', "%{$search}%")
                     ->orWhere('no_seri', 'LIKE', "%{$search}%")
                     ->orWhere('tipe_model', 'LIKE', "%{$search}%")
-                    ->orWhereHas('merk', fn ($m) => $m->where('nama_merk', 'LIKE', "%{$search}%"));
+                    ->orWhereHas('merk', fn ($m) => $m->where('nama_merk', 'LIKE', "%{$search}%"))
+                    ->orWhereHas('lokasi', function ($l) use ($search) {
+                        $l->where('nama_lokasi', 'LIKE', "%{$search}%")
+                            ->orWhere('gedung', 'LIKE', "%{$search}%")
+                            ->orWhere('kode_lokasi', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('penanggungJawab', fn ($pj) => $pj->where('nama', 'LIKE', "%{$search}%"));
+
+                if ($wilayahRange) {
+                    $min = (string) $wilayahRange['min'];
+                    $max = (string) $wilayahRange['max'];
+                    $prefix = (string) $wilayahRange['prefix'];
+
+                    $q->orWhereHas('lokasi', function ($lq) use ($min, $max, $prefix) {
+                        $lq->whereBetween('kode_lokasi', [$min, $max])
+                            ->orWhere('kode_lokasi', 'LIKE', "{$prefix}%");
+                    })->orWhere(function ($kq) use ($prefix) {
+                        $kq->where('sifat_barang', 'S')
+                            ->where('kode_aset', 'LIKE', "%S{$prefix}%");
+                    });
+                }
             });
         }
 
         // Filter Kategori
         if ($request->filled('kategori_id')) {
             $query->where('kategori_id', $request->kategori_id);
+        }
+
+        // Filter Wilayah / Range Kode Lokasi
+        if ($request->filled('area_lokasi')) {
+            $query->inWilayahRange($request->area_lokasi);
+        } elseif ($request->filled('lokasi_range')) {
+            $query->inWilayahRange($request->lokasi_range);
         }
 
         // Filter Lokasi
@@ -62,9 +92,9 @@ class QrPrintController extends Controller
 
         // Ambil list untuk dropdown filter
         $kategoriList = Kategori::orderBy('nama_kategori')->get();
-        $lokasiList = Lokasi::orderBy('nama_lokasi')->get();
+        $lokasiList = Lokasi::orderBy('kode_lokasi')->get();
         $penanggungJawabList = PenanggungJawab::with('divisi')->orderBy('nama')->get();
-
+        $wilayahList = Lokasi::getWilayahOptions();
         $templates = QrCodeService::getTemplates();
         $config = QrConfig::getAllConfig();
 
@@ -73,8 +103,8 @@ class QrPrintController extends Controller
         if ($request->filled('selected_ids')) {
             $raw = $request->selected_ids;
             $arr = is_array($raw) ? $raw : explode(',', (string) $raw);
-            $preSelectedIds = array_filter(array_map(function($id) {
-                return is_string($id) || is_numeric($id) ? trim((string)$id) : null;
+            $preSelectedIds = array_filter(array_map(function ($id) {
+                return is_string($id) || is_numeric($id) ? trim((string) $id) : null;
             }, $arr));
         }
 
@@ -83,6 +113,7 @@ class QrPrintController extends Controller
             'kategoriList',
             'lokasiList',
             'penanggungJawabList',
+            'wilayahList',
             'templates',
             'config',
             'preSelectedIds',

@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
-
 return [
 
     /*
@@ -143,7 +141,7 @@ return [
     |
     */
 
-    'path' => env('SESSION_PATH', '/'),
+    'path' => (str_starts_with(env('SESSION_PATH', '/'), 'C:') || str_contains(env('SESSION_PATH', '/'), '\\')) ? '/' : env('SESSION_PATH', '/'),
 
     /*
     |--------------------------------------------------------------------------

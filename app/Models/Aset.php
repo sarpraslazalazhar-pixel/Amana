@@ -145,4 +145,31 @@ class Aset extends Model
     {
         return $this->hasMany(LampiranAset::class, 'aset_id')->latest();
     }
+
+    public function scopeInWilayahRange($query, string $rangeInput)
+    {
+        $range = Lokasi::parseWilayahRange($rangeInput);
+        if (! $range) {
+            return $query;
+        }
+
+        $min = (string) $range['min'];
+        $max = (string) $range['max'];
+        $prefix = (string) $range['prefix'];
+
+        return $query->where(function ($w) use ($min, $max, $prefix) {
+            $w->whereHas('lokasi', function ($lq) use ($min, $max, $prefix) {
+                $lq->whereBetween('kode_lokasi', [$min, $max])
+                    ->orWhere('kode_lokasi', 'LIKE', "{$prefix}%");
+            })->orWhere(function ($kq) use ($prefix) {
+                $kq->where('sifat_barang', 'S')
+                    ->where('kode_aset', 'LIKE', "%S{$prefix}%");
+            });
+        });
+    }
+
+    public function getWilayahLokasiAttribute(): ?string
+    {
+        return $this->lokasi?->wilayah_nama;
+    }
 }

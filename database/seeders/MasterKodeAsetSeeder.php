@@ -400,16 +400,15 @@ class MasterKodeAsetSeeder extends Seeder
             ['kode' => '338', 'nama' => 'Ruang Kepala Asrama Putra', 'gedung' => 'Kampus RGI Sawangan', 'alamat' => 'Jl. Raya Sawangan KM. 2 No. 100, Asrama Putra Blok A, Sawangan, Depok', 'lat' => -6.398540, 'lng' => 106.764510],
             ['kode' => '339', 'nama' => 'Mushola Kampus RGI', 'gedung' => 'Kampus RGI Sawangan', 'alamat' => 'Jl. Raya Sawangan KM. 2 No. 100, Mushola Sentral RGI, Sawangan, Depok', 'lat' => -6.398540, 'lng' => 106.764510],
 
-            // DASAMAS CENTER (Kode 400 - 423)
-            ['kode' => '400', 'nama' => 'Dasamas Center (Gedung Utama)', 'gedung' => 'Dasamas Center', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Cirendeu, Ciputat Timur, Kota Tangerang Selatan, Banten 15419', 'lat' => -6.305020, 'lng' => 106.780010],
-            ['kode' => '410', 'nama' => 'Toilet Lt. 1 Dasamas', 'gedung' => 'Dasamas Center', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Area Toilet Lt. 1, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
-            ['kode' => '411', 'nama' => 'Ruang Kamar Relawan 1', 'gedung' => 'Dasamas Center', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Kamar Penginapan 1, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
-            ['kode' => '412', 'nama' => 'Ruang Kamar Relawan 2', 'gedung' => 'Dasamas Center', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Kamar Penginapan 2, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
-            ['kode' => '413', 'nama' => 'Pantry Dasamas Center', 'gedung' => 'Dasamas Center', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Dapur Relawan, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
-            ['kode' => '421', 'nama' => 'Ruang Tunggu Tamu Dasamas', 'gedung' => 'Dasamas Center', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Ruang Tamu Depan, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
-            ['kode' => '422', 'nama' => 'Ruang Aula Pertemuan Dasamas', 'gedung' => 'Dasamas Center', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Aula Utama Dasamas, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
-            ['kode' => '423', 'nama' => 'Toilet Lantai Atas Dasamas', 'gedung' => 'Dasamas Center', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Area Toilet Lt. 2, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
-
+            // RGI SENTRA (Kode 400 - 423)
+            ['kode' => '400', 'nama' => 'RGI Sentra (Gedung Utama)', 'gedung' => 'RGI Sentra', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Cirendeu, Ciputat Timur, Kota Tangerang Selatan, Banten 15419', 'lat' => -6.305020, 'lng' => 106.780010],
+            ['kode' => '410', 'nama' => 'Toilet Lt. 1 RGI Sentra', 'gedung' => 'RGI Sentra', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Area Toilet Lt. 1, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
+            ['kode' => '411', 'nama' => 'Ruang Kamar Relawan 1', 'gedung' => 'RGI Sentra', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Kamar Penginapan 1, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
+            ['kode' => '412', 'nama' => 'Ruang Kamar Relawan 2', 'gedung' => 'RGI Sentra', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Kamar Penginapan 2, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
+            ['kode' => '413', 'nama' => 'Pantry RGI Sentra', 'gedung' => 'RGI Sentra', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Dapur Relawan, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
+            ['kode' => '421', 'nama' => 'Ruang Tunggu Tamu RGI Sentra', 'gedung' => 'RGI Sentra', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Ruang Tamu Depan, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
+            ['kode' => '422', 'nama' => 'Ruang Aula Pertemuan RGI Sentra', 'gedung' => 'RGI Sentra', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Aula Utama RGI Sentra, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
+            ['kode' => '423', 'nama' => 'Toilet Lantai Atas RGI Sentra', 'gedung' => 'RGI Sentra', 'alamat' => 'Jl. Masjid Al Azhar No. 45, Area Toilet Lt. 2, Tangerang Selatan', 'lat' => -6.305020, 'lng' => 106.780010],
             // KANTOR LAYANAN (KL) (Kode 500 - 520)
             ['kode' => '500', 'nama' => 'KL Sentra Primer Jakarta Timur', 'gedung' => 'Kantor Layanan (KL)', 'alamat' => 'Kantor Layanan Sentra Primer Al Azhar, Jl. Dr. Sumarno, Pulo Gebang, Kec. Cakung, Kota Jakarta Timur, DKI Jakarta 13950', 'lat' => -6.215530, 'lng' => 106.945020],
             ['kode' => '510', 'nama' => 'KL Bintaro Tangerang Selatan', 'gedung' => 'Kantor Layanan (KL)', 'alamat' => 'Kantor Layanan Al Azhar Bintaro, Ruko Kebayoran Arcade 1 Blok C3 No. 58, Bintaro Jaya Sektor 7, Pondok Aren, Kota Tangerang Selatan, Banten 15224', 'lat' => -6.282540, 'lng' => 106.717050],
