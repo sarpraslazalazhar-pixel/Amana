@@ -11,6 +11,9 @@
             @elseif($template['paper_size'] === 'custom_103')
                 size: 205mm 165mm portrait;
                 margin: 5mm 6mm;
+            @elseif($template['paper_size'] === 'a3')
+                size: a3 {{ $template['orientation'] ?? 'portrait' }};
+                margin: {{ ($template['orientation'] ?? 'portrait') === 'landscape' ? '8mm 6mm' : '10mm' }};
             @else
                 size: a4 portrait;
                 margin: 8mm 6mm;
@@ -63,11 +66,13 @@
 
         .sheet {
             page-break-after: always;
+            break-after: page;
             padding: 6mm;
         }
 
         .sheet:last-child {
-            page-break-after: avoid;
+            page-break-after: avoid !important;
+            break-after: avoid !important;
         }
 
         .grid-container {
@@ -75,12 +80,9 @@
             @if($template['key'] === 'thermal_single')
                 grid-template-columns: 1fr;
                 gap: 0;
-            @elseif($template['key'] === 'a4_grid_12')
-                grid-template-columns: repeat(3, 1fr);
-                gap: 3mm;
             @else
-                grid-template-columns: repeat(4, 1fr);
-                gap: 2.5mm;
+                grid-template-columns: repeat({{ $template['cols'] ?? 4 }}, 1fr);
+                gap: {{ $template['key'] === 'a3_grid_60' ? '1.5mm' : ($template['key'] === 'a3_grid_40' ? '2mm' : ($template['key'] === 'a4_grid_12' ? '3mm' : '2.5mm')) }};
             @endif
         }
 
@@ -121,7 +123,16 @@
         }
 
         .qr-wrapper img {
-            @if($template['key'] === 'a4_grid_12')
+            @if($template['key'] === 'a3_grid_24')
+                width: 38mm;
+                height: 38mm;
+            @elseif($template['key'] === 'a3_grid_40')
+                width: 26mm;
+                height: 26mm;
+            @elseif($template['key'] === 'a3_grid_60')
+                width: 20mm;
+                height: 20mm;
+            @elseif($template['key'] === 'a4_grid_12')
                 width: 30mm;
                 height: 30mm;
             @elseif($template['key'] === 'a4_grid_24')
@@ -188,6 +199,16 @@
             width: 100%;
             height: 100%;
         }
+
+        @if($template['key'] === 'a3_grid_24')
+        .label-header { font-size: 9px; padding-bottom: 2px; }
+        .row1-text    { font-size: 10.5px; }
+        .row2-text    { font-size: 9.5px; }
+        @elseif($template['key'] === 'a3_grid_60')
+        .label-header { font-size: 6.5px; }
+        .row1-text    { font-size: 8px; }
+        .row2-text    { font-size: 7.5px; }
+        @endif
     </style>
 </head>
 <body>

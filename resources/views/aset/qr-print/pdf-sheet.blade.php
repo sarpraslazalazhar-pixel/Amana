@@ -11,6 +11,14 @@
             @elseif($template['paper_size'] === 'custom_103')
                 size: 205mm 165mm portrait;
                 margin: 4mm 4mm;
+            @elseif($template['paper_size'] === 'a3')
+                @if(($template['orientation'] ?? 'portrait') === 'landscape')
+                    size: 420mm 297mm landscape;
+                    margin: 8mm 6mm;
+                @else
+                    size: 297mm 420mm portrait;
+                    margin: 10mm;
+                @endif
             @else
                 size: 210mm 297mm portrait;
                 margin: 6mm 5mm;
@@ -34,10 +42,12 @@
         .sheet {
             width: 100%;
             page-break-after: always;
+            break-after: page;
         }
 
         .sheet:last-child {
-            page-break-after: avoid;
+            page-break-after: avoid !important;
+            break-after: avoid !important;
         }
 
         /* Tabel Grid Layout untuk DomPDF */
@@ -56,7 +66,13 @@
             padding: 1.5mm 1.5mm;
             background: #ffffff;
             overflow: hidden;
-            @if($template['key'] === 'a4_grid_12')
+            @if($template['key'] === 'a3_grid_24')
+                height: 64mm;
+            @elseif($template['key'] === 'a3_grid_40')
+                height: 50mm;
+            @elseif($template['key'] === 'a3_grid_60')
+                height: 42mm;
+            @elseif($template['key'] === 'a4_grid_12')
                 height: 64mm;
             @elseif($template['key'] === 'a4_grid_24')
                 height: 42mm;
@@ -89,7 +105,16 @@
         }
 
         .qr-img {
-            @if($template['key'] === 'a4_grid_12')
+            @if($template['key'] === 'a3_grid_24')
+                width: 38mm;
+                height: 38mm;
+            @elseif($template['key'] === 'a3_grid_40')
+                width: 26mm;
+                height: 26mm;
+            @elseif($template['key'] === 'a3_grid_60')
+                width: 20mm;
+                height: 20mm;
+            @elseif($template['key'] === 'a4_grid_12')
                 width: 32mm;
                 height: 32mm;
             @elseif($template['key'] === 'a4_grid_24')
@@ -174,6 +199,16 @@
             font-weight: bold;
             color: #047857;
         }
+
+        @if($template['key'] === 'a3_grid_24')
+        .label-header { font-size: 8pt; }
+        .row1-text    { font-size: 9pt; }
+        .row2-text    { font-size: 8pt; }
+        @elseif($template['key'] === 'a3_grid_60')
+        .label-header { font-size: 5.5pt; }
+        .row1-text    { font-size: 6.5pt; }
+        .row2-text    { font-size: 6pt; }
+        @endif
     </style>
 </head>
 <body>

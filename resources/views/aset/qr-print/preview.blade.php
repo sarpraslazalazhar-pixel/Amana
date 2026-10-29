@@ -118,6 +118,73 @@
                             @endforeach
                         </div>
 
+                    @elseif($template['key'] === 'a3_grid_60')
+                        <!-- Layout A3 Landscape Grid 60 (10 Kolom x 6 Baris) -->
+                        <div class="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-1.5">
+                            @foreach($pageLabels as $lbl)
+                                <div class="p-1.5 bg-white rounded-lg border-2 border-dashed border-slate-300 text-center flex flex-col items-center justify-between shadow-2xs hover:border-emerald-400 transition-colors">
+                                    <div class="w-full text-[7.5px] font-extrabold tracking-wide uppercase text-slate-900 border-b border-slate-100 pb-0.5 truncate">
+                                        {{ $lbl['title'] }}
+                                    </div>
+                                    <div class="w-10 h-10 my-1 flex items-center justify-center">
+                                        <img src="data:image/svg+xml;base64,{{ $lbl['qr_base64'] }}" alt="QR Code" class="w-full h-full object-contain">
+                                    </div>
+                                    <div class="w-full pt-0.5 border-t border-slate-100 space-y-0.5">
+                                        <p class="font-extrabold text-[8.5px] text-slate-900 truncate" title="{{ $lbl['row1_text'] }}">
+                                            {{ $lbl['row1_text'] }}
+                                        </p>
+                                        <p class="font-mono font-bold text-[7.5px] text-emerald-700 truncate">
+                                            {{ $lbl['row2_text'] }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @elseif($template['key'] === 'a3_grid_24')
+                        <!-- Layout A3 Landscape Grid 24 (6 Kolom x 4 Baris) -->
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            @foreach($pageLabels as $lbl)
+                                <div class="p-3 bg-white rounded-2xl border-2 border-dashed border-slate-300 text-center flex flex-col items-center justify-between shadow-2xs hover:border-emerald-400 transition-colors">
+                                    <div class="w-full text-[10px] font-extrabold tracking-wide uppercase text-slate-900 border-b border-slate-100 pb-1.5 truncate">
+                                        {{ $lbl['title'] }}
+                                    </div>
+                                    <div class="w-20 h-20 my-2 flex items-center justify-center">
+                                        <img src="data:image/svg+xml;base64,{{ $lbl['qr_base64'] }}" alt="QR Code" class="w-full h-full object-contain">
+                                    </div>
+                                    <div class="w-full pt-1.5 border-t border-slate-100 space-y-0.5">
+                                        <p class="font-extrabold text-xs text-slate-900 truncate" title="{{ $lbl['row1_text'] }}">
+                                            {{ $lbl['row1_text'] }}
+                                        </p>
+                                        <p class="font-mono font-bold text-[10px] text-emerald-700 truncate">
+                                            {{ $lbl['row2_text'] }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                    @elseif($template['key'] === 'a3_grid_40')
+                        <!-- Layout A3 Landscape Grid 40 (8 Kolom x 5 Baris) -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+                            @foreach($pageLabels as $lbl)
+                                <div class="p-2 bg-white rounded-xl border-2 border-dashed border-slate-300 text-center flex flex-col items-center justify-between shadow-2xs hover:border-emerald-400 transition-colors">
+                                    <div class="w-full text-[8.5px] font-extrabold tracking-wide uppercase text-slate-900 border-b border-slate-100 pb-1 truncate">
+                                        {{ $lbl['title'] }}
+                                    </div>
+                                    <div class="w-14 h-14 my-1 flex items-center justify-center">
+                                        <img src="data:image/svg+xml;base64,{{ $lbl['qr_base64'] }}" alt="QR Code" class="w-full h-full object-contain">
+                                    </div>
+                                    <div class="w-full pt-1 border-t border-slate-100 space-y-0.5">
+                                        <p class="font-extrabold text-[10px] text-slate-900 truncate" title="{{ $lbl['row1_text'] }}">
+                                            {{ $lbl['row1_text'] }}
+                                        </p>
+                                        <p class="font-mono font-bold text-[8.5px] text-emerald-700 truncate">
+                                            {{ $lbl['row2_text'] }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     @else
                         <!-- Layout Grid 4 Kolom (A4 20 Stiker, A4 24 Stiker, atau TJ 103) -->
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">

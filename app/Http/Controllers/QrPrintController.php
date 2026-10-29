@@ -194,6 +194,10 @@ class QrPrintController extends Controller
         } elseif ($template['paper_size'] === 'thermal_50x65') {
             // Thermal 50mm x 65mm = 141.7 pt x 184.2 pt
             $pdf->setPaper([0, 0, 141.7, 184.2], 'portrait');
+        } elseif ($template['paper_size'] === 'a3') {
+            // A3 portrait/landscape: 297mm × 420mm = 841.9pt × 1190.6pt
+            $orientation = $template['orientation'] ?? 'portrait';
+            $pdf->setPaper([0, 0, 841.9, 1190.6], $orientation);
         } else {
             $pdf->setPaper('a4', 'portrait');
         }
