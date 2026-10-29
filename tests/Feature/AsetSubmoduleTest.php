@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\AgendaAset;
 use App\Models\Aset;
 use App\Models\Barang;
 use App\Models\Divisi;
 use App\Models\Kategori;
+use App\Models\LampiranAset;
 use App\Models\Lokasi;
 use App\Models\Merk;
+use App\Models\Mitra;
 use App\Models\PenanggungJawab;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,6 +34,8 @@ class AsetSubmoduleTest extends TestCase
 
     protected PenanggungJawab $pj2;
 
+    protected Mitra $mitra;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -51,6 +56,7 @@ class AsetSubmoduleTest extends TestCase
         $this->pj1 = PenanggungJawab::create(['nama' => 'Budi Santoso', 'jabatan' => 'Staff IT', 'divisi_id' => $divisi->id]);
         $this->pj2 = PenanggungJawab::create(['nama' => 'Siti Rahma', 'jabatan' => 'Staff HR', 'divisi_id' => $divisi->id]);
 
+        $this->mitra = Mitra::firstOrCreate(['nama' => 'Vendor Test'], ['jenis' => 'toko', 'status' => 'aktif']);
         $this->aset = Aset::create([
             'nama_aset' => 'Laptop ROG',
             'kode_aset' => 'ELK-2026-IT01-0001',
@@ -64,7 +70,7 @@ class AsetSubmoduleTest extends TestCase
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
             'tanggal_pembelian' => '2026-01-01',
-            'toko_distributor' => 'Toko Komputer',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 15000000,
             'harga_total' => 15000000,
@@ -236,7 +242,7 @@ class AsetSubmoduleTest extends TestCase
             'penanggung_jawab_id' => $this->aset->penanggung_jawab_id,
             'lokasi_id' => $this->aset->lokasi_id,
             'tanggal_pembelian' => '2026-09-25',
-            'toko_distributor' => 'Vendor',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 10000000,
             'umur_ekonomis_tahun' => 4,
@@ -260,7 +266,7 @@ class AsetSubmoduleTest extends TestCase
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
             'tanggal_pembelian' => '2026-01-01',
-            'toko_distributor' => 'Toko Komputer',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 2,
             'harga_satuan' => 16000000,
             'umur_ekonomis_tahun' => 5,
@@ -290,7 +296,7 @@ class AsetSubmoduleTest extends TestCase
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
             'tanggal_pembelian' => '2026-01-01',
-            'toko_distributor' => 'Toko Komputer',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 15000000,
             'umur_ekonomis_tahun' => 5,
@@ -334,7 +340,7 @@ class AsetSubmoduleTest extends TestCase
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
             'tanggal_pembelian' => '2026-08-27',
-            'toko_distributor' => 'Vendor Program',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 5000000,
             'umur_ekonomis_tahun' => 3,
@@ -360,7 +366,7 @@ class AsetSubmoduleTest extends TestCase
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
             'tanggal_pembelian' => '2026-08-27',
-            'toko_distributor' => 'Wakaf Center',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 10000000,
             'umur_ekonomis_tahun' => 5,
@@ -392,7 +398,7 @@ class AsetSubmoduleTest extends TestCase
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
             'tanggal_pembelian' => '2026-08-27',
-            'toko_distributor' => 'Vendor IT',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 20000000,
             'umur_ekonomis_tahun' => 4,
@@ -418,7 +424,7 @@ class AsetSubmoduleTest extends TestCase
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
             'tanggal_pembelian' => '2026-01-01',
-            'toko_distributor' => 'Toko Komputer',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 15000000,
             'umur_ekonomis_tahun' => 5,
@@ -434,7 +440,7 @@ class AsetSubmoduleTest extends TestCase
 
     public function test_selesaikan_agenda_rejects_lampiran_kebesaran(): void
     {
-        $agenda = \App\Models\AgendaAset::create([
+        $agenda = AgendaAset::create([
             'aset_id' => $this->aset->id,
             'nama_agenda' => 'Servis Fan',
             'tanggal_mulai' => '2026-08-20',
@@ -496,7 +502,7 @@ class AsetSubmoduleTest extends TestCase
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
             'tanggal_pembelian' => '2026-08-28',
-            'toko_distributor' => 'Vendor IT',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 10000000,
             'umur_ekonomis_tahun' => 4,
@@ -509,7 +515,7 @@ class AsetSubmoduleTest extends TestCase
         ]);
 
         $response->assertRedirect();
-        $lampiran = \App\Models\LampiranAset::where('label', 'Faktur Asli')->first();
+        $lampiran = LampiranAset::where('label', 'Faktur Asli')->first();
         $this->assertNotNull($lampiran);
         $this->assertEquals('faktur_pembelian.webp', $lampiran->file_name);
         $this->assertEquals('image/webp', $lampiran->file_type);
@@ -534,7 +540,7 @@ class AsetSubmoduleTest extends TestCase
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
             'tanggal_pembelian' => '2026-08-28',
-            'toko_distributor' => 'Vendor IT',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 10000000,
             'umur_ekonomis_tahun' => 4,

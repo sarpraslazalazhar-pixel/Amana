@@ -10,6 +10,7 @@ use App\Models\Divisi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\Merk;
+use App\Models\Mitra;
 use App\Models\PenanggungJawab;
 use App\Models\RiwayatAset;
 use Illuminate\Http\UploadedFile;
@@ -132,6 +133,7 @@ class AsetImportService
             $tahunProduksi = (int) self::extractColumn($row, $columnMap, ['TAHUN PRODUKSI', 'THN PRODUKSI', 'TH PRODUKSI', 'TAHUN']);
             $lokasiMentah = self::extractColumn($row, $columnMap, ['LOKASI', 'RUANG', 'TEMPAT', 'LOKASI BARANG']);
             $pjMentah = self::extractColumn($row, $columnMap, ['PENANGGUNG JAWAB', 'PJ', 'AMIL', 'PIC', 'PEMAKAI', 'PENGGUNA']);
+            $petugasPengadaanMentah = self::extractColumn($row, $columnMap, ['PETUGAS PENGADAAN', 'YANG BELI', 'PEMBELI', 'PENGADAAN']);
             $deskripsiMentah = self::extractColumn($row, $columnMap, ['DESKRIPSI', 'KETERANGAN', 'SPESIFIKASI', 'DETAIL']);
             $tglBeliMentah = self::extractColumn($row, $columnMap, ['TANGGAL PEMBELIAN', 'TGL PEMBELIAN', 'TANGGAL', 'TGL BELI', 'TANGGAL PEROLEHAN', 'TGL PEROLEHAN', 'SEJAK TANGGAL']);
             $tokoDistributor = self::extractColumn($row, $columnMap, ['DISTRIBUTOR', 'TOKO', 'TOKO / DISTRIBUTOR', 'SUPPLIER', 'VENDOR']);
@@ -362,6 +364,7 @@ class AsetImportService
                 'tahun_produksi' => $tahunProduksi > 1900 ? $tahunProduksi : null,
                 'lokasi_mentah' => $lokasiMentah,
                 'pj_mentah' => $pjMentah,
+                'petugas_pengadaan_mentah' => $petugasPengadaanMentah,
                 'deskripsi_mentah' => $deskripsiMentah,
                 'tanggal_pembelian' => $tanggalPembelian,
                 'toko_distributor' => $tokoDistributor ?: 'LAZ Al Azhar',
@@ -682,10 +685,14 @@ class AsetImportService
                         'tahun_produksi' => $item->tahun_produksi,
                         'lokasi_id' => $lokasiId,
                         'penanggung_jawab_id' => $pjId,
+                        'petugas_pengadaan_id' => AsetFuzzyMatcher::matchPenanggungJawab($item->petugas_pengadaan_mentah)?->id
+                            ?? PenanggungJawab::where('user_id', $userId)->value('id'),
                         'deskripsi' => $item->deskripsi_mentah,
                         'tanggal_pembelian' => $item->tanggal_pembelian ?? now()->toDateString(),
-                        'toko_distributor' => ! empty($item->toko_distributor) ? mb_substr(trim($item->toko_distributor), 0, 255) : 'LAZ Al Azhar',
-                        'no_invoice' => ! empty($item->no_invoice) ? mb_substr(trim($item->no_invoice), 0, 100) : null,
+                        'mitra_id' => Mitra::firstOrCreate(
+                            ['nama' => ! empty($item->toko_distributor) ? mb_substr(trim($item->toko_distributor), 0, 200) : 'LAZ Al Azhar'],
+                            ['jenis' => 'toko', 'status' => 'aktif']
+                        )->id,
                         'jumlah_unit' => max(1, (int) $item->jumlah_unit),
                         'harga_satuan' => $hargaSatuan,
                         'harga_total' => max(0, (float) $hargaTotal),

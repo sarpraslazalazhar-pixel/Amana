@@ -9,6 +9,7 @@ use App\Models\Divisi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\Merk;
+use App\Models\Mitra;
 use App\Models\PenanggungJawab;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,6 +32,8 @@ class AuditLogTest extends TestCase
     protected PenanggungJawab $pj1;
 
     protected PenanggungJawab $pj2;
+
+    protected Mitra $mitra;
 
     protected function setUp(): void
     {
@@ -59,6 +62,7 @@ class AuditLogTest extends TestCase
         $this->pj1 = PenanggungJawab::create(['nama' => 'Ahmad', 'jabatan' => 'Staff IT', 'divisi_id' => $divisi->id]);
         $this->pj2 = PenanggungJawab::create(['nama' => 'Budi', 'jabatan' => 'Manajer', 'divisi_id' => $divisi->id]);
 
+        $this->mitra = Mitra::firstOrCreate(['nama' => 'Lenovo Official Store'], ['jenis' => 'distributor', 'status' => 'aktif']);
         $this->aset = Aset::create([
             'nama_aset' => 'ThinkPad X1 Carbon',
             'kode_aset' => 'ELK-2026-IT01-0001',
@@ -72,7 +76,7 @@ class AuditLogTest extends TestCase
             'lokasi_id' => $this->lokasi1->id,
             'penanggung_jawab_id' => $this->pj1->id,
             'tanggal_pembelian' => '2026-01-01',
-            'toko_distributor' => 'Lenovo Official Store',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 20000000,
             'harga_total' => 20000000,
@@ -107,7 +111,7 @@ class AuditLogTest extends TestCase
             'lokasi_id' => $this->lokasi1->id, // Lokasi tetap sama
             'penanggung_jawab_id' => $this->pj1->id, // PJ tetap sama
             'tanggal_pembelian' => '2026-01-01',
-            'toko_distributor' => 'Lenovo Official Store',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 2,
             'harga_satuan' => 22000000,
             'umur_ekonomis_tahun' => 5,
@@ -142,7 +146,7 @@ class AuditLogTest extends TestCase
             'lokasi_id' => $this->lokasi2->id, // Lokasi pindah
             'penanggung_jawab_id' => $this->pj2->id, // PJ pindah
             'tanggal_pembelian' => '2026-01-01',
-            'toko_distributor' => 'Lenovo Official Store',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 20000000,
             'umur_ekonomis_tahun' => 5,

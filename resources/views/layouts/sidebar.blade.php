@@ -265,6 +265,22 @@
                     </div>
                 </div>
 
+                <!-- Toko & Mitra -->
+                <div class="relative group">
+                    <a href="{{ route('data.mitra.index') }}"
+                       class="flex items-center text-xs font-semibold rounded-xl transition-all {{ request()->routeIs('data.mitra.*') ? 'bg-gradient-to-r from-cyan-600 to-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+                       :class="sidebarCollapsed ? 'px-4 py-2.5 md:px-0 md:py-2.5 md:justify-center' : 'px-4 py-2.5'">
+                        <i class="ti ti-building-store text-base {{ request()->routeIs('data.mitra.*') ? 'text-white' : 'text-slate-400' }}" :class="sidebarCollapsed ? 'mr-3 md:mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed" class="truncate">Toko & Mitra</span>
+                    </a>
+                    <!-- Tooltip -->
+                    <div x-show="sidebarCollapsed" 
+                         x-cloak
+                         class="hidden md:flex pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-slate-900/90 text-white text-xs font-semibold rounded-xl whitespace-nowrap shadow-xl z-50 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-150 items-center">
+                        Toko & Mitra
+                    </div>
+                </div>
+
                 <!-- LOG AKTIVITAS -->
                 <div class="pt-4 pb-1.5" :class="sidebarCollapsed ? 'md:pt-3 md:pb-1' : ''">
                     <p x-show="!sidebarCollapsed" class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aktivitas</p>

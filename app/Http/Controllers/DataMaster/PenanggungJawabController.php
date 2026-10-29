@@ -51,7 +51,7 @@ class PenanggungJawabController extends Controller
     public function show($id)
     {
         $pic = PenanggungJawab::with(['divisi', 'aset' => function ($q) {
-            $q->with(['kategori', 'lokasi', 'merk'])->orderBy('nama_aset');
+            $q->with(['kategori', 'lokasi', 'merk', 'mitra'])->orderBy('nama_aset');
         }])->findOrFail($id);
 
         return response()->json([

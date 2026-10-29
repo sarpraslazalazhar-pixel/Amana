@@ -21,7 +21,7 @@ class AsetExportService
      */
     public static function buildQuery(array $filters = [])
     {
-        $query = Aset::with(['kategori', 'barang', 'divisi', 'merk', 'lokasi', 'penanggungJawab']);
+        $query = Aset::with(['kategori', 'barang', 'divisi', 'merk', 'lokasi', 'penanggungJawab', 'mitra']);
 
         if (! empty($filters['status']) && $filters['status'] !== 'semua') {
             $query->where('status', $filters['status']);
@@ -246,7 +246,7 @@ class AsetExportService
 
             // Pembelian
             $sheet->setCellValue('N'.$rowNum, $aset->tanggal_pembelian ? Carbon::parse($aset->tanggal_pembelian)->format('d/m/Y') : '-');
-            $sheet->setCellValue('O'.$rowNum, $aset->toko_distributor ?: '-');
+            $sheet->setCellValue('O'.$rowNum, $aset->mitra?->nama ?? '-');
             $sheet->setCellValue('P'.$rowNum, $aset->no_invoice ?: '-');
             $sheet->setCellValue('Q'.$rowNum, $aset->jumlah_unit);
             $sheet->setCellValue('R'.$rowNum, $aset->harga_satuan);

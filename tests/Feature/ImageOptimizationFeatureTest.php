@@ -8,6 +8,7 @@ use App\Models\Divisi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\Merk;
+use App\Models\Mitra;
 use App\Models\PenanggungJawab;
 use App\Models\User;
 use Database\Seeders\MasterKodeAsetSeeder;
@@ -35,6 +36,8 @@ class ImageOptimizationFeatureTest extends TestCase
 
     private Merk $merk;
 
+    private Mitra $mitra;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -52,6 +55,7 @@ class ImageOptimizationFeatureTest extends TestCase
         $this->lokasi = Lokasi::first() ?? Lokasi::create(['kode_lokasi' => '111', 'nama_lokasi' => 'Lobi Utama', 'gedung' => 'Pusat']);
         $this->pj = PenanggungJawab::first() ?? PenanggungJawab::create(['nama' => 'Suryamin', 'kode_pic' => '050', 'divisi_id' => $this->divisi->id]);
         $this->merk = Merk::first() ?? Merk::create(['nama_merk' => 'Lenovo']);
+        $this->mitra = Mitra::firstOrCreate(['nama' => 'Mitra Image Store'], ['jenis' => 'toko', 'status' => 'aktif']);
     }
 
     public function test_upload_foto_utama_aset_tersimpan_sebagai_file_webp_teroptimasi(): void
@@ -71,7 +75,7 @@ class ImageOptimizationFeatureTest extends TestCase
             'lokasi_id' => $this->lokasi->id,
             'penanggung_jawab_id' => $this->pj->id,
             'tanggal_pembelian' => '2026-03-01',
-            'toko_distributor' => 'Lenovo Official Store',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 22000000,
             'umur_ekonomis_tahun' => 4,
@@ -143,7 +147,7 @@ class ImageOptimizationFeatureTest extends TestCase
             'lokasi_id' => $this->lokasi->id,
             'penanggung_jawab_id' => $this->pj->id,
             'tanggal_pembelian' => '2026-01-01',
-            'toko_distributor' => 'Asus Store',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 20000000,
             'umur_ekonomis_tahun' => 5,

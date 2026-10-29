@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\Merk;
+use App\Models\Mitra;
 use App\Models\PenanggungJawab;
 
 class AuditLogger
@@ -44,17 +45,19 @@ class AuditLogger
 
         $fieldLabels = [
             'nama_aset' => 'Nama Aset',
+            'kode_aset_lama' => 'Kode Aset Lama',
             'kategori_id' => 'Kategori',
             'merk_id' => 'Merk',
             'lokasi_id' => 'Lokasi',
             'penanggung_jawab_id' => 'Penanggung Jawab',
+            'petugas_pengadaan_id' => 'Petugas Pengadaan',
             'tipe_model' => 'Tipe / Model',
             'produsen' => 'Produsen',
             'no_seri' => 'Nomor Seri',
             'tahun_produksi' => 'Tahun Produksi',
             'deskripsi' => 'Deskripsi',
             'tanggal_pembelian' => 'Tanggal Pembelian',
-            'toko_distributor' => 'Toko / Distributor',
+            'mitra_id' => 'Toko / Distributor',
             'no_invoice' => 'No. Invoice',
             'jumlah_unit' => 'Jumlah Unit',
             'harga_satuan' => 'Harga Satuan',
@@ -116,7 +119,8 @@ class AuditLogger
             'kategori_id' => Kategori::find($val)?->nama_kategori ?? "ID {$val}",
             'merk_id' => Merk::find($val)?->nama_merk ?? "ID {$val}",
             'lokasi_id' => Lokasi::find($val)?->nama_lokasi ?? "ID {$val}",
-            'penanggung_jawab_id' => PenanggungJawab::find($val)?->nama ?? "ID {$val}",
+            'penanggung_jawab_id', 'petugas_pengadaan_id' => PenanggungJawab::find($val)?->nama ?? "ID {$val}",
+            'mitra_id' => Mitra::find($val)?->nama ?? "ID {$val}",
             'harga_satuan', 'harga_total', 'nilai_residu', 'penyusutan_per_bulan' => 'Rp '.number_format((float) $val, 0, ',', '.'),
             'umur_ekonomis_tahun' => "{$val} Tahun",
             'foto_utama' => $val ? 'Ada Foto ('.basename($val).')' : 'Tidak ada foto',

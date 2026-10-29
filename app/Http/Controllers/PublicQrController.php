@@ -22,6 +22,7 @@ class PublicQrController extends Controller
             'divisi',
             'lokasi',
             'penanggungJawab',
+            'mitra',
             'riwayat' => function ($q) {
                 $q->with(['penanggungJawab', 'lokasi', 'divisi'])->orderBy('sejak_tanggal', 'desc')->orderBy('id', 'desc');
             },
@@ -53,7 +54,7 @@ class PublicQrController extends Controller
                     $oldScannedCode = $kode_aset;
                 }
             }
-            
+
             if (! $aset) {
                 $aset = Aset::with($withRelations)
                     ->where('kode_aset_lama', $kode_aset)

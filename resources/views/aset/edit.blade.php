@@ -25,6 +25,13 @@
         'title' => $m->nama_merk,
         'subtitle' => ''
     ])->values()->all();
+
+    $mitraItems = $mitraList->map(fn($m) => [
+        'id' => $m->id,
+        'code' => $m->jenis,
+        'title' => $m->nama,
+        'subtitle' => $m->nama_kontak ?? '',
+    ])->values()->all();
 @endphp
 
 <div class="max-w-5xl mx-auto space-y-6" x-data="asetEditForm">
@@ -205,6 +212,16 @@
                         <option value="2">2 — Second</option>
                     </select>
                 </div>
+
+                <!-- Kode Aset Lama / Nomor Stiker Fisik -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">
+                        Kode Aset Lama <span class="text-slate-400 font-normal">(Opsional)</span>
+                    </label>
+                    <input type="text" name="kode_aset_lama" placeholder="Contoh: EL-2022-045 atau no. stiker" value="{{ old('kode_aset_lama', $aset->kode_aset_lama) }}"
+                           class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors font-mono font-medium">
+                    <p class="text-[10px] text-slate-400 mt-1">Isi jika aset berasal dari sistem lama atau sudah berstiker.</p>
+                </div>
             </div>
         </div>
 
@@ -299,14 +316,36 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Pembelian <span class="text-rose-500">*</span></label>
-                    <input type="date" name="tanggal_pembelian" required value="{{ old('tanggal_pembelian', $aset->tanggal_pembelian ? \Carbon\Carbon::parse($aset->tanggal_pembelian)->format('Y-m-d') : '') }}"
+                    <input type="date" name="tanggal_pembelian" required x-model="tanggalPembelian" value="{{ old('tanggal_pembelian', $aset->tanggal_pembelian ? \Carbon\Carbon::parse($aset->tanggal_pembelian)->format('Y-m-d') : '') }}"
                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Toko / Distributor <span class="text-rose-500">*</span></label>
-                    <input type="text" name="toko_distributor" required value="{{ old('toko_distributor', $aset->toko_distributor) }}"
-                           class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-semibold text-slate-700">Toko / Distributor <span class="text-rose-500">*</span></label>
+                        @if(auth()->check() && auth()->user()->role === 'super_admin')
+                            <button type="button" @click="bukaMitraModal()"
+                                    class="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded-lg transition-colors">
+                                <i class="ti ti-plus text-xs"></i> Tambah
+                            </button>
+                        @endif
+                    </div>
+                    <x-searchable-select name="mitra_id"
+                                         :dynamicItems="'mitraItemsDynamic'"
+                                         model="mitraId"
+                                         :required="true"
+                                         placeholder="-- Pilih Toko / Mitra --" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">
+                        Petugas Pengadaan <span class="text-slate-400 font-normal">(Opsional)</span>
+                    </label>
+                    <x-searchable-select name="petugas_pengadaan_id"
+                                         :items="$pjItems"
+                                         model="petugasPengadaanId"
+                                         :required="false"
+                                         placeholder="-- Cari Petugas Pengadaan --" />
                 </div>
 
                 <div>
@@ -363,6 +402,21 @@
                                class="w-full px-3.5 py-2.5 text-xs bg-transparent border-0 focus:outline-none focus:ring-0 font-bold text-slate-800">
                         <input type="hidden" name="nilai_residu" :value="nilaiResidu">
                     </div>
+                </div>
+
+                <!-- Estimasi Periode Habis Susut -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">
+                        Estimasi Selesai Susut
+                        <span class="text-slate-400 font-normal">(Otomatis)</span>
+                    </label>
+                    <div class="px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-100/70 flex items-center justify-between font-bold text-slate-700 select-none">
+                        <span x-text="estimasiHabisSusut"></span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-50 text-cyan-700 border border-cyan-200">
+                            Garis Lurus
+                        </span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Tanggal Pembelian + Umur Ekonomis.</p>
                 </div>
             </div>
 
@@ -626,6 +680,58 @@
         </div>
     </div>
 
+    <div x-show="mitraModalOpen" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto"
+         @keydown.escape.window="mitraModalOpen = false">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4 my-8"
+             @click.outside="mitraModalOpen = false">
+
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <i class="ti ti-building-store text-lg"></i>
+                    </span>
+                    <h3 class="text-base font-extrabold text-slate-900">Tambah Mitra Baru</h3>
+                </div>
+                <button type="button" @click="mitraModalOpen = false" class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+                    <i class="ti ti-x text-lg"></i>
+                </button>
+            </div>
+
+            <form @submit.prevent="simpanMitraBaru()" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Toko / Mitra <span class="text-rose-500">*</span></label>
+                    <input type="text" x-ref="mitraInput" x-model="mitraNamaBaru" maxlength="200" :disabled="mitraSaving" placeholder="Contoh: Toko Elektronik Berkah"
+                           class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold text-slate-800 disabled:opacity-60">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Mitra <span class="text-rose-500">*</span></label>
+                    <select x-model="mitraJenis" :disabled="mitraSaving"
+                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold text-slate-800">
+                        <option value="toko">Toko</option>
+                        <option value="distributor">Distributor</option>
+                        <option value="jasa">Jasa</option>
+                    </select>
+                </div>
+
+                <p x-show="mitraError" x-text="mitraError" x-cloak class="text-[11px] font-bold text-rose-600"></p>
+
+                <div class="flex items-center justify-end space-x-3 pt-2 border-t border-slate-100">
+                    <button type="button" @click="mitraModalOpen = false"
+                            class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" :disabled="mitraSaving"
+                            class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 disabled:opacity-60 text-white text-xs font-extrabold uppercase tracking-wider shadow-md shadow-emerald-600/20 transition-all inline-flex items-center gap-1.5">
+                        <i class="ti text-sm" :class="mitraSaving ? 'ti-loader-2 animate-spin' : 'ti-check'"></i>
+                        <span x-text="mitraSaving ? 'Menyimpan...' : 'Simpan Mitra'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 
 @push('scripts')
@@ -637,6 +743,7 @@ document.addEventListener('alpine:init', () => {
         divisiId: @js((string) old('divisi_id', $aset->divisi_id ?? ($divisiList->first()->id ?? ''))),
         jenisWakaf: @js((string) old('jenis', $aset->jenis ?? 'kelolaan')),
         allDivisi: @js($divisiList),
+        tanggalPembelian: @js(old('tanggal_pembelian', $aset->tanggal_pembelian ? \Carbon\Carbon::parse($aset->tanggal_pembelian)->format('Y-m-d') : '')),
         jumlahUnit: @js((int) old('jumlah_unit', $aset->jumlah_unit)),
         hargaSatuan: @js((int) old('harga_satuan', (int) $aset->harga_satuan)),
         hargaSatuanDisplay: @js((int) old('harga_satuan', (int) $aset->harga_satuan) > 0 ? number_format((float) str_replace('.', '', (string) old('harga_satuan', (int) $aset->harga_satuan)), 0, ',', '.') : ''),
@@ -655,6 +762,14 @@ document.addEventListener('alpine:init', () => {
         merkSaving: false,
         merkError: '',
         merkNamaBaru: '',
+        petugasPengadaanId: @js((string) old('petugas_pengadaan_id', $aset->petugas_pengadaan_id ?? '')),
+        mitraId: @js((string) old('mitra_id', $aset->mitra_id ?? '')),
+        mitraItemsDynamic: @js($mitraItems),
+        mitraModalOpen: false,
+        mitraSaving: false,
+        mitraError: '',
+        mitraNamaBaru: '',
+        mitraJenis: 'toko',
         photoPreview: null,
         photoPreviewUrl: null,
         isCompressingPhoto: false,
@@ -679,6 +794,24 @@ document.addEventListener('alpine:init', () => {
 
         get isTanah() {
             return this.selectedKategori?.kode_kategori === 'TN';
+        },
+
+        get estimasiHabisSusut() {
+            if (this.isTanah) return 'Tanah (Tidak Disusutkan)';
+            if (!this.tanggalPembelian || !this.umurTahun || this.umurTahun <= 0) return '-';
+            try {
+                const parts = this.tanggalPembelian.split('-');
+                if (parts.length < 3) return '-';
+                const year = parseInt(parts[0], 10) + parseInt(this.umurTahun, 10);
+                const month = parseInt(parts[1], 10);
+                const monthNames = [
+                    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                ];
+                return `${monthNames[month - 1] || ''} ${year}`;
+            } catch (e) {
+                return '-';
+            }
         },
 
         onKategoriChange() {
@@ -927,6 +1060,56 @@ document.addEventListener('alpine:init', () => {
                 this.merkError = 'Gagal terhubung ke server.';
             } finally {
                 this.merkSaving = false;
+            }
+        },
+
+        bukaMitraModal() {
+            this.mitraError = '';
+            this.mitraNamaBaru = '';
+            this.mitraJenis = 'toko';
+            this.mitraModalOpen = true;
+            this.$nextTick(() => {
+                if (this.$refs.mitraInput) {
+                    this.$refs.mitraInput.focus();
+                }
+            });
+        },
+
+        async simpanMitraBaru() {
+            const nama = (this.mitraNamaBaru || '').trim();
+            if (!nama) {
+                this.mitraError = 'Nama mitra wajib diisi.';
+                return;
+            }
+            this.mitraSaving = true;
+            this.mitraError = '';
+            try {
+                const res = await fetch('{{ route('data.mitra.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ nama: nama, jenis: this.mitraJenis, status: 'aktif' })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (!this.mitraItemsDynamic.some(m => String(m.id) === String(data.id))) {
+                        this.mitraItemsDynamic.push({ id: data.id, code: data.jenis, title: data.nama, subtitle: '' });
+                    }
+                    this.mitraId = String(data.id);
+                    this.mitraModalOpen = false;
+                } else if (res.status === 422) {
+                    const data = await res.json().catch(() => null);
+                    this.mitraError = data?.errors?.nama?.[0] || 'Nama mitra sudah digunakan.';
+                } else {
+                    this.mitraError = 'Gagal menyimpan mitra. Coba lagi.';
+                }
+            } catch (err) {
+                this.mitraError = 'Gagal terhubung ke server.';
+            } finally {
+                this.mitraSaving = false;
             }
         }
     }));

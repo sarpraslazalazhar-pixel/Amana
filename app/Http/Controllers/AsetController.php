@@ -11,6 +11,7 @@ use App\Models\Kategori;
 use App\Models\LampiranAset;
 use App\Models\Lokasi;
 use App\Models\Merk;
+use App\Models\Mitra;
 use App\Models\PenanggungJawab;
 use App\Models\RiwayatAset;
 use App\Services\AsetExportService;
@@ -114,7 +115,7 @@ class AsetController extends Controller
     {
         $config = $this->grupConfig($grup);
 
-        $query = Aset::with(['kategori', 'merk', 'lokasi', 'penanggungJawab']);
+        $query = Aset::with(['kategori', 'merk', 'lokasi', 'penanggungJawab', 'mitra']);
 
         foreach ($config['filters'] as $column => $value) {
             $query->where($column, $value);
@@ -273,7 +274,7 @@ class AsetController extends Controller
                     $aset->lokasi->nama_lokasi ?? '-',
                     $aset->penanggungJawab->nama ?? '-',
                     $aset->tanggal_pembelian ? date('d/m/Y', strtotime($aset->tanggal_pembelian)) : '-',
-                    $aset->toko_distributor ?? '-',
+                    $aset->mitra->nama ?? '-',
                     $aset->no_invoice ?? '-',
                     $aset->jumlah_unit,
                     $aset->harga_satuan,
@@ -299,8 +300,9 @@ class AsetController extends Controller
         $merkList = Merk::orderBy('nama_merk')->get();
         $lokasiList = Lokasi::orderBy('kode_lokasi')->get();
         $pjList = PenanggungJawab::orderBy('nama')->get();
+        $mitraList = Mitra::where('status', 'aktif')->orderBy('nama')->get();
 
-        return view('aset.create', compact('kategoriList', 'barangList', 'divisiList', 'merkList', 'lokasiList', 'pjList'));
+        return view('aset.create', compact('kategoriList', 'barangList', 'divisiList', 'merkList', 'lokasiList', 'pjList', 'mitraList'));
     }
 
     public function previewKode(Request $request)
@@ -352,6 +354,7 @@ class AsetController extends Controller
 
         $request->validate([
             'nama_aset' => 'required|string|max:255',
+            'kode_aset_lama' => 'nullable|string|max:100',
             'sifat_barang' => 'required|in:D,S',
             'kategori_id' => 'required|exists:kategori,id',
             'barang_id' => 'required|exists:barang,id',
@@ -361,8 +364,9 @@ class AsetController extends Controller
             'merk_id' => 'nullable|exists:merk,id',
             'lokasi_id' => 'required|exists:lokasi,id',
             'penanggung_jawab_id' => 'required|exists:penanggung_jawab,id',
+            'petugas_pengadaan_id' => 'nullable|exists:penanggung_jawab,id',
             'tanggal_pembelian' => 'required|date',
-            'toko_distributor' => 'required|string|max:255',
+            'mitra_id' => 'required|exists:mitra,id',
             'jumlah_unit' => 'required|integer|min:1',
             'harga_satuan' => $hargaRules,
             'umur_ekonomis_tahun' => $umurRules,
@@ -447,6 +451,7 @@ class AsetController extends Controller
             'nama_aset' => $request->nama_aset,
             'sifat_barang' => $request->sifat_barang,
             'kode_aset' => $kodeAset,
+            'kode_aset_lama' => $request->filled('kode_aset_lama') ? trim((string) $request->kode_aset_lama) : null,
             'kategori_id' => $request->kategori_id,
             'barang_id' => $request->barang_id,
             'divisi_id' => $request->divisi_id,
@@ -460,9 +465,12 @@ class AsetController extends Controller
             'tahun_produksi' => $request->tahun_produksi,
             'lokasi_id' => $request->lokasi_id,
             'penanggung_jawab_id' => $request->penanggung_jawab_id,
+            'petugas_pengadaan_id' => $request->filled('petugas_pengadaan_id')
+                ? $request->petugas_pengadaan_id
+                : PenanggungJawab::where('user_id', auth()->id())->value('id'),
             'deskripsi' => $request->deskripsi,
             'tanggal_pembelian' => $request->tanggal_pembelian,
-            'toko_distributor' => $request->toko_distributor,
+            'mitra_id' => $request->mitra_id,
             'no_invoice' => $request->no_invoice,
             'jumlah_unit' => $request->jumlah_unit,
             'harga_satuan' => $hargaSatuan,
@@ -531,7 +539,7 @@ class AsetController extends Controller
     public function show($id)
     {
         $aset = Aset::with([
-            'kategori', 'barang', 'divisi', 'merk', 'lokasi', 'penanggungJawab',
+            'kategori', 'barang', 'divisi', 'merk', 'lokasi', 'penanggungJawab', 'petugasPengadaan', 'mitra',
             'riwayat.user', 'riwayat.updater', 'riwayat.penanggungJawab', 'riwayat.lokasi', 'riwayat.divisi',
             'agenda.user', 'agenda.updater',
             'keuangan.user', 'keuangan.updater', 'keuangan.agenda',
@@ -550,7 +558,7 @@ class AsetController extends Controller
     public function pdf(Request $request, $id)
     {
         $aset = Aset::with([
-            'kategori', 'barang', 'divisi', 'merk', 'lokasi', 'penanggungJawab.divisi',
+            'kategori', 'barang', 'divisi', 'merk', 'lokasi', 'penanggungJawab.divisi', 'petugasPengadaan', 'mitra',
             'riwayat' => fn ($q) => $q->with(['user', 'penanggungJawab', 'lokasi', 'divisi'])->orderBy('sejak_tanggal', 'desc')->orderBy('id', 'desc'),
             'agenda' => fn ($q) => $q->with(['user'])->orderBy('status', 'asc')->orderBy('created_at', 'desc'),
             'keuangan' => fn ($q) => $q->with(['user'])->orderBy('tanggal', 'desc')->orderBy('id', 'desc'),
@@ -628,8 +636,12 @@ class AsetController extends Controller
         $merkList = Merk::orderBy('nama_merk')->get();
         $lokasiList = Lokasi::orderBy('nama_lokasi')->get();
         $pjList = PenanggungJawab::orderBy('nama')->get();
+        $mitraList = Mitra::where('status', 'aktif')
+            ->orWhere('id', $aset->mitra_id)
+            ->orderBy('nama')
+            ->get();
 
-        return view('aset.edit', compact('aset', 'kategoriList', 'barangList', 'divisiList', 'merkList', 'lokasiList', 'pjList'));
+        return view('aset.edit', compact('aset', 'kategoriList', 'barangList', 'divisiList', 'merkList', 'lokasiList', 'pjList', 'mitraList'));
     }
 
     public function update(Request $request, $id)
@@ -655,13 +667,15 @@ class AsetController extends Controller
 
         $request->validate([
             'nama_aset' => 'required|string|max:255',
+            'kode_aset_lama' => 'nullable|string|max:100',
             'divisi_id' => 'nullable|exists:divisi,id',
             'kategori_id' => 'required|exists:kategori,id',
             'merk_id' => 'nullable|exists:merk,id',
             'lokasi_id' => 'required|exists:lokasi,id',
             'penanggung_jawab_id' => 'required|exists:penanggung_jawab,id',
+            'petugas_pengadaan_id' => 'nullable|exists:penanggung_jawab,id',
             'tanggal_pembelian' => 'required|date',
-            'toko_distributor' => 'required|string|max:255',
+            'mitra_id' => 'required|exists:mitra,id',
             'jumlah_unit' => 'required|integer|min:1',
             'harga_satuan' => $hargaRules,
             'umur_ekonomis_tahun' => $umurRules,
@@ -729,9 +743,8 @@ class AsetController extends Controller
 
         // 1. Capture original data for audit logging
         $originalData = $aset->only([
-            'nama_aset', 'divisi_id', 'kategori_id', 'merk_id', 'tipe_model', 'produsen',
-            'no_seri', 'tahun_produksi', 'lokasi_id', 'penanggung_jawab_id',
-            'deskripsi', 'tanggal_pembelian', 'toko_distributor', 'no_invoice',
+            'nama_aset', 'kode_aset_lama', 'divisi_id', 'kategori_id', 'merk_id', 'tipe_model', 'produsen',
+            'deskripsi', 'tanggal_pembelian', 'mitra_id', 'no_invoice',
             'jumlah_unit', 'harga_satuan', 'harga_total', 'umur_ekonomis_tahun',
             'nilai_residu', 'penyusutan_per_bulan', 'foto_utama', 'keterangan_tambahan', 'jenis',
             'sifat_barang', 'barang_id', 'cara_perolehan', 'status_barang',
@@ -840,9 +853,10 @@ class AsetController extends Controller
             'tahun_produksi' => $request->tahun_produksi,
             'lokasi_id' => $request->lokasi_id,
             'penanggung_jawab_id' => $request->penanggung_jawab_id,
+            'petugas_pengadaan_id' => $request->petugas_pengadaan_id ?: null,
             'deskripsi' => $request->deskripsi,
             'tanggal_pembelian' => $request->tanggal_pembelian,
-            'toko_distributor' => $request->toko_distributor,
+            'mitra_id' => $request->mitra_id,
             'no_invoice' => $request->no_invoice,
             'jumlah_unit' => $request->jumlah_unit,
             'harga_satuan' => $hargaSatuan,
@@ -857,6 +871,7 @@ class AsetController extends Controller
             'barang_id' => $request->barang_id,
             'cara_perolehan' => $request->filled('cara_perolehan') ? $request->cara_perolehan : $aset->cara_perolehan,
             'status_barang' => $request->filled('status_barang') ? $request->status_barang : $aset->status_barang,
+            'kode_aset_lama' => $request->filled('kode_aset_lama') ? trim((string) $request->kode_aset_lama) : $aset->kode_aset_lama,
         ];
 
         if ($mutationResult && $mutationResult['changed']) {
@@ -899,7 +914,7 @@ class AsetController extends Controller
         $divisiList = Divisi::orderBy('kode_divisi')->get();
         $merkList = Merk::orderBy('nama_merk')->get();
         $lokasiList = Lokasi::orderBy('kode_lokasi')->get();
-        $pjList = PenanggungJawab::orderBy('nama')->get();
+        $pjList = PenanggungJawab::with('divisi')->orderBy('nama')->get();
         $wilayahList = Lokasi::getWilayahOptions();
 
         $previewQuery = AsetExportService::buildQuery($request->all());

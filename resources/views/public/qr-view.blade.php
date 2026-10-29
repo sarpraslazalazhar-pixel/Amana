@@ -223,10 +223,10 @@
                                 <span class="font-semibold text-slate-800">{{ \Carbon\Carbon::parse($aset->tanggal_pembelian)->format('d/m/Y') }}</span>
                             </div>
                         @endif
-                        @if($config['show_toko_distributor'] && $aset->toko_distributor)
+                        @if($config['show_toko_distributor'] && $aset->mitra)
                             <div class="flex justify-between">
                                 <span class="text-slate-400">Toko / Distributor:</span>
-                                <span class="font-semibold text-slate-800">{{ $aset->toko_distributor }}</span>
+                                <span class="font-semibold text-slate-800">{{ $aset->mitra->nama }}</span>
                             </div>
                         @endif
                         @if($config['show_no_invoice'] && $aset->no_invoice)

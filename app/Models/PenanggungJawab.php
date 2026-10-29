@@ -38,4 +38,9 @@ class PenanggungJawab extends Model
     {
         return $this->hasMany(Aset::class, 'penanggung_jawab_id');
     }
+
+    public function asetPengadaan()
+    {
+        return $this->hasMany(Aset::class, 'petugas_pengadaan_id');
+    }
 }

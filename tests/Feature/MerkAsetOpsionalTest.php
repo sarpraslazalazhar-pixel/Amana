@@ -8,6 +8,7 @@ use App\Models\Divisi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\Merk;
+use App\Models\Mitra;
 use App\Models\PenanggungJawab;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,6 +31,8 @@ class MerkAsetOpsionalTest extends TestCase
     protected PenanggungJawab $pj;
 
     protected Merk $merk;
+
+    protected Mitra $mitra;
 
     protected function setUp(): void
     {
@@ -68,6 +71,7 @@ class MerkAsetOpsionalTest extends TestCase
         $this->merk = Merk::create([
             'nama_merk' => 'Dell',
         ]);
+        $this->mitra = Mitra::firstOrCreate(['nama' => 'Vendor Test Merk'], ['jenis' => 'toko', 'status' => 'aktif']);
     }
 
     public function test_form_tambah_aset_menampilkan_label_merk_opsional(): void
@@ -94,7 +98,7 @@ class MerkAsetOpsionalTest extends TestCase
             'lokasi_id' => $this->lokasi->id,
             'penanggung_jawab_id' => $this->pj->id,
             'tanggal_pembelian' => '2026-03-01',
-            'toko_distributor' => 'Toko Komputer Mandiri',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 15000000,
             'umur_ekonomis_tahun' => 4,
@@ -183,7 +187,7 @@ class MerkAsetOpsionalTest extends TestCase
             'lokasi_id' => $this->lokasi->id,
             'penanggung_jawab_id' => $this->pj->id,
             'tanggal_pembelian' => '2026-03-01',
-            'toko_distributor' => 'Dell Official Store',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 12000000,
             'umur_ekonomis_tahun' => 4,

@@ -18,7 +18,7 @@ class QrPrintController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Aset::with(['kategori', 'merk', 'lokasi', 'penanggungJawab']);
+        $query = Aset::with(['kategori', 'merk', 'lokasi', 'penanggungJawab', 'mitra']);
 
         // Filter Pencarian Teks
         if ($request->filled('search')) {
@@ -135,7 +135,7 @@ class QrPrintController extends Controller
         $template = QrCodeService::getTemplate($request->template_key);
         $config = QrConfig::getAllConfig();
 
-        $asetItems = Aset::with(['kategori', 'merk', 'lokasi', 'penanggungJawab'])
+        $asetItems = Aset::with(['kategori', 'merk', 'lokasi', 'penanggungJawab', 'mitra'])
             ->whereIn('id', $request->aset_ids)
             ->orderBy('id', 'asc')
             ->get();
@@ -172,7 +172,7 @@ class QrPrintController extends Controller
         $template = QrCodeService::getTemplate($request->template_key);
         $config = QrConfig::getAllConfig();
 
-        $asetItems = Aset::with(['kategori', 'merk', 'lokasi', 'penanggungJawab'])
+        $asetItems = Aset::with(['kategori', 'merk', 'lokasi', 'penanggungJawab', 'mitra'])
             ->whereIn('id', $request->aset_ids)
             ->orderBy('id', 'asc')
             ->get();
@@ -224,7 +224,7 @@ class QrPrintController extends Controller
         $template = QrCodeService::getTemplate($request->template_key);
         $config = QrConfig::getAllConfig();
 
-        $asetItems = Aset::with(['kategori', 'merk', 'lokasi', 'penanggungJawab'])
+        $asetItems = Aset::with(['kategori', 'merk', 'lokasi', 'penanggungJawab', 'mitra'])
             ->whereIn('id', $request->aset_ids)
             ->orderBy('id', 'asc')
             ->get();

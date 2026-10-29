@@ -8,6 +8,7 @@ use App\Models\Divisi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\Merk;
+use App\Models\Mitra;
 use App\Models\PenanggungJawab;
 use App\Models\User;
 use Database\Seeders\MasterKodeAsetSeeder;
@@ -40,6 +41,8 @@ class GedungTanahNominalOpsionalTest extends TestCase
 
     protected PenanggungJawab $pj;
 
+    protected Mitra $mitra;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -59,6 +62,7 @@ class GedungTanahNominalOpsionalTest extends TestCase
         $this->merk = Merk::firstOrCreate(['nama_merk' => 'Umum']);
         $this->lokasi = Lokasi::first();
         $this->pj = PenanggungJawab::first();
+        $this->mitra = Mitra::firstOrCreate(['nama' => 'Vendor Test Gedung'], ['jenis' => 'toko', 'status' => 'aktif']);
     }
 
     public function test_tambah_aset_gedung_tanpa_nominal_dan_umur_berhasil(): void
@@ -75,7 +79,7 @@ class GedungTanahNominalOpsionalTest extends TestCase
             'lokasi_id' => $this->lokasi->id,
             'penanggung_jawab_id' => $this->pj->id,
             'tanggal_pembelian' => '2026-01-15',
-            'toko_distributor' => 'Yayasan Pesantren Islam',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             // harga_satuan dan umur_ekonomis_tahun tidak diisi (opsional)
         ]);
@@ -104,7 +108,7 @@ class GedungTanahNominalOpsionalTest extends TestCase
             'lokasi_id' => $this->lokasi->id,
             'penanggung_jawab_id' => $this->pj->id,
             'tanggal_pembelian' => '2026-02-10',
-            'toko_distributor' => 'Wakif H. Ahmad',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => '',
             'umur_ekonomis_tahun' => 0,
@@ -134,7 +138,7 @@ class GedungTanahNominalOpsionalTest extends TestCase
             'lokasi_id' => $this->lokasi->id,
             'penanggung_jawab_id' => $this->pj->id,
             'tanggal_pembelian' => '2026-03-01',
-            'toko_distributor' => 'iBox',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             // harga_satuan sengaja dikosongkan
             'harga_satuan' => '',
@@ -178,7 +182,7 @@ class GedungTanahNominalOpsionalTest extends TestCase
             'lokasi_id' => $this->lokasi->id,
             'penanggung_jawab_id' => $this->pj->id,
             'tanggal_pembelian' => '2026-01-01',
-            'toko_distributor' => 'Developer',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => '',
             'umur_ekonomis_tahun' => '',

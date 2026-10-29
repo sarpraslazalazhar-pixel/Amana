@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataMaster\KategoriController;
 use App\Http\Controllers\DataMaster\LokasiController;
 use App\Http\Controllers\DataMaster\MerkController;
+use App\Http\Controllers\DataMaster\MitraController;
 use App\Http\Controllers\DataMaster\PenanggungJawabController;
 use App\Http\Controllers\KalenderAsetController;
 use App\Http\Controllers\LampiranAsetController;
@@ -165,6 +166,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('data/penanggung-jawab', PenanggungJawabController::class)->names('data.penanggung-jawab')->except(['create', 'edit']);
         Route::resource('data/kategori', KategoriController::class)->names('data.kategori')->except(['create', 'edit']);
         Route::resource('data/merk', MerkController::class)->names('data.merk')->except(['create', 'show', 'edit']);
+        Route::resource('data/mitra', MitraController::class)->names('data.mitra')->except(['create', 'show', 'edit']);
         Route::post('data/kategori/{kategori}/barang', [KategoriController::class, 'storeBarang'])->name('data.kategori.barang.store');
         Route::put('data/kategori/barang/{barang}', [KategoriController::class, 'updateBarang'])->name('data.kategori.barang.update');
         Route::delete('data/kategori/barang/{barang}', [KategoriController::class, 'destroyBarang'])->name('data.kategori.barang.destroy');

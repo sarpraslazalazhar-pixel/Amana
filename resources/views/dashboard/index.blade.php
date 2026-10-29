@@ -650,33 +650,49 @@
         };
 
         function destroyExistingCharts() {
-            if (window.chartKategori && typeof window.chartKategori.destroy === 'function') {
-                window.chartKategori.destroy();
-                window.chartKategori = null;
+            try {
+                if (window.chartKategori && typeof window.chartKategori.destroy === 'function') {
+                    window.chartKategori.destroy();
+                }
+            } catch (e) {}
+            window.chartKategori = null;
+
+            try {
+                if (window.chartPenyusutan && typeof window.chartPenyusutan.destroy === 'function') {
+                    window.chartPenyusutan.destroy();
+                }
+            } catch (e) {}
+            window.chartPenyusutan = null;
+        }
+        function waitForApexCharts(callback, maxAttempts = 60) {
+            let attempts = 0;
+            function check() {
+                const ApexClass = window.ApexCharts || (typeof ApexCharts !== 'undefined' ? ApexCharts : null);
+                if (ApexClass) {
+                    callback(ApexClass);
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(check, 40);
+                } else {
+                    console.warn('ApexCharts is not available after timeout.');
+                }
             }
-            if (window.chartPenyusutan && typeof window.chartPenyusutan.destroy === 'function') {
-                window.chartPenyusutan.destroy();
-                window.chartPenyusutan = null;
-            }
+            check();
         }
 
         function initDashboardCharts() {
-            // 1. Destroy any existing instances to avoid memory leaks & duplicate charts
-            destroyExistingCharts();
-
             const containerKategori = document.querySelector("#apexChartKategori");
             const containerPenyusutan = document.querySelector("#apexChartPenyusutan");
             if (!containerKategori || !containerPenyusutan) return;
 
-            // 2. Ensure containers are completely cleared
-            containerKategori.innerHTML = '';
-            containerPenyusutan.innerHTML = '';
+            waitForApexCharts(function (ApexClass) {
+                const cKategori = document.querySelector("#apexChartKategori");
+                const cPenyusutan = document.querySelector("#apexChartPenyusutan");
+                if (!cKategori || !cPenyusutan) return;
 
-            if (typeof ApexCharts === 'undefined') {
-                console.warn('ApexCharts is not available.');
-                return;
-            }
-
+                destroyExistingCharts();
+                cKategori.innerHTML = '';
+                cPenyusutan.innerHTML = '';
             // ---------------------------------------------------------------------
             // 1. APEXCHART KATEGORI (GROUPED BAR / COLUMN)
             // ---------------------------------------------------------------------
@@ -737,8 +753,8 @@
                 }
             };
 
-            window.chartKategori = new ApexCharts(containerKategori, chartKategoriOptions);
-            window.chartKategori.render();
+                window.chartKategori = new ApexClass(cKategori, chartKategoriOptions);
+                window.chartKategori.render();
 
             // ---------------------------------------------------------------------
             // 2. APEXCHART VALUASI & PENYUSUTAN (GROUPED COLUMN)
@@ -803,19 +819,40 @@
                 }
             };
 
-            window.chartPenyusutan = new ApexCharts(containerPenyusutan, chartPenyusutanOptions);
-            window.chartPenyusutan.render();
+                window.chartPenyusutan = new ApexClass(cPenyusutan, chartPenyusutanOptions);
+                window.chartPenyusutan.render();
+            });
         }
 
         // Clean up charts before SPA navigator replaces page content
-        document.addEventListener('amana:before-page-unload', destroyExistingCharts, { once: true });
+        const onBeforeUnload = function () {
+            destroyExistingCharts();
+            document.removeEventListener('amana:before-page-unload', onBeforeUnload);
+            document.removeEventListener('amana:page-loaded', onPageLoaded);
+        };
+        document.addEventListener('amana:before-page-unload', onBeforeUnload);
 
-        // Safe idempotent execution
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initDashboardCharts, { once: true });
-        } else {
-            initDashboardCharts();
+        const onPageLoaded = function () {
+            requestAnimationFrame(() => {
+                initDashboardCharts();
+            });
+        };
+        document.addEventListener('amana:page-loaded', onPageLoaded);
+
+        // Window bfcache restore (Back/Forward)
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                requestAnimationFrame(() => initDashboardCharts());
+            }
+        });
+
+        // Initial mount if containers are already present or on DOMContentLoaded
+        if (document.querySelector("#apexChartKategori") && document.querySelector("#apexChartPenyusutan")) {
+            requestAnimationFrame(() => initDashboardCharts());
         }
+        document.addEventListener('DOMContentLoaded', () => {
+            requestAnimationFrame(() => initDashboardCharts());
+        });
     })();
 </script>
 @endsection

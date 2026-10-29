@@ -8,7 +8,9 @@ use App\Models\Divisi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\Merk;
+use App\Models\Mitra;
 use App\Models\PenanggungJawab;
+use App\Models\RiwayatAset;
 use App\Models\User;
 use Database\Seeders\MasterKodeAsetSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,19 +21,30 @@ class DivisiWakafPilihanJenisTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Kategori $kategori;
+
     protected Barang $barang;
+
     protected PenanggungJawab $pj;
+
     protected Lokasi $lokasi;
+
     protected Merk $merk;
+
     protected Divisi $divisiWakaf;
+
     protected Divisi $divisiProgram;
+
     protected Divisi $divisiDireksi;
+
+    protected Mitra $mitra;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(MasterKodeAsetSeeder::class);
+        $this->mitra = Mitra::firstOrCreate(['nama' => 'Vendor Test Wakaf'], ['jenis' => 'toko', 'status' => 'aktif']);
 
         $this->admin = User::create([
             'name' => 'Super Admin Test',
@@ -64,7 +77,7 @@ class DivisiWakafPilihanJenisTest extends TestCase
             'cara_perolehan' => '1',
             'status_barang' => '1',
             'tanggal_pembelian' => '2026-09-25',
-            'toko_distributor' => 'Dealer Mobil',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 250000000,
             'umur_ekonomis_tahun' => 5,
@@ -93,7 +106,7 @@ class DivisiWakafPilihanJenisTest extends TestCase
             'cara_perolehan' => '1',
             'status_barang' => '1',
             'tanggal_pembelian' => '2026-09-25',
-            'toko_distributor' => 'Toko IT',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 15000000,
             'umur_ekonomis_tahun' => 4,
@@ -122,7 +135,7 @@ class DivisiWakafPilihanJenisTest extends TestCase
             'cara_perolehan' => '1',
             'status_barang' => '1',
             'tanggal_pembelian' => '2026-09-25',
-            'toko_distributor' => 'Vendor',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 5000000,
             'umur_ekonomis_tahun' => 3,
@@ -170,7 +183,7 @@ class DivisiWakafPilihanJenisTest extends TestCase
             'penanggung_jawab_id' => $this->pj->id,
             'lokasi_id' => $this->lokasi->id,
             'tanggal_pembelian' => '2026-09-25',
-            'toko_distributor' => 'Vendor',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 10000000,
             'umur_ekonomis_tahun' => 4,
@@ -197,7 +210,7 @@ class DivisiWakafPilihanJenisTest extends TestCase
             'cara_perolehan' => '1',
             'status_barang' => '1',
             'tanggal_pembelian' => '2026-09-25',
-            'toko_distributor' => 'Vendor',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 5000000,
             'umur_ekonomis_tahun' => 3,
@@ -225,7 +238,7 @@ class DivisiWakafPilihanJenisTest extends TestCase
             'cara_perolehan' => '1',
             'status_barang' => '1',
             'tanggal_pembelian' => '2026-09-25',
-            'toko_distributor' => 'Vendor',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 15000000,
             'umur_ekonomis_tahun' => 4,
@@ -375,7 +388,7 @@ class DivisiWakafPilihanJenisTest extends TestCase
         $this->assertEquals('tetap', $aset->jenis);
         $this->assertEquals('Aset Tetap', $aset->klasifikasi);
 
-        $riwayat = \App\Models\RiwayatAset::where('aset_id', $aset->id)->where('jenis_aksi', 'mutasi')->latest()->first();
+        $riwayat = RiwayatAset::where('aset_id', $aset->id)->where('jenis_aksi', 'mutasi')->latest()->first();
         $this->assertNotNull($riwayat);
         $this->assertStringContainsString('Mutasi operasional ke Divisi Wakaf via Hak Nazir', $riwayat->keterangan);
     }
@@ -414,7 +427,7 @@ class DivisiWakafPilihanJenisTest extends TestCase
             'penanggung_jawab_id' => $this->pj->id,
             'lokasi_id' => $this->lokasi->id,
             'tanggal_pembelian' => '2026-09-25',
-            'toko_distributor' => 'Vendor',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 10000000,
             'umur_ekonomis_tahun' => 4,
@@ -423,7 +436,7 @@ class DivisiWakafPilihanJenisTest extends TestCase
 
         $response->assertRedirect(route('aset.show', $aset->id));
 
-        $riwayat = \App\Models\RiwayatAset::where('aset_id', $aset->id)->where('jenis_aksi', 'mutasi')->latest()->first();
+        $riwayat = RiwayatAset::where('aset_id', $aset->id)->where('jenis_aksi', 'mutasi')->latest()->first();
         $this->assertNotNull($riwayat);
         $this->assertStringContainsString("Jenis aset dialihkan dari 'Kelolaan' ke 'Tetap (Hak Nazir)'", $riwayat->keterangan);
     }

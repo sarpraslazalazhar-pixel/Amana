@@ -181,6 +181,11 @@
                         <span class="font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs inline-block tracking-wider">
                             {{ $aset->kode_aset }}
                         </span>
+                        @if($aset->kode_aset_lama)
+                            <span class="text-[11px] font-mono text-slate-500 block mt-1">
+                                Kode Lama: <span class="text-slate-700 font-semibold">{{ $aset->kode_aset_lama }}</span>
+                            </span>
+                        @endif
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-1 font-medium">Kategori Barang</span>
@@ -361,7 +366,11 @@
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-1 font-medium">Toko / Distributor</span>
-                        <span class="font-bold text-slate-800 text-[13px]">{{ $aset->toko_distributor ?? '-' }}</span>
+                        <span class="font-bold text-slate-800 text-[13px]">{{ $aset->mitra?->nama ?? '-' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block mb-1 font-medium">Petugas Pengadaan</span>
+                        <span class="font-bold text-slate-800 text-[13px]">{{ $aset->petugasPengadaan?->nama ?? '-' }}</span>
                     </div>
                     <div>
                         <span class="text-slate-400 block mb-1 font-medium">No. Invoice</span>

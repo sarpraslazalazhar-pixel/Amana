@@ -553,7 +553,7 @@
                                             <template x-if="form.show_toko_distributor">
                                                 <div class="flex justify-between text-slate-600">
                                                     <span>Toko:</span>
-                                                    <span class="font-semibold">{{ $sampleAset->toko_distributor ?? 'PT Asus Indo' }}</span>
+                                                    <span class="font-semibold">{{ $sampleAset->mitra?->nama ?? 'PT Asus Indo' }}</span>
                                                 </div>
                                             </template>
                                             <template x-if="form.show_no_invoice">

@@ -13,9 +13,9 @@ class Aset extends Model
 
     protected $fillable = [
         'nama_aset', 'sifat_barang', 'kode_aset', 'kode_aset_lama', 'kode_sistem_lama', 'kategori_id', 'barang_id', 'merk_id', 'tipe_model',
-        'produsen', 'no_seri', 'tahun_produksi', 'nomor_urut', 'lokasi_id', 'divisi_id', 'penanggung_jawab_id',
+        'produsen', 'no_seri', 'tahun_produksi', 'nomor_urut', 'lokasi_id', 'divisi_id', 'penanggung_jawab_id', 'petugas_pengadaan_id',
         'cara_perolehan', 'status_barang',
-        'deskripsi', 'tanggal_pembelian', 'toko_distributor', 'no_invoice',
+        'deskripsi', 'tanggal_pembelian', 'mitra_id', 'no_invoice',
         'jumlah_unit', 'harga_satuan', 'harga_total', 'umur_ekonomis_tahun',
         'penyusutan_per_bulan', 'nilai_residu', 'foto_utama', 'keterangan_tambahan', 'status',
         'nonaktif_sebab', 'nonaktif_keterangan',
@@ -109,6 +109,16 @@ class Aset extends Model
     public function penanggungJawab()
     {
         return $this->belongsTo(PenanggungJawab::class, 'penanggung_jawab_id');
+    }
+
+    public function petugasPengadaan()
+    {
+        return $this->belongsTo(PenanggungJawab::class, 'petugas_pengadaan_id');
+    }
+
+    public function mitra()
+    {
+        return $this->belongsTo(Mitra::class, 'mitra_id');
     }
 
     public function creator()

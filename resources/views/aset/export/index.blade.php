@@ -2,8 +2,50 @@
 
 @section('title', 'Pusat Ekspor Data Aset')
 @section('header-title', 'Pusat Ekspor Data Aset')
-
 @section('content')
+@php
+    $divisiFilterItems = $divisiList->map(fn($d) => [
+        'id' => (string) $d->id,
+        'title' => $d->nama_divisi,
+        'code' => 'Div ' . $d->kode_divisi,
+        'subtitle' => $d->keterangan ?: '',
+    ])->toArray();
+
+    $kategoriFilterItems = $kategoriList->map(fn($k) => [
+        'id' => (string) $k->id,
+        'title' => $k->nama_kategori,
+        'code' => $k->kode_kategori,
+        'subtitle' => '',
+    ])->toArray();
+
+    $merkFilterItems = $merkList->map(fn($m) => [
+        'id' => (string) $m->id,
+        'title' => $m->nama_merk,
+        'code' => '',
+        'subtitle' => '',
+    ])->toArray();
+
+    $wilayahFilterItems = collect($wilayahList ?? \App\Models\Lokasi::getWilayahOptions())->map(fn($w, $key) => [
+        'id' => (string) $key,
+        'title' => $w['nama'],
+        'code' => $key,
+        'subtitle' => 'Rentang: ' . $key,
+    ])->values()->toArray();
+
+    $lokasiFilterItems = $lokasiList->map(fn($l) => [
+        'id' => (string) $l->id,
+        'title' => $l->nama_lokasi,
+        'code' => $l->kode_lokasi,
+        'subtitle' => $l->gedung ?: 'Gedung',
+    ])->toArray();
+
+    $pjFilterItems = $pjList->map(fn($p) => [
+        'id' => (string) $p->id,
+        'title' => $p->nama,
+        'code' => $p->kode_pic ? str_pad($p->kode_pic, 3, '0', STR_PAD_LEFT) : null,
+        'subtitle' => $p->jabatan ?? ($p->divisi?->nama_divisi ?? null),
+    ])->toArray();
+@endphp
 <div class="space-y-6">
 
     <!-- Header Actions & Title -->
@@ -55,79 +97,67 @@
                         <!-- Divisi -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Divisi Spesifik</label>
-                            <select name="divisi_id" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                                <option value="">-- Semua Divisi --</option>
-                                @foreach($divisiList as $div)
-                                    <option value="{{ $div->id }}" {{ request('divisi_id') == $div->id ? 'selected' : '' }}>
-                                        {{ $div->kode_divisi }} - {{ $div->nama_divisi }} ({{ $div->keterangan }})
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select
+                                name="divisi_id"
+                                :items="$divisiFilterItems"
+                                :value="request('divisi_id', '')"
+                                placeholder="-- Semua Divisi --"
+                            />
                         </div>
 
                         <!-- Kategori -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori Barang</label>
-                            <select name="kategori_id" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                                <option value="">-- Semua Kategori --</option>
-                                @foreach($kategoriList as $kat)
-                                    <option value="{{ $kat->id }}" {{ request('kategori_id') == $kat->id ? 'selected' : '' }}>
-                                        {{ $kat->kode_kategori }} - {{ $kat->nama_kategori }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select
+                                name="kategori_id"
+                                :items="$kategoriFilterItems"
+                                :value="request('kategori_id', '')"
+                                placeholder="-- Semua Kategori --"
+                            />
                         </div>
 
                         <!-- Merk -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Merk / Brand</label>
-                            <select name="merk_id" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                                <option value="">-- Semua Merk --</option>
-                                @foreach($merkList as $m)
-                                    <option value="{{ $m->id }}" {{ request('merk_id') == $m->id ? 'selected' : '' }}>
-                                        {{ $m->nama_merk }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select
+                                name="merk_id"
+                                :items="$merkFilterItems"
+                                :value="request('merk_id', '')"
+                                placeholder="-- Semua Merk --"
+                            />
                         </div>
 
                         <!-- Area / Wilayah Lokasi (Ratusan) -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Area / Wilayah Lokasi (1xx - 6xx)</label>
-                            <select name="area_lokasi" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold text-slate-700">
-                                <option value="">-- Semua Area / Wilayah --</option>
-                                @foreach($wilayahList ?? \App\Models\Lokasi::getWilayahOptions() as $k => $w)
-                                    <option value="{{ $k }}" {{ request('area_lokasi') == $k ? 'selected' : '' }}>
-                                        {{ $w['label'] }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select
+                                name="area_lokasi"
+                                :items="$wilayahFilterItems"
+                                :value="request('area_lokasi', '')"
+                                placeholder="-- Semua Area / Wilayah --"
+                            />
                         </div>
 
                         <!-- Lokasi -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Lokasi Penempatan</label>
-                            <select name="lokasi_id" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                                <option value="">-- Semua Lokasi --</option>
-                                @foreach($lokasiList as $lok)
-                                    <option value="{{ $lok->id }}" {{ request('lokasi_id') == $lok->id ? 'selected' : '' }}>
-                                        {{ $lok->kode_lokasi }} - {{ $lok->nama_lokasi }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select
+                                name="lokasi_id"
+                                :items="$lokasiFilterItems"
+                                :value="request('lokasi_id', '')"
+                                placeholder="-- Semua Lokasi --"
+                            />
                         </div>
 
                         <!-- Penanggung Jawab -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Penanggung Jawab (Amil / PIC)</label>
-                            <select name="penanggung_jawab_id" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                                <option value="">-- Semua Penanggung Jawab --</option>
-                                @foreach($pjList as $pj)
-                                    <option value="{{ $pj->id }}" {{ request('penanggung_jawab_id') == $pj->id ? 'selected' : '' }}>
-                                        {{ $pj->nama }} (NIA: {{ $pj->kode_pic ?: '-' }})
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select
+                                name="penanggung_jawab_id"
+                                :items="$pjFilterItems"
+                                :value="request('penanggung_jawab_id', '')"
+                                placeholder="-- Semua Penanggung Jawab --"
+                            />
                         </div>
 
                         <!-- Status Aset -->

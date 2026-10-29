@@ -475,7 +475,7 @@
                 <td class="lbl">Tanggal Pembelian</td>
                 <td class="val font-bold">{{ \Carbon\Carbon::parse($aset->tanggal_pembelian)->translatedFormat('d F Y') }}</td>
                 <td class="lbl">Toko / Distributor</td>
-                <td class="val font-bold">{{ $aset->toko_distributor }}</td>
+                <td class="val font-bold">{{ $aset->mitra?->nama ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="lbl">No. Invoice / Bukti</td>
@@ -488,6 +488,10 @@
                 <td class="val">{{ $aset->cara_perolehan == 2 ? 'Hibah / Donasi Barang' : 'Pembelian Langsung' }}</td>
                 <td class="lbl">Status Kondisi Awal</td>
                 <td class="val">{{ $aset->status_barang == 2 ? 'Second / Bekas' : 'Baru' }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">Petugas Pengadaan</td>
+                <td class="val font-bold" colspan="3">{{ $aset->petugasPengadaan?->nama ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="lbl">Harga Satuan</td>

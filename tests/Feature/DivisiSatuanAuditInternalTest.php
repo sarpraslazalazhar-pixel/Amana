@@ -8,6 +8,7 @@ use App\Models\Divisi;
 use App\Models\Kategori;
 use App\Models\Lokasi;
 use App\Models\Merk;
+use App\Models\Mitra;
 use App\Models\PenanggungJawab;
 use App\Models\User;
 use App\Services\KodeAsetGenerator;
@@ -20,17 +21,26 @@ class DivisiSatuanAuditInternalTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Kategori $kategori;
+
     protected Barang $barang;
+
     protected PenanggungJawab $pj;
+
     protected Lokasi $lokasi;
+
     protected Merk $merk;
+
     protected Divisi $divisiKpw;
+
+    protected Mitra $mitra;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(MasterKodeAsetSeeder::class);
+        $this->mitra = Mitra::firstOrCreate(['nama' => 'Vendor Test KPw'], ['jenis' => 'toko', 'status' => 'aktif']);
 
         $this->admin = User::create([
             'name' => 'Super Admin Test',
@@ -86,7 +96,7 @@ class DivisiSatuanAuditInternalTest extends TestCase
             'cara_perolehan' => '1',
             'status_barang' => '1',
             'tanggal_pembelian' => '2026-10-06',
-            'toko_distributor' => 'Dealer Resmi',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 250000000,
             'umur_ekonomis_tahun' => 5,
@@ -115,7 +125,7 @@ class DivisiSatuanAuditInternalTest extends TestCase
             'cara_perolehan' => '1',
             'status_barang' => '1',
             'tanggal_pembelian' => '2026-10-06',
-            'toko_distributor' => 'Toko IT Surabaya',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 15000000,
             'umur_ekonomis_tahun' => 4,
@@ -144,7 +154,7 @@ class DivisiSatuanAuditInternalTest extends TestCase
             'cara_perolehan' => '1',
             'status_barang' => '1',
             'tanggal_pembelian' => '2026-10-06',
-            'toko_distributor' => 'Vendor',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 5000000,
             'umur_ekonomis_tahun' => 3,
@@ -172,7 +182,7 @@ class DivisiSatuanAuditInternalTest extends TestCase
             'cara_perolehan' => '1',
             'status_barang' => '1',
             'tanggal_pembelian' => '2026-10-06',
-            'toko_distributor' => 'Vendor',
+            'mitra_id' => $this->mitra->id,
             'jumlah_unit' => 1,
             'harga_satuan' => 10000000,
             'harga_total' => 10000000,
@@ -188,7 +198,7 @@ class DivisiSatuanAuditInternalTest extends TestCase
             'nama_aset' => 'Aset KPw Diubah Menjadi Tetap',
             'sifat_barang' => 'D',
             'tanggal_pembelian' => '2026-10-06',
-            'toko_distributor' => 'Vendor',
+            'mitra_id' => $this->mitra->id,
             'kategori_id' => $this->kategori->id,
             'barang_id' => $this->barang->id,
             'divisi_id' => $this->divisiKpw->id,

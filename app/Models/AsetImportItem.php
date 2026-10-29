@@ -25,9 +25,11 @@ class AsetImportItem extends Model
         'tahun_produksi',
         'lokasi_mentah',
         'pj_mentah',
+        'petugas_pengadaan_mentah',
         'deskripsi_mentah',
         'tanggal_pembelian',
         'toko_distributor',
+        'mitra_id',
         'no_invoice',
         'jumlah_unit',
         'harga_satuan',
@@ -90,6 +92,11 @@ class AsetImportItem extends Model
     public function divisi()
     {
         return $this->belongsTo(Divisi::class, 'divisi_id');
+    }
+
+    public function mitra()
+    {
+        return $this->belongsTo(Mitra::class, 'mitra_id');
     }
 
     public function existingAset()
