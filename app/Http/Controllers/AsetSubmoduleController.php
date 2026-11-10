@@ -216,11 +216,7 @@ class AsetSubmoduleController extends Controller
             'catatan_penyelesaian' => 'nullable|string',
             'biaya_riil' => 'nullable|numeric|min:0',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
-        ], [
-            'lampiran.file' => 'Berkas lampiran tidak valid.',
-            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
-            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
-        ]);
+        ], $this->lampiranValidationMessages($request));
 
         $agenda = AgendaAset::with('aset')->findOrFail($agendaId);
         $aset = $agenda->aset;
@@ -340,11 +336,7 @@ class AsetSubmoduleController extends Controller
             'jenis_transaksi' => 'nullable|string|max:255',
             'keterangan' => 'nullable|string',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
-        ], [
-            'lampiran.file' => 'Berkas lampiran tidak valid.',
-            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
-            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
-        ]);
+        ], $this->lampiranValidationMessages($request));
 
         $aset = Aset::findOrFail($asetId);
 
@@ -395,11 +387,7 @@ class AsetSubmoduleController extends Controller
             'tanggal' => 'required|date',
             'kejadian' => 'required|string',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
-        ], [
-            'lampiran.file' => 'Berkas lampiran tidak valid.',
-            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
-            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
-        ]);
+        ], $this->lampiranValidationMessages($request));
 
         $aset = Aset::findOrFail($asetId);
 
@@ -616,11 +604,7 @@ class AsetSubmoduleController extends Controller
             'jenis_transaksi' => 'nullable|string|max:255',
             'keterangan' => 'nullable|string',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
-        ], [
-            'lampiran.file' => 'Berkas lampiran tidak valid.',
-            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
-            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
-        ]);
+        ], $this->lampiranValidationMessages($request));
 
         $lampiranPath = $keuangan->lampiran;
         if ($request->hasFile('lampiran') && $request->file('lampiran')->isValid()) {
@@ -816,11 +800,7 @@ class AsetSubmoduleController extends Controller
             'tanggal' => 'required|date',
             'kejadian' => 'required|string',
             'lampiran' => 'nullable|file|max:10240|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx',
-        ], [
-            'lampiran.file' => 'Berkas lampiran tidak valid.',
-            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
-            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
-        ]);
+        ], $this->lampiranValidationMessages($request));
 
         $lampiranPath = $jurnal->lampiran;
         if ($request->hasFile('lampiran') && $request->file('lampiran')->isValid()) {
@@ -865,5 +845,20 @@ class AsetSubmoduleController extends Controller
 
         return redirect()->route('aset.show', ['aset' => $aset->id, 'tab' => 'jurnal'])
             ->with('success', 'Catatan jurnal kejadian berhasil dihapus.');
+    }
+
+    /**
+     * Pesan validasi seragam untuk unggahan lampiran sub-modul (termasuk error PHP upload_max_filesize).
+     *
+     * @return array<string, string>
+     */
+    private function lampiranValidationMessages(Request $request): array
+    {
+        return [
+            'lampiran.uploaded' => ImageOptimizerService::formatUploadError($request->file('lampiran'), 'lampiran'),
+            'lampiran.file' => 'Berkas lampiran tidak valid.',
+            'lampiran.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 10 MB.',
+            'lampiran.mimes' => 'Format file lampiran harus: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
+        ];
     }
 }

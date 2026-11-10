@@ -275,4 +275,59 @@ class AgendaSelesaiIntegrationTest extends TestCase
         $response->assertSee('Dilaporkan:');
         $response->assertSee('Terakhir Diedit:');
     }
+
+    public function test_selesaikan_agenda_mendukung_pdf_lebih_dari_2mb(): void
+    {
+        Storage::fake('public');
+
+        $agenda = AgendaAset::create([
+            'aset_id' => $this->aset->id,
+            'tipe_agenda' => 'tanggal_tertentu',
+            'nama_agenda' => 'Berita Acara Servis Besar',
+            'tanggal' => '2026-09-10',
+            'status' => 'pending',
+            'user_id' => $this->admin->id,
+        ]);
+
+        $pdf25Mb = UploadedFile::fake()->create('berita_acara.pdf', 2560, 'application/pdf');
+
+        $response = $this->actingAs($this->admin)->post(route('aset.agenda.selesaikan', $agenda->id), [
+            'tanggal_selesai' => '2026-09-10',
+            'catatan_penyelesaian' => 'Upload dokumen PDF > 2 MB',
+            'biaya_riil' => '0',
+            'lampiran' => $pdf25Mb,
+        ]);
+
+        $response->assertRedirect(route('aset.show', $this->aset->id));
+        $response->assertSessionHasNoErrors();
+
+        $agenda->refresh();
+        $this->assertEquals('selesai', $agenda->status);
+        $this->assertStringEndsWith('.pdf', (string) $agenda->lampiran_penyelesaian);
+        Storage::disk('public')->assertExists($agenda->lampiran_penyelesaian);
+    }
+
+    public function test_selesaikan_agenda_menampilkan_pesan_indonesian_jika_upload_php_gagal(): void
+    {
+        $agenda = AgendaAset::create([
+            'aset_id' => $this->aset->id,
+            'tipe_agenda' => 'tanggal_tertentu',
+            'nama_agenda' => 'Servis Rutin',
+            'tanggal' => '2026-09-12',
+            'status' => 'pending',
+            'user_id' => $this->admin->id,
+        ]);
+
+        $failedUpload = new UploadedFile('', 'dokumen_2mb.pdf', 'application/pdf', UPLOAD_ERR_INI_SIZE, false);
+
+        $response = $this->actingAs($this->admin)->post(route('aset.agenda.selesaikan', $agenda->id), [
+            'tanggal_selesai' => '2026-09-12',
+            'lampiran' => $failedUpload,
+        ]);
+
+        $response->assertSessionHasErrors('lampiran');
+        $errors = session('errors')->get('lampiran');
+        $this->assertStringNotContainsString('failed to upload', strtolower($errors[0]));
+        $this->assertStringContainsString('batas upload server php', strtolower($errors[0]));
+    }
 }

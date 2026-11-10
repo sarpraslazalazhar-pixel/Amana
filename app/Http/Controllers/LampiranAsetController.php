@@ -46,6 +46,7 @@ class LampiranAsetController extends Controller
             'lampiran_label' => 'nullable|string|max:255',
         ], [
             'lampiran_file.required' => 'File lampiran wajib dipilih.',
+            'lampiran_file.uploaded' => ImageOptimizerService::formatUploadError($request->file('lampiran_file'), 'lampiran'),
             'lampiran_file.file' => 'File tidak valid.',
             'lampiran_file.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 5 MB.',
             'lampiran_file.mimes' => 'Format file harus: ' . strtoupper(implode(', ', self::ALLOWED_EXTENSIONS)) . '.',

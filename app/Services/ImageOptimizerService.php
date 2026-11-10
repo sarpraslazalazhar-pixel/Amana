@@ -182,8 +182,100 @@ class ImageOptimizerService
         $slug = Str::slug($baseName, '_');
         $extension = $file->getClientOriginalExtension() ?: ($file->guessExtension() ?: 'bin');
         $filename = time() . '_' . ($slug ?: 'file') . '.' . $extension;
+        $storedPath = $file->storeAs($directory, $filename, $disk);
+        if ($storedPath === false) {
+            throw new \RuntimeException('Gagal menyimpan berkas lampiran ke penyimpanan server.');
+        }
 
-        return $file->storeAs($directory, $filename, $disk);
+        return $storedPath;
+    }
+
+    /**
+     * Konversi nilai konfigurasi PHP INI (misal: 2M, 512K, 1G) ke byte.
+     */
+    public static function parseIniSizeToBytes(string|false $value): int
+    {
+        if ($value === false) {
+            return PHP_INT_MAX;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '' || $trimmed === '0' || $trimmed === '-1') {
+            return PHP_INT_MAX;
+        }
+
+        $unit = strtolower(substr($trimmed, -1));
+        $number = (float) $trimmed;
+
+        return match ($unit) {
+            'g' => (int) ($number * 1024 * 1024 * 1024),
+            'm' => (int) ($number * 1024 * 1024),
+            'k' => (int) ($number * 1024),
+            default => (int) $number,
+        };
+    }
+
+    /**
+     * Dapatkan batas ukuran upload efektif dari konfigurasi PHP server (upload_max_filesize & post_max_size).
+     */
+    public static function getServerMaxUploadBytes(): int
+    {
+        $uploadMax = self::parseIniSizeToBytes(ini_get('upload_max_filesize'));
+        $postMax = self::parseIniSizeToBytes(ini_get('post_max_size'));
+
+        return min($uploadMax, $postMax);
+    }
+
+    /**
+     * Format angka byte menjadi label ukuran ringkas (misal: 2 MB, 10 MB).
+     */
+    public static function formatBytesLabel(int $bytes): string
+    {
+        if ($bytes >= 1024 * 1024 * 1024) {
+            return round($bytes / (1024 * 1024 * 1024), 1).' GB';
+        }
+        if ($bytes >= 1024 * 1024) {
+            $mb = $bytes / (1024 * 1024);
+
+            return (fmod($mb, 1.0) === 0.0 ? (string) (int) $mb : (string) round($mb, 1)).' MB';
+        }
+        if ($bytes >= 1024) {
+            return round($bytes / 1024).' KB';
+        }
+
+        return $bytes.' B';
+    }
+
+    /**
+     * Buat pesan error upload yang informatif dalam Bahasa Indonesia ketika PHP gagal menerima berkas.
+     */
+    public static function formatUploadError(mixed $file, string $fieldLabel = 'lampiran'): string
+    {
+        if (is_array($file)) {
+            foreach ($file as $item) {
+                if ($item instanceof UploadedFile && ! $item->isValid()) {
+                    $file = $item;
+                    break;
+                }
+            }
+        }
+
+        if (! $file instanceof UploadedFile) {
+            return "Gagal mengunggah {$fieldLabel} ke server. Pastikan ukuran file tidak melebihi batas upload server ("
+                .(ini_get('upload_max_filesize') ?: '2M').').';
+        }
+
+        return match ($file->getError()) {
+            UPLOAD_ERR_INI_SIZE => "Ukuran file {$fieldLabel} melebihi batas upload server PHP ("
+                .(ini_get('upload_max_filesize') ?: '2M')
+                .'). Perkecil/kompres file atau naikkan upload_max_filesize di server.',
+            UPLOAD_ERR_FORM_SIZE => "Ukuran file {$fieldLabel} melebihi batas maksimum form HTML.",
+            UPLOAD_ERR_PARTIAL => "Proses unggah {$fieldLabel} terputus sebelum selesai. Silakan coba lagi.",
+            UPLOAD_ERR_NO_TMP_DIR => "Folder sementara (tmp) untuk unggah {$fieldLabel} tidak tersedia di server.",
+            UPLOAD_ERR_CANT_WRITE => "Server gagal menulis file {$fieldLabel} ke disk penyimpanan sementara.",
+            UPLOAD_ERR_EXTENSION => "Unggah {$fieldLabel} dihentikan oleh ekstensi PHP di server.",
+            default => "Gagal mengunggah {$fieldLabel} ke server.",
+        };
     }
 
     /**

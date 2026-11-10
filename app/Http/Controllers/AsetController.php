@@ -385,9 +385,11 @@ class AsetController extends Controller
             'lampiran_labels' => 'nullable|array|max:5',
             'lampiran_labels.*' => 'nullable|string|max:255',
         ], [
+            'foto_utama.uploaded' => ImageOptimizerService::formatUploadError($request->file('foto_utama'), 'foto utama'),
             'foto_utama.image' => 'Foto utama harus berupa file gambar (JPG, PNG, WEBP).',
             'foto_utama.max' => 'Ukuran foto utama terlalu besar (kebesaran). Maksimal 10 MB.',
             'lampiran_files.max' => 'Maksimal 5 berkas lampiran yang dapat diunggah sekaligus.',
+            'lampiran_files.*.uploaded' => ImageOptimizerService::formatUploadError($request->file('lampiran_files'), 'lampiran'),
             'lampiran_files.*.file' => 'Berkas lampiran tidak valid.',
             'lampiran_files.*.max' => 'Ukuran file lampiran terlalu besar (kebesaran). Maksimal 5 MB per file.',
             'lampiran_files.*.mimes' => 'Format file lampiran tidak didukung. Format yang diizinkan: PDF, JPG, JPEG, PNG, WEBP, DOC, DOCX, XLS, XLSX.',
@@ -694,6 +696,7 @@ class AsetController extends Controller
             'cara_perolehan' => 'nullable|in:1,2',
             'status_barang' => 'nullable|in:1,2',
         ], [
+            'foto_utama.uploaded' => ImageOptimizerService::formatUploadError($request->file('foto_utama'), 'foto utama'),
             'foto_utama.image' => 'Foto utama harus berupa file gambar (JPG, PNG, WEBP).',
             'foto_utama.max' => 'Ukuran foto utama terlalu besar (kebesaran). Maksimal 10 MB.',
         ]);

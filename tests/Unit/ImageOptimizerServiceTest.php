@@ -81,4 +81,22 @@ class ImageOptimizerServiceTest extends TestCase
         $this->service->deleteOldImage('aset_foto/lama.webp', 'public');
         Storage::disk('public')->assertMissing('aset_foto/lama.webp');
     }
+
+    public function test_parse_ini_size_dan_format_upload_error(): void
+    {
+        $this->assertSame(2 * 1024 * 1024, ImageOptimizerService::parseIniSizeToBytes('2M'));
+        $this->assertSame(20 * 1024 * 1024, ImageOptimizerService::parseIniSizeToBytes('20m'));
+        $this->assertSame(512 * 1024, ImageOptimizerService::parseIniSizeToBytes('512K'));
+        $this->assertSame(1024 * 1024 * 1024, ImageOptimizerService::parseIniSizeToBytes('1G'));
+        $this->assertSame(PHP_INT_MAX, ImageOptimizerService::parseIniSizeToBytes('-1'));
+        $this->assertSame(PHP_INT_MAX, ImageOptimizerService::parseIniSizeToBytes('0'));
+        $this->assertSame('2 MB', ImageOptimizerService::formatBytesLabel(2 * 1024 * 1024));
+        $this->assertSame('2.5 MB', ImageOptimizerService::formatBytesLabel((int) (2.5 * 1024 * 1024)));
+
+        $iniSizeErr = new UploadedFile('', 'a.pdf', null, UPLOAD_ERR_INI_SIZE, false);
+        $this->assertStringContainsString('upload_max_filesize', ImageOptimizerService::formatUploadError($iniSizeErr, 'lampiran'));
+
+        $partialErr = new UploadedFile('', 'a.pdf', null, UPLOAD_ERR_PARTIAL, false);
+        $this->assertStringContainsString('terputus', ImageOptimizerService::formatUploadError($partialErr, 'lampiran'));
+    }
 }

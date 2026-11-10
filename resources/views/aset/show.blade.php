@@ -36,6 +36,10 @@
         'title' => $d->nama_divisi,
         'subtitle' => 'Kode ' . $d->kode_divisi
     ])->values()->all();
+    $appMaxLampiranBytes = 10 * 1024 * 1024;
+    $serverMaxUploadBytes = \App\Services\ImageOptimizerService::getServerMaxUploadBytes();
+    $effectiveMaxLampiranBytes = min($appMaxLampiranBytes, $serverMaxUploadBytes);
+    $effectiveMaxLampiranLabel = \App\Services\ImageOptimizerService::formatBytesLabel($effectiveMaxLampiranBytes);
 @endphp
 
 @section('content')
@@ -49,12 +53,26 @@
     agendaSelesaiModalOpen: false,
     selectedAgenda: null,
     agendaBiayaInput: '0',
+    maxLampiranBytes: {{ $effectiveMaxLampiranBytes }},
+    maxLampiranLabel: '{{ $effectiveMaxLampiranLabel }}',
+    lampiranSizeError: '',
+    validateLampiranFile(event) {
+        this.lampiranSizeError = '';
+        const file = event.target.files?.[0];
+        if (!file) return;
+        if (file.size > this.maxLampiranBytes) {
+            const fileMb = (file.size / (1024 * 1024)).toFixed(2);
+            this.lampiranSizeError = `Ukuran file (${fileMb} MB) melebihi batas maksimal ${this.maxLampiranLabel}. Silakan perkecil atau kompres file terlebih dahulu.`;
+            event.target.value = '';
+        }
+    },
     formatRibuan(val) {
         let clean = String(val).replace(/[^0-9]/g, '');
         return clean ? Number(clean).toLocaleString('id-ID') : '0';
     },
     openAgendaSelesaiModal(agenda) {
         this.selectedAgenda = agenda;
+        this.lampiranSizeError = '';
         let est = Number(agenda.biaya_estimasi || 0);
         this.agendaBiayaInput = est > 0 ? est.toLocaleString('id-ID') : '0';
         this.agendaSelesaiModalOpen = true;
@@ -66,6 +84,7 @@
     openEditModal(type, item) {
         this.editType = type;
         this.editItem = item;
+        this.lampiranSizeError = '';
         if (type === 'keuangan') {
             this.editNominalInput = item.nominal ? Number(item.nominal).toLocaleString('id-ID') : '0';
         } else if (type === 'agenda') {
@@ -712,13 +731,12 @@
                                 + AGENDA
                             </button>
                             <button x-show="activeTab === 'keuangan'" type="button" x-cloak
-                                    @click="modalType = 'keuangan'; modalOpen = true"
+                                    @click="lampiranSizeError = ''; modalType = 'keuangan'; modalOpen = true"
                                     class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-sm shadow-emerald-600/20">
                                 + CATAT BIAYA
                             </button>
                             <button x-show="activeTab === 'jurnal'" type="button" x-cloak
-                                    @click="modalType = 'jurnal'; modalOpen = true"
-                                    class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-sm shadow-emerald-600/20">
+                                    @click="lampiranSizeError = ''; modalType = 'jurnal'; modalOpen = true"
                                 + JURNAL
                             </button>
                         </div>
@@ -1421,7 +1439,7 @@
                 </button>
             </div>
 
-            <form :action="'/' + editType + '/' + editItem?.id" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+            <form :action="'{{ rtrim(url('/'), '/') }}/' + editType + '/' + editItem?.id" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
                 @csrf
                 @method('PUT')
 
@@ -1579,8 +1597,10 @@
                                 </div>
                             </template>
                             <input type="file" name="lampiran" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                                   @change="validateLampiranFile($event)"
                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 cursor-pointer">
-                            <span class="text-[10.5px] text-slate-400 mt-0.5 block">Format: JPG, PNG, WEBP, PDF, DOC, XLS (Maks. 10MB). Biarkan kosong jika tidak diubah.</span>
+                            <p x-show="lampiranSizeError" x-cloak x-text="lampiranSizeError" class="mt-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-[11px]"></p>
+                            <span class="text-[10.5px] text-slate-400 mt-0.5 block">Format: JPG, PNG, WEBP, PDF, DOC, XLS (Maks. {{ $effectiveMaxLampiranLabel }}). Biarkan kosong jika tidak diubah.</span>
                         </div>
                     </div>
                 </template>
@@ -1612,8 +1632,10 @@
                                 </div>
                             </template>
                             <input type="file" name="lampiran" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                                   @change="validateLampiranFile($event)"
                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 cursor-pointer">
-                            <span class="text-[10.5px] text-slate-400 mt-0.5 block">Biarkan kosong jika tidak ingin mengubah dokumen lampiran.</span>
+                            <p x-show="lampiranSizeError" x-cloak x-text="lampiranSizeError" class="mt-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-[11px]"></p>
+                            <span class="text-[10.5px] text-slate-400 mt-0.5 block">Format: JPG, PNG, WEBP, PDF, DOC, XLS (Maks. {{ $effectiveMaxLampiranLabel }}). Biarkan kosong jika tidak ingin mengubah dokumen lampiran.</span>
                         </div>
                     </div>
                 </template>
@@ -1673,7 +1695,7 @@
                 </div>
             </div>
 
-            <form :action="'/agenda/' + selectedAgenda?.id + '/selesai'" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+            <form :action="'{{ url('/agenda') }}/' + selectedAgenda?.id + '/selesai'" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
                 @csrf
 
                 <!-- Tanggal Selesai -->
@@ -1696,8 +1718,10 @@
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Upload Dokumen / Foto Bukti (Opsional)</label>
                     <input type="file" name="lampiran" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                           @change="validateLampiranFile($event)"
                            class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
-                    <span class="text-[10.5px] text-slate-400 mt-0.5 block">Mendukung file JPG, PNG, PDF maks 10MB. <strong>Agenda akan dicatat ke Jurnal hanya jika melampirkan foto/dokumen ini.</strong></span>
+                    <p x-show="lampiranSizeError" x-cloak x-text="lampiranSizeError" class="mt-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-[11px]"></p>
+                    <span class="text-[10.5px] text-slate-400 mt-0.5 block">Mendukung file JPG, PNG, PDF maks {{ $effectiveMaxLampiranLabel }}. <strong>Agenda akan dicatat ke Jurnal hanya jika melampirkan foto/dokumen ini.</strong></span>
                 </div>
 
                 <!-- Realisasi Biaya Aktual -->
@@ -2132,8 +2156,10 @@
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1">Bukti Nota / Lampiran <span class="text-slate-400 font-normal">(Opsional)</span></label>
                     <input type="file" name="lampiran" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                           @change="validateLampiranFile($event)"
                            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 cursor-pointer">
-                    <p class="text-[10px] text-slate-400 mt-1">Format: JPG, PNG, WEBP, PDF, DOC, XLS (Maks. 10MB)</p>
+                    <p x-show="lampiranSizeError" x-cloak x-text="lampiranSizeError" class="mt-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-[11px]"></p>
+                    <p class="text-[10px] text-slate-400 mt-1">Format: JPG, PNG, WEBP, PDF, DOC, XLS (Maks. {{ $effectiveMaxLampiranLabel }})</p>
                 </div>
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" @click="modalOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200">Batal</button>
@@ -2159,7 +2185,10 @@
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1">Lampiran File <span class="text-slate-400 font-normal">(Opsional - Foto / Dokumen PDF)</span></label>
                     <input type="file" name="lampiran" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                           @change="validateLampiranFile($event)"
                            class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                    <p x-show="lampiranSizeError" x-cloak x-text="lampiranSizeError" class="mt-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-[11px]"></p>
+                    <p class="text-[10px] text-slate-400 mt-1">Format: JPG, PNG, WEBP, PDF, DOC, XLS (Maks. {{ $effectiveMaxLampiranLabel }})</p>
                 </div>
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" @click="modalOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200">Batal</button>
